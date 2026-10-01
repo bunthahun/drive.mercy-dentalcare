@@ -185,6 +185,28 @@ def rename_file(file_id: int, new_name: str) -> bool:
     conn.close()
     return True
 
+def move_files_to_folder(file_ids: List[int], target_folder_id: Optional[int]) -> bool:
+    if not file_ids:
+        return False
+    conn = get_connection()
+    cursor = conn.cursor()
+    placeholders = ",".join("?" for _ in file_ids)
+    cursor.execute(f"UPDATE files SET folder_id = ? WHERE id IN ({placeholders})", [target_folder_id] + list(file_ids))
+    conn.commit()
+    conn.close()
+    return True
+
+def move_folders_to_folder(folder_ids: List[int], target_parent_id: Optional[int]) -> bool:
+    if not folder_ids:
+        return False
+    conn = get_connection()
+    cursor = conn.cursor()
+    placeholders = ",".join("?" for _ in folder_ids)
+    cursor.execute(f"UPDATE folders SET parent_id = ? WHERE id IN ({placeholders})", [target_parent_id] + list(folder_ids))
+    conn.commit()
+    conn.close()
+    return True
+
 def get_files(
     category: Optional[str] = None,
     drive_owner: Optional[str] = None,
