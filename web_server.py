@@ -1030,6 +1030,174 @@ body {
     color: var(--text-muted);
     font-size: 18px;
     cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-close-modal:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Current Drive Badge */
+.current-drive-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.drive-badge-icon {
+    font-size: 16px;
+}
+
+.drive-badge-name {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #38bdf8;
+    letter-spacing: 0.3px;
+}
+
+/* Preview Modal */
+.preview-modal-card {
+    max-width: 920px;
+    width: 92vw;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.preview-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+}
+
+.preview-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.preview-modal-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 280px;
+    background: #090d16;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.preview-media-container {
+    max-width: 100%;
+    max-height: 72vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-img {
+    max-width: 100%;
+    max-height: 72vh;
+    object-fit: contain;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6);
+}
+
+.preview-video {
+    max-width: 100%;
+    max-height: 72vh;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6);
+    background: #000;
+}
+
+.preview-audio-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 20px;
+    text-align: center;
+    width: 100%;
+}
+
+.preview-audio-icon {
+    font-size: 56px;
+    margin-bottom: 12px;
+}
+
+.preview-audio-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #f8fafc;
+    word-break: break-all;
+}
+
+.preview-pdf-container {
+    width: 100%;
+    height: 72vh;
+}
+
+.preview-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: #ffffff;
+}
+
+.preview-text-content {
+    width: 100%;
+    max-height: 70vh;
+    overflow-y: auto;
+    background: #111827;
+    padding: 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    line-height: 1.6;
+    color: #e2e8f0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    border: 1px solid var(--card-border);
+}
+
+.preview-generic-container {
+    text-align: center;
+    padding: 35px 20px;
+}
+
+.generic-icon {
+    font-size: 58px;
+    margin-bottom: 14px;
+}
+
+.generic-name {
+    font-size: 17px;
+    font-weight: 600;
+    color: #f8fafc;
+    margin-bottom: 6px;
+    word-break: break-all;
+}
+
+.generic-size {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.preview-loading, .preview-error {
+    font-size: 14px;
+    color: #94a3b8;
+    padding: 40px;
+    text-align: center;
 }
 
 /* Mobile Responsiveness */
@@ -1127,6 +1295,10 @@ body {
             <!-- Top App Bar -->
             <header class="top-bar">
                 <div class="top-left">
+                    <div class="current-drive-badge" id="currentDriveBadge">
+                        <span class="drive-badge-icon">💽</span>
+                        <span class="drive-badge-name" id="currentDriveTitle">HUN BUNTHA</span>
+                    </div>
                     <button class="btn-primary" id="btnUploadFile">
                         <span>📤</span>
                         <span id="tUploadFile">ផ្ទុកឯកសារឡើង</span>
@@ -1204,6 +1376,23 @@ body {
                 <div class="transfer-list" id="transferList"></div>
             </div>
         </main>
+    <!-- File Preview Modal -->
+    <div class="modal-backdrop" id="previewModal" style="display: none;">
+        <div class="modal-card preview-modal-card">
+            <div class="modal-header">
+                <div class="preview-header-left">
+                    <span id="previewFileIcon" style="font-size: 22px;">📄</span>
+                    <span class="modal-title" id="previewFileName" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 450px;">File Preview</span>
+                </div>
+                <div class="preview-header-actions">
+                    <button class="btn-primary" id="btnPreviewDownload" style="padding: 6px 14px; font-size: 13px;">📥 ទាញយក</button>
+                    <button class="btn-close-modal" id="btnClosePreview">✕</button>
+                </div>
+            </div>
+            <div class="preview-modal-body" id="previewModalBody">
+                <!-- Injected Preview Content -->
+            </div>
+        </div>
     </div>
 
     <!-- Settings Modal -->
@@ -1317,6 +1506,7 @@ const i18n = {
 
 document.addEventListener("DOMContentLoaded", () => {
     initEventListeners();
+    updateCurrentDriveHeader();
     fetchStats();
     loadFiles();
 });
@@ -1329,13 +1519,30 @@ function initEventListeners() {
             btn.classList.add("active");
             currentCategory = btn.dataset.cat;
 
-            const isTrash = currentCategory === "trash";
-            document.getElementById("btnUploadFile").style.display = isTrash ? "none" : "flex";
-            document.getElementById("btnEmptyTrash").style.display = isTrash ? "flex" : "none";
-
+            updateCurrentDriveHeader();
             loadFiles();
         });
     });
+
+    // Preview Modal Close
+    const previewModal = document.getElementById("previewModal");
+    const closePreviewBtn = document.getElementById("btnClosePreview");
+    if (closePreviewBtn) {
+        closePreviewBtn.addEventListener("click", () => {
+            if (previewModal) previewModal.style.display = "none";
+            const body = document.getElementById("previewModalBody");
+            if (body) body.innerHTML = "";
+        });
+    }
+    if (previewModal) {
+        previewModal.addEventListener("click", (e) => {
+            if (e.target === previewModal) {
+                previewModal.style.display = "none";
+                const body = document.getElementById("previewModalBody");
+                if (body) body.innerHTML = "";
+            }
+        });
+    }
 
     // Language Toggle
     document.getElementById("btnLangToggle").addEventListener("click", () => {
@@ -1568,8 +1775,11 @@ function renderFiles() {
                 </div>
                 <div class="card-actions">
                     ${!file.is_trash ? `
+                        <button class="btn-card-action btn-view" style="background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; font-weight: 600; padding: 6px 10px;" title="${currentLang === 'km' ? 'បើកមើល' : 'View'}">
+                            👁️ ${currentLang === 'km' ? 'បើកមើល' : 'View'}
+                        </button>
                         <button class="btn-card-action btn-dl" style="background: linear-gradient(135deg, #2563eb, #0284c7); color: #ffffff; font-weight: 600; padding: 6px 10px;" title="${i18n[currentLang].download}">
-                            📥 ${i18n[currentLang].download}
+                            📥
                         </button>
                         <button class="btn-card-action btn-del" style="max-width: 36px;" title="${i18n[currentLang].delete}">🗑️</button>
                     ` : `
@@ -1580,12 +1790,24 @@ function renderFiles() {
             `;
 
             // Card Events
+            card.style.cursor = "pointer";
+            card.addEventListener("click", () => {
+                if (!file.is_trash) previewFile(file.id);
+            });
+
             card.querySelector(".card-star").addEventListener("click", (e) => {
                 e.stopPropagation();
                 toggleFavorite(file.id);
             });
 
             if (!file.is_trash) {
+                const viewBtn = card.querySelector(".btn-view");
+                if (viewBtn) {
+                    viewBtn.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        previewFile(file.id);
+                    });
+                }
                 card.querySelector(".btn-dl").addEventListener("click", (e) => {
                     e.stopPropagation();
                     downloadFile(file.id);
@@ -1616,6 +1838,12 @@ function renderFiles() {
         filesData.forEach(file => {
             const tr = document.createElement("tr");
             const icon = getFileIcon(file.category);
+            tr.style.cursor = "pointer";
+            tr.addEventListener("click", (e) => {
+                if (e.target.tagName !== 'BUTTON' && !file.is_trash) {
+                    previewFile(file.id);
+                }
+            });
 
             tr.innerHTML = `
                 <td>${icon} ${file.file_name}</td>
@@ -1625,11 +1853,12 @@ function renderFiles() {
                 <td>${file.chunk_count || 1} parts</td>
                 <td style="text-align: right;">
                     ${!file.is_trash ? `
-                        <button class="btn-primary" style="padding: 4px 10px; font-size: 11px; margin-right: 4px;" onclick="downloadFile(${file.id})">📥 ${i18n[currentLang].download}</button>
-                        <button class="btn-secondary" style="padding: 4px 8px;" onclick="trashFile(${file.id})">🗑️</button>
+                        <button class="btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); padding: 4px 10px; font-size: 11px; margin-right: 4px;" onclick="event.stopPropagation(); previewFile(${file.id})">👁️ ${currentLang === 'km' ? 'បើកមើល' : 'View'}</button>
+                        <button class="btn-primary" style="padding: 4px 8px; font-size: 11px; margin-right: 4px;" onclick="event.stopPropagation(); downloadFile(${file.id})">📥</button>
+                        <button class="btn-secondary" style="padding: 4px 8px;" onclick="event.stopPropagation(); trashFile(${file.id})">🗑️</button>
                     ` : `
-                        <button class="btn-secondary" style="padding: 4px 8px; margin-right: 4px;" onclick="restoreFile(${file.id})">♻️ ${i18n[currentLang].restore}</button>
-                        <button class="btn-secondary" style="padding: 4px 8px; color: #f43f5e;" onclick="deletePermanent(${file.id})">❌</button>
+                        <button class="btn-secondary" style="padding: 4px 8px; margin-right: 4px;" onclick="event.stopPropagation(); restoreFile(${file.id})">♻️ ${i18n[currentLang].restore}</button>
+                        <button class="btn-secondary" style="padding: 4px 8px; color: #f43f5e;" onclick="event.stopPropagation(); deletePermanent(${file.id})">❌</button>
                     `}
                 </td>
             `;
@@ -1692,6 +1921,115 @@ async function handleFilesUpload(files) {
 
 function downloadFile(id) {
     window.location.href = `/api/download/${id}`;
+}
+
+function updateCurrentDriveHeader() {
+    const isTrash = currentCategory === "trash";
+    const uploadBtn = document.getElementById("btnUploadFile");
+    const emptyTrashBtn = document.getElementById("btnEmptyTrash");
+    if (uploadBtn) uploadBtn.style.display = isTrash ? "none" : "flex";
+    if (emptyTrashBtn) emptyTrashBtn.style.display = isTrash ? "flex" : "none";
+
+    const titleEl = document.getElementById("currentDriveTitle");
+    const dropHint = document.getElementById("tDropHint");
+
+    if (currentCategory === "vuochlin") {
+        if (titleEl) titleEl.textContent = "NEANG VUOCHLIN";
+        if (dropHint) dropHint.textContent = currentLang === "km" 
+            ? "ទម្លាក់ឯកសារនៅទីនេះដើម្បីផ្ទុកចូល Drive [NEANG VUOCHLIN]"
+            : "Drop files here to upload to Drive [NEANG VUOCHLIN]";
+    } else if (currentCategory === "trash") {
+        if (titleEl) titleEl.textContent = currentLang === "km" ? "ធុងសំរាម (Trash)" : "Recycle Bin";
+    } else {
+        if (titleEl) titleEl.textContent = "HUN BUNTHA";
+        if (dropHint) dropHint.textContent = currentLang === "km"
+            ? "ទម្លាក់ឯកសារនៅទីនេះដើម្បីផ្ទុកចូល Drive [HUN BUNTHA]"
+            : "Drop files here to upload to Drive [HUN BUNTHA]";
+    }
+}
+
+function previewFile(id) {
+    const file = filesData.find(f => f.id === id);
+    if (!file) return;
+
+    const modal = document.getElementById("previewModal");
+    const body = document.getElementById("previewModalBody");
+    const nameEl = document.getElementById("previewFileName");
+    const iconEl = document.getElementById("previewFileIcon");
+    const dlBtn = document.getElementById("btnPreviewDownload");
+
+    if (nameEl) nameEl.textContent = file.file_name;
+    if (iconEl) iconEl.textContent = getFileIcon(file.category);
+    if (dlBtn) dlBtn.onclick = () => downloadFile(file.id);
+
+    const ext = file.file_name.toLowerCase().split('.').pop();
+    const viewUrl = `/api/view/${file.id}`;
+
+    // Supported preview types
+    const imageExts = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico'];
+    const videoExts = ['mp4', 'webm', 'ogg', 'mov', 'm4v'];
+    const audioExts = ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'];
+    const isPdf = ext === 'pdf';
+    const textExts = ['txt', 'log', 'csv', 'json', 'md', 'html', 'xml', 'js', 'py', 'css', 'sql'];
+
+    body.innerHTML = `<div class="preview-loading">⏳ កំពុងទាញយកមកបើកមើល... (Loading preview...)</div>`;
+    modal.style.display = "flex";
+
+    if (imageExts.includes(ext)) {
+        body.innerHTML = `
+            <div class="preview-media-container">
+                <img src="${viewUrl}" alt="${file.file_name}" class="preview-img" onerror="this.parentElement.innerHTML='<div class=\\'preview-error\\'>មិនអាចបើកមើលរូបភាពនេះបានទេ</div>'">
+            </div>
+        `;
+    } else if (videoExts.includes(ext)) {
+        body.innerHTML = `
+            <div class="preview-media-container">
+                <video controls autoplay class="preview-video">
+                    <source src="${viewUrl}">
+                    Browser របស់អ្នកមិនគាំទ្រការចាក់វីដេអូនេះទេ។
+                </video>
+            </div>
+        `;
+    } else if (audioExts.includes(ext)) {
+        body.innerHTML = `
+            <div class="preview-audio-container">
+                <div class="preview-audio-icon">🎵</div>
+                <div class="preview-audio-title">${file.file_name}</div>
+                <audio controls autoplay style="width: 100%; max-width: 420px; margin-top: 18px;">
+                    <source src="${viewUrl}">
+                </audio>
+            </div>
+        `;
+    } else if (isPdf) {
+        body.innerHTML = `
+            <div class="preview-pdf-container">
+                <iframe src="${viewUrl}" class="preview-iframe" title="${file.file_name}"></iframe>
+            </div>
+        `;
+    } else if (textExts.includes(ext)) {
+        fetch(viewUrl)
+            .then(res => res.text())
+            .then(txt => {
+                const escaped = txt.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                body.innerHTML = `<pre class="preview-text-content"><code>${escaped}</code></pre>`;
+            })
+            .catch(err => {
+                body.innerHTML = `<div class="preview-error">បរាជ័យក្នុងការបើកអត្ថបទ: ${err.message}</div>`;
+            });
+    } else {
+        body.innerHTML = `
+            <div class="preview-generic-container">
+                <div class="generic-icon">${getFileIcon(file.category)}</div>
+                <div class="generic-name">${file.file_name}</div>
+                <div class="generic-size">${formatSize(file.file_size)}</div>
+                <p style="color: var(--text-muted); font-size: 13px; margin: 15px 0;">ប្រភេទ File នេះត្រូវទាញយកមកបើកក្នុងកុំព្យូទ័រ ឬទូរស័ព្ទដៃ</p>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <a href="${viewUrl}" target="_blank" class="btn-primary" style="text-decoration: none; padding: 8px 16px;">🌐 បើកក្នុង Tab ថ្មី (Open in Tab)</a>
+                    <button class="btn-secondary" onclick="downloadFile(${file.id})" style="padding: 8px 16px;">📥 ទាញយក (Download)</button>
+                </div>
+            </div>
+        `;
+    }
 }
 
 async function toggleFavorite(id) {
@@ -1902,6 +2240,20 @@ def download_file(file_id):
     try:
         engine.download_file(file_id, str(temp_path))
         return send_file(str(temp_path), as_attachment=True, download_name=name)
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route("/api/view/<int:file_id>", methods=["GET"])
+def view_file_content(file_id):
+    file_info = database.get_file_by_id(file_id)
+    if not file_info: return jsonify({"success": False, "error": "Not found"}), 404
+    name = file_info["file_name"]
+    mime_type = file_info.get("mime_type") or mimetypes.guess_type(name)[0] or "application/octet-stream"
+    temp_path = CACHE_DIR / f"view_{file_id}_{name}"
+    try:
+        if not temp_path.exists():
+            engine.download_file(file_id, str(temp_path))
+        return send_file(str(temp_path), mimetype=mime_type, as_attachment=False, download_name=name)
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
