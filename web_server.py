@@ -1909,6 +1909,26 @@ body.has-selection .card-select-checkbox {
     color: #f8fafc;
 }
 
+/* ==========================================================================
+   Windows 11 Marquee Rubberband Drag-Selection Box
+   ========================================================================== */
+.selection-marquee {
+    position: fixed;
+    background: rgba(56, 189, 248, 0.22);
+    border: 1px solid rgba(56, 189, 248, 0.75);
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 99998;
+    display: none;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+}
+
+body.marquee-selecting {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
+
+
 </style>
 </head>
 <body>
@@ -2400,6 +2420,7 @@ const i18n = {
 document.addEventListener("DOMContentLoaded", () => {
     initEventListeners();
     initContextMenuListeners();
+    initMarqueeSelection();
     updateCurrentDriveHeader();
     fetchStats();
     loadFiles();
@@ -4044,6 +4065,154 @@ function showPromptModal(title, label, defaultValue, onConfirm) {
     closeBtn.addEventListener("click", handleCancel);
     if (inputEl) inputEl.addEventListener("keydown", handleKeyDown);
 }
+
+/* ==========================================================================
+   Windows 11 Rubberband / Marquee Drag-Selection Logic
+   ========================================================================== */
+function initMarqueeSelection() {
+    const dropZone = document.getElementById("dropZone");
+    if (!dropZone) return;
+
+    // Create marquee element once
+    let marquee = document.getElementById("selectionMarqueeBox");
+    if (!marquee) {
+        marquee = document.createElement("div");
+        marquee.id = "selectionMarqueeBox";
+        marquee.className = "selection-marquee";
+        document.body.appendChild(marquee);
+    }
+
+    let isMouseDown = false;
+    let isSelecting = false;
+    let startX = 0;
+    let startY = 0;
+    let initialSelected = new Set();
+
+    dropZone.addEventListener("mousedown", (e) => {
+        // Only trigger on primary left click
+        if (e.button !== 0) return;
+
+        // If clicking on an interactive element or on a card/row, ignore
+        if (e.target.closest(".file-card") ||
+            e.target.closest(".folder-card") ||
+            e.target.closest("button") ||
+            e.target.closest("input") ||
+            e.target.closest("a") ||
+            e.target.closest("table") ||
+            e.target.closest(".win-context-menu") ||
+            e.target.closest(".selection-floating-bar") ||
+            e.target.closest(".modal-backdrop") ||
+            e.target.closest(".address-bar-bar")) {
+            return;
+        }
+
+        isMouseDown = true;
+        isSelecting = false;
+        startX = e.clientX;
+        startY = e.clientY;
+
+        if (e.ctrlKey || e.metaKey || e.shiftKey) {
+            initialSelected = new Set(selectedFileIds);
+        } else {
+            initialSelected = new Set();
+            clearSelection();
+        }
+    });
+
+    window.addEventListener("mousemove", (e) => {
+        if (!isMouseDown) return;
+
+        const currentX = e.clientX;
+        const currentY = e.clientY;
+        const diffX = currentX - startX;
+        const diffY = currentY - startY;
+
+        // Threshold to distinguish click from drag
+        if (!isSelecting && (Math.abs(diffX) > 4 || Math.abs(diffY) > 4)) {
+            isSelecting = true;
+            document.body.classList.add("marquee-selecting");
+            marquee.style.display = "block";
+        }
+
+        if (!isSelecting) return;
+
+        // Calculate rectangle boundaries
+        const left = Math.min(startX, currentX);
+        const top = Math.min(startY, currentY);
+        const width = Math.abs(diffX);
+        const height = Math.abs(diffY);
+
+        marquee.style.left = `${left}px`;
+        marquee.style.top = `${top}px`;
+        marquee.style.width = `${width}px`;
+        marquee.style.height = `${height}px`;
+
+        const marqueeRect = {
+            left: left,
+            top: top,
+            right: left + width,
+            bottom: top + height
+        };
+
+        // Determine intersected cards
+        const newlySelected = new Set(initialSelected);
+
+        document.querySelectorAll(".file-card").forEach(card => {
+            const cardId = parseInt(card.dataset.fileId);
+            if (!cardId) return;
+
+            const rect = card.getBoundingClientRect();
+            const intersects = !(
+                rect.right < marqueeRect.left ||
+                rect.left > marqueeRect.right ||
+                rect.bottom < marqueeRect.top ||
+                rect.top > marqueeRect.bottom
+            );
+
+            if (intersects) {
+                newlySelected.add(cardId);
+            } else if (!initialSelected.has(cardId)) {
+                newlySelected.delete(cardId);
+            }
+        });
+
+        // Also check table rows in list view
+        document.querySelectorAll(".file-table tbody tr").forEach(tr => {
+            const trId = parseInt(tr.dataset.fileId);
+            if (!trId) return;
+
+            const rect = tr.getBoundingClientRect();
+            const intersects = !(
+                rect.right < marqueeRect.left ||
+                rect.left > marqueeRect.right ||
+                rect.bottom < marqueeRect.top ||
+                rect.top > marqueeRect.bottom
+            );
+
+            if (intersects) {
+                newlySelected.add(trId);
+            } else if (!initialSelected.has(trId)) {
+                newlySelected.delete(trId);
+            }
+        });
+
+        selectedFileIds = newlySelected;
+        updateSelectionUI();
+    });
+
+    window.addEventListener("mouseup", (e) => {
+        if (!isMouseDown) return;
+        isMouseDown = false;
+
+        if (isSelecting) {
+            isSelecting = false;
+            document.body.classList.remove("marquee-selecting");
+            marquee.style.display = "none";
+            updateSelectionUI();
+        }
+    });
+}
+
 
 
 </script>
