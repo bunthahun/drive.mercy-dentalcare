@@ -4,6 +4,7 @@ Fully self-contained: Embeds HTML, CSS, JS, Crypto, and Storage Engine.
 """
 import os
 import io
+import time
 import math
 import mimetypes
 import hashlib
@@ -153,10 +154,12 @@ class StorageEngine:
     def get_backend_name(self):
         return "Telegram 1000TB Cloud" if self.is_telegram else "Local Storage Node"
 
-    def upload_file(self, local_path: str, drive_owner: str = "buntha"):
+    def upload_file(self, local_path: str, drive_owner: str = "buntha", custom_filename: str = None):
         p = Path(local_path)
         file_size = p.stat().st_size
-        file_name = p.name
+        file_name = custom_filename or p.name
+        if file_name.startswith("up_"):
+            file_name = file_name[3:]
         mime_type, _ = mimetypes.guess_type(local_path)
         mime_type = mime_type or "application/octet-stream"
         sha256_hash = compute_sha256(local_path)
@@ -944,6 +947,35 @@ body {
     margin-top: auto;
 }
 
+.card-media-preview {
+    width: 100%;
+    height: 120px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: #0b101d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    position: relative;
+}
+
+.card-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.file-card:hover .card-thumb-img {
+    transform: scale(1.06);
+}
+
+.card-thumb-fallback {
+    font-size: 40px;
+}
+
 .card-actions {
     display: flex;
     gap: 6px;
@@ -957,16 +989,58 @@ body {
     background: #1e293b;
     border: none;
     color: var(--text-secondary);
-    padding: 5px;
+    padding: 7px 5px;
     border-radius: 6px;
-    font-size: 12px;
+    font-size: 11px;
     cursor: pointer;
     text-align: center;
+    transition: all 0.2s ease;
 }
 
 .btn-card-action:hover {
     background: #334155;
     color: #ffffff;
+}
+
+.btn-card-action.btn-view {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    flex: 1.2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.btn-card-action.btn-view:hover {
+    background: linear-gradient(135deg, #059669, #047857) !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+.btn-card-action.btn-dl {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.btn-card-action.btn-dl:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+
+.btn-card-action.btn-del {
+    max-width: 34px;
+    flex: 0 0 34px;
+    padding: 7px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* File Table */
@@ -2014,16 +2088,22 @@ function renderFiles() {
         grid.innerHTML = "";
 
         filesData.forEach(file => {
-            const card = document.createElement("div");
-            card.className = "file-card";
-            const icon = getFileIcon(file.category);
-            const isFav = file.is_favorite ? "active" : "";
+            const ext = file.file_name.toLowerCase().split('.').pop();
+            const isImage = file.category === "images" || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'].includes(ext);
 
             card.innerHTML = `
-                <div class="card-top">
-                    <span class="card-icon">${icon}</span>
+                <div class="card-top" style="margin-bottom: ${isImage ? '6px' : '12px'};">
+                    <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">
+                        ${isImage ? '🖼️ រូបភាព' : icon}
+                    </span>
                     <button class="card-star ${isFav}" title="Favorite">★</button>
                 </div>
+                ${isImage ? `
+                    <div class="card-media-preview" title="ចុចដើម្បីបើកមើល (Click to preview)">
+                        <img src="/api/view/${file.id}" alt="${file.file_name}" class="card-thumb-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <span class="card-thumb-fallback" style="display: none;">${icon}</span>
+                    </div>
+                ` : ''}
                 <div class="card-name" title="${file.file_name}">${file.file_name}</div>
                 <div class="card-meta">
                     <span>${formatSize(file.file_size)}</span>
@@ -2031,16 +2111,16 @@ function renderFiles() {
                 </div>
                 <div class="card-actions">
                     ${!file.is_trash ? `
-                        <button class="btn-card-action btn-view" style="background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; font-weight: 600; padding: 6px 10px;" title="${currentLang === 'km' ? 'បើកមើល' : 'View'}">
+                        <button class="btn-card-action btn-view" title="${currentLang === 'km' ? 'បើកមើល' : 'View'}">
                             👁️ ${currentLang === 'km' ? 'បើកមើល' : 'View'}
                         </button>
-                        <button class="btn-card-action btn-dl" style="background: linear-gradient(135deg, #2563eb, #0284c7); color: #ffffff; font-weight: 600; padding: 6px 10px;" title="${i18n[currentLang].download}">
-                            📥
+                        <button class="btn-card-action btn-dl" title="${i18n[currentLang].download}">
+                            📥 ${currentLang === 'km' ? 'ទាញយក' : 'Download'}
                         </button>
-                        <button class="btn-card-action btn-del" style="max-width: 36px;" title="${i18n[currentLang].delete}">🗑️</button>
+                        <button class="btn-card-action btn-del" title="${i18n[currentLang].delete}">🗑️</button>
                     ` : `
                         <button class="btn-card-action btn-restore" title="${i18n[currentLang].restore}">♻️ ${i18n[currentLang].restore}</button>
-                        <button class="btn-card-action btn-perm" style="max-width: 36px; color: #f43f5e;" title="${i18n[currentLang].permanent}">❌</button>
+                        <button class="btn-card-action btn-perm" style="color: #f43f5e;" title="${i18n[currentLang].permanent}">❌</button>
                     `}
                 </div>
             `;
@@ -2488,17 +2568,72 @@ def list_files():
     )
     return jsonify({"success": True, "files": files})
 
+def backup_database_to_telegram():
+    try:
+        from config import DB_PATH
+        s = load_settings()
+        tok = s.get("telegram_bot_token")
+        cid = s.get("telegram_chat_id")
+        if not tok or not cid or not DB_PATH.exists(): return
+        with open(DB_PATH, "rb") as f:
+            data_bytes = f.read()
+        res = requests.post(
+            f"https://api.telegram.org/bot{tok}/sendDocument",
+            data={"chat_id": cid, "caption": "📦 #CLOUD_METADATA_SYNC_V1"},
+            files={"document": ("cloud_storage.db", io.BytesIO(data_bytes))},
+            timeout=30
+        ).json()
+        if res.get("ok"):
+            mid = res["result"]["message_id"]
+            requests.post(
+                f"https://api.telegram.org/bot{tok}/pinChatMessage",
+                data={"chat_id": cid, "message_id": mid, "disable_notification": True},
+                timeout=10
+            )
+    except Exception as err:
+        print(f"Sync backup error: {err}")
+
+def restore_database_from_telegram():
+    try:
+        from config import DB_PATH
+        s = load_settings()
+        tok = s.get("telegram_bot_token")
+        cid = s.get("telegram_chat_id")
+        if not tok or not cid: return
+        res = requests.get(f"https://api.telegram.org/bot{tok}/getChat?chat_id={cid}", timeout=15).json()
+        if not res.get("ok"): return
+        pinned = res.get("result", {}).get("pinned_message", {})
+        doc = pinned.get("document", {})
+        if doc.get("file_name") == "cloud_storage.db":
+            fid = doc.get("file_id")
+            f_info = requests.get(f"https://api.telegram.org/bot{tok}/getFile?file_id={fid}", timeout=15).json()
+            if f_info.get("ok"):
+                f_path = f_info["result"]["file_path"]
+                down_url = f"https://api.telegram.org/file/bot{tok}/{f_path}"
+                db_data = requests.get(down_url, timeout=30).content
+                if len(db_data) > 0:
+                    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+                    with open(DB_PATH, "wb") as f:
+                        f.write(db_data)
+                    print("Restored cloud_storage.db from Telegram pinned backup successfully!")
+    except Exception as err:
+        print(f"Sync restore error: {err}")
+
 @app.route("/api/upload", methods=["POST"])
 def upload_file():
     if "file" not in request.files: return jsonify({"success": False, "error": "No file"}), 400
     uploaded_file = request.files["file"]
     if not uploaded_file.filename: return jsonify({"success": False, "error": "Empty filename"}), 400
+    clean_name = uploaded_file.filename
+    if clean_name.startswith("up_"):
+        clean_name = clean_name[3:]
     drive_owner = request.form.get("drive", "buntha")
-    temp_path = CACHE_DIR / f"up_{uploaded_file.filename}"
+    temp_path = CACHE_DIR / f"tmp_{int(time.time())}_{clean_name}"
     uploaded_file.save(str(temp_path))
     try:
-        res = engine.upload_file(str(temp_path), drive_owner=drive_owner)
+        res = engine.upload_file(str(temp_path), drive_owner=drive_owner, custom_filename=clean_name)
         if temp_path.exists(): temp_path.unlink()
+        backup_database_to_telegram()
         return jsonify({"success": True, "file": res})
     except Exception as e:
         if temp_path.exists(): temp_path.unlink()
@@ -2586,11 +2721,15 @@ def restore_file(file_id):
 
 @app.route("/api/delete-permanent/<int:file_id>", methods=["DELETE"])
 def delete_perm(file_id):
-    return jsonify({"success": True, "file": database.delete_permanently(file_id)})
+    res = database.delete_permanently(file_id)
+    backup_database_to_telegram()
+    return jsonify({"success": True, "file": res})
 
 @app.route("/api/empty-trash", methods=["POST"])
 def empty_trash_route():
-    return jsonify({"success": True, "count": len(database.empty_trash())})
+    res = database.empty_trash()
+    backup_database_to_telegram()
+    return jsonify({"success": True, "count": len(res)})
 
 @app.route("/api/settings", methods=["GET", "POST"])
 def settings_route():
@@ -2612,6 +2751,13 @@ def test_tg_route():
 @app.route("/api/locales/<lang>", methods=["GET"])
 def locales_route(lang):
     return jsonify(STRINGS.get(lang, STRINGS["km"]))
+
+# Restore DB from pinned Telegram backup on startup
+try:
+    restore_database_from_telegram()
+except Exception as e:
+    print(f"Startup restore error: {e}")
+database.init_db()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
