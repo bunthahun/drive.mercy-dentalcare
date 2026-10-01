@@ -37,7 +37,8 @@ def init_db():
         cursor.execute("ALTER TABLE files ADD COLUMN drive_owner TEXT DEFAULT 'buntha'")
     except sqlite3.OperationalError:
         pass
-    cursor.execute("UPDATE files SET file_name = SUBSTR(file_name, 4) WHERE file_name LIKE 'up_%'")
+    cursor.execute("UPDATE files SET file_name = SUBSTR(file_name, 4) WHERE SUBSTR(file_name, 1, 3) = 'up_'")
+    cursor.execute("UPDATE files SET file_name = 'upload_welcome_test.txt' WHERE file_name = 'oad_welcome_test.txt'")
     conn.commit()
     conn.close()
 
