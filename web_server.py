@@ -433,6 +433,84 @@ body {
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
+/* Windows Style Drive Item */
+.nav-item.drive-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    background: rgba(30, 41, 59, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s ease;
+}
+
+.nav-item.drive-item:hover {
+    background: rgba(30, 41, 59, 0.85);
+    border-color: rgba(59, 130, 246, 0.4);
+}
+
+.nav-item.drive-item.active {
+    background: rgba(37, 99, 235, 0.16);
+    border: 1px solid #3b82f6;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.22);
+}
+
+.drive-icon-container {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.drive-img-icon {
+    width: 44px;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45));
+}
+
+.drive-details {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.drive-label {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.3px;
+}
+
+.drive-bar-wrapper {
+    width: 100%;
+    height: 13px;
+    background-color: #d1d5db;
+    border: 1px solid #6b7280;
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.drive-bar-fill {
+    height: 100%;
+    background-color: #2563eb;
+    width: 1%;
+    transition: width 0.3s ease;
+}
+
+.drive-subtext {
+    font-size: 10.5px;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .nav-icon {
     font-size: 16px;
 }
@@ -1004,9 +1082,17 @@ body {
 
             <!-- Categories Menu -->
             <nav class="nav-menu">
-                <button class="nav-item active" data-cat="all">
-                    <span class="nav-icon">📁</span>
-                    <span class="nav-label" id="tAllFiles">ឯកសារទាំងអស់</span>
+                <button class="nav-item active drive-item" data-cat="all">
+                    <div class="drive-icon-container">
+                        <img src="data:image/png;base64,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" alt="Drive" class="drive-img-icon">
+                    </div>
+                    <div class="drive-details">
+                        <div class="drive-label">HUN BUNTHA</div>
+                        <div class="drive-bar-wrapper">
+                            <div class="drive-bar-fill" id="driveNavFill" style="width: 1%;"></div>
+                        </div>
+                        <div class="drive-subtext" id="driveNavSub">1000 TB free of 1000 TB</div>
+                    </div>
                 </button>
                 <button class="nav-item" data-cat="trash">
                     <span class="nav-icon">🗑️</span>
@@ -1366,6 +1452,15 @@ async function fetchStats() {
         if (statusBtn && statusTxt) {
             statusBtn.className = "status-pill connected";
             statusTxt.textContent = "Mercy Dental Care";
+        }
+
+        const driveNavFill = document.getElementById("driveNavFill");
+        const driveNavSub = document.getElementById("driveNavSub");
+        if (driveNavFill) driveNavFill.style.width = `${pct}%`;
+        if (driveNavSub) {
+            driveNavSub.textContent = currentLang === "km" 
+                ? `នៅសល់ ${freeTb.toFixed(2)} TB នៃ 1,000 TB`
+                : `${freeTb.toFixed(2)} TB free of 1,000 TB`;
         }
     } catch (e) {
         console.error("Error fetching stats:", e);
