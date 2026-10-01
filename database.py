@@ -37,6 +37,21 @@ def init_db():
         cursor.execute("ALTER TABLE files ADD COLUMN drive_owner TEXT DEFAULT 'buntha'")
     except sqlite3.OperationalError:
         pass
+    try:
+        cursor.execute("ALTER TABLE files ADD COLUMN folder_id INTEGER DEFAULT NULL")
+    except sqlite3.OperationalError:
+        pass
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS folders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            folder_name TEXT NOT NULL,
+            parent_id INTEGER DEFAULT NULL,
+            drive_owner TEXT DEFAULT 'buntha',
+            is_trash INTEGER DEFAULT 0,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )
+    """)
     cursor.execute("UPDATE files SET file_name = SUBSTR(file_name, 4) WHERE SUBSTR(file_name, 1, 3) = 'up_'")
     cursor.execute("UPDATE files SET file_name = 'upload_welcome_test.txt' WHERE file_name = 'oad_welcome_test.txt'")
     conn.commit()
@@ -72,7 +87,8 @@ def add_file(
     cloud_backend: str,
     chunks: List[Dict[str, Any]],
     category: Optional[str] = None,
-    drive_owner: str = "buntha"
+    drive_owner: str = "buntha",
+    folder_id: Optional[int] = None
 ) -> int:
     if file_name.startswith("up_"):
         file_name = file_name[3:]
@@ -86,8 +102,8 @@ def add_file(
         INSERT INTO files (
             file_name, file_size, mime_type, category, sha256,
             is_encrypted, is_favorite, is_trash, cloud_backend,
-            chunk_count, chunks_data, drive_owner, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?, ?)
+            chunk_count, chunks_data, drive_owner, folder_id, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?, ?, ?)
     """, (
         file_name,
         file_size,
@@ -99,6 +115,7 @@ def add_file(
         len(chunks),
         json.dumps(chunks),
         drive_owner,
+        folder_id,
         now,
         now
     ))
@@ -107,12 +124,74 @@ def add_file(
     conn.close()
     return file_id
 
+def create_folder(folder_name: str, drive_owner: str = "buntha", parent_id: Optional[int] = None) -> int:
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO folders (folder_name, parent_id, drive_owner, is_trash, created_at, updated_at)
+        VALUES (?, ?, ?, 0, ?, ?)
+    """, (folder_name, parent_id, drive_owner, now, now))
+    conn.commit()
+    f_id = cursor.lastrowid
+    conn.close()
+    return f_id
+
+def get_folders(drive_owner: str = "buntha", parent_id: Optional[int] = None, is_trash: bool = False) -> List[Dict[str, Any]]:
+    conn = get_connection()
+    cursor = conn.cursor()
+    query = "SELECT * FROM folders WHERE is_trash = ?"
+    params: List[Any] = [1 if is_trash else 0]
+    if drive_owner == "buntha":
+        query += " AND (drive_owner = 'buntha' OR drive_owner IS NULL)"
+    else:
+        query += " AND drive_owner = ?"
+        params.append(drive_owner)
+    
+    if parent_id is not None:
+        query += " AND parent_id = ?"
+        params.append(parent_id)
+    else:
+        query += " AND (parent_id IS NULL OR parent_id = 0)"
+        
+    query += " ORDER BY folder_name ASC"
+    cursor.execute(query, params)
+    rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    return rows
+
+def rename_folder(folder_id: int, new_name: str) -> bool:
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE folders SET folder_name = ? WHERE id = ?", (new_name, folder_id))
+    conn.commit()
+    conn.close()
+    return True
+
+def delete_folder(folder_id: int) -> bool:
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM folders WHERE id = ?", (folder_id,))
+    cursor.execute("DELETE FROM files WHERE folder_id = ?", (folder_id,))
+    conn.commit()
+    conn.close()
+    return True
+
+def rename_file(file_id: int, new_name: str) -> bool:
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE files SET file_name = ? WHERE id = ?", (new_name, file_id))
+    conn.commit()
+    conn.close()
+    return True
+
 def get_files(
     category: Optional[str] = None,
     drive_owner: Optional[str] = None,
     search_query: Optional[str] = None,
     is_trash: bool = False,
     is_favorite: Optional[bool] = None,
+    folder_id: Optional[int] = None,
     sort_by: str = "date",
     sort_desc: bool = True
 ) -> List[Dict[str, Any]]:
@@ -136,6 +215,13 @@ def get_files(
     if is_favorite is not None and not is_trash:
         query += " AND is_favorite = ?"
         params.append(1 if is_favorite else 0)
+
+    if not is_trash and not search_query and category not in ["favorites", "trash"]:
+        if folder_id is not None:
+            query += " AND folder_id = ?"
+            params.append(folder_id)
+        else:
+            query += " AND (folder_id IS NULL OR folder_id = 0)"
         
     if search_query:
         query += " AND file_name LIKE ?"
