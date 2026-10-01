@@ -2088,6 +2088,10 @@ function renderFiles() {
         grid.innerHTML = "";
 
         filesData.forEach(file => {
+            const card = document.createElement("div");
+            card.className = "file-card";
+            const icon = getFileIcon(file.category);
+            const isFav = file.is_favorite ? "active" : "";
             const ext = file.file_name.toLowerCase().split('.').pop();
             const isImage = file.category === "images" || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'].includes(ext);
 
