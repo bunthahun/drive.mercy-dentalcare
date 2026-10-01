@@ -37,6 +37,7 @@ def init_db():
         cursor.execute("ALTER TABLE files ADD COLUMN drive_owner TEXT DEFAULT 'buntha'")
     except sqlite3.OperationalError:
         pass
+    cursor.execute("UPDATE files SET file_name = SUBSTR(file_name, 4) WHERE file_name LIKE 'up_%'")
     conn.commit()
     conn.close()
 
@@ -72,6 +73,8 @@ def add_file(
     category: Optional[str] = None,
     drive_owner: str = "buntha"
 ) -> int:
+    if file_name.startswith("up_"):
+        file_name = file_name[3:]
     if not category:
         category = categorize_file(file_name)
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
