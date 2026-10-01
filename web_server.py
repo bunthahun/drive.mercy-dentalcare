@@ -154,7 +154,7 @@ class StorageEngine:
     def get_backend_name(self):
         return "Telegram 1000TB Cloud" if self.is_telegram else "Local Storage Node"
 
-    def upload_file(self, local_path: str, drive_owner: str = "buntha", custom_filename: str = None):
+    def upload_file(self, local_path: str, drive_owner: str = "buntha", custom_filename: str = None, folder_id: int = None):
         p = Path(local_path)
         file_size = p.stat().st_size
         file_name = custom_filename or p.name
@@ -202,7 +202,8 @@ class StorageEngine:
             is_encrypted=enc_enabled,
             cloud_backend=cloud_type,
             chunks=chunks_info,
-            drive_owner=drive_owner
+            drive_owner=drive_owner,
+            folder_id=folder_id
         )
         return {"id": file_db_id, "file_name": file_name, "file_size": file_size, "chunks_count": len(chunks_info)}
 
@@ -1427,6 +1428,254 @@ body {
     }
 }
 
+/* ==========================================================================
+   Windows 11 Address Bar & Breadcrumbs
+   ========================================================================== */
+.address-bar-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(17, 24, 39, 0.7);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    margin-bottom: 16px;
+    backdrop-filter: blur(10px);
+}
+
+.breadcrumbs-trail {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.breadcrumb-item {
+    background: transparent;
+    border: none;
+    color: #cbd5e1;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.breadcrumb-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #38bdf8;
+}
+
+.breadcrumb-item.active {
+    color: #ffffff;
+    font-weight: 600;
+    background: rgba(56, 189, 248, 0.12);
+}
+
+.breadcrumb-separator {
+    color: #64748b;
+    font-size: 14px;
+    user-select: none;
+}
+
+.btn-new-folder-action {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--card-border);
+    color: #f8fafc;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.btn-new-folder-action:hover {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: #38bdf8;
+    color: #38bdf8;
+    transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   Folder Grid & Folder Card (Windows 11 Explorer Style)
+   ========================================================================== */
+.folder-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.folder-card {
+    background: rgba(24, 32, 50, 0.7);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    position: relative;
+}
+
+.folder-card:hover {
+    background: rgba(38, 49, 75, 0.9);
+    border-color: #38bdf8;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 12px rgba(56, 189, 248, 0.2);
+}
+
+.folder-icon {
+    font-size: 26px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    flex-shrink: 0;
+}
+
+.folder-details {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.folder-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #f1f5f9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.folder-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* ==========================================================================
+   Windows 11 Acrylic Context Menu
+   ========================================================================== */
+.win-context-menu {
+    position: fixed;
+    z-index: 99999;
+    min-width: 220px;
+    background: rgba(30, 36, 50, 0.96);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 6px;
+    animation: winContextMenuIn 0.12s cubic-bezier(0, 0, 0.2, 1);
+    font-family: 'Kantumruy Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+@keyframes winContextMenuIn {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.win-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: #e2e8f0;
+    font-size: 13px;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+
+.win-menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.win-item-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.win-item-icon {
+    font-size: 15px;
+    width: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.win-icon-plus {
+    font-size: 18px;
+    line-height: 1;
+    color: #38bdf8;
+}
+
+.win-item-label {
+    font-weight: 500;
+}
+
+.win-item-arrow {
+    font-size: 16px;
+    color: #94a3b8;
+    margin-left: 12px;
+}
+
+.win-menu-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 4px 6px;
+}
+
+.win-menu-item.win-danger:hover {
+    background: rgba(244, 63, 94, 0.2);
+    color: #fb7185;
+}
+
+/* Submenu Flyout (Matches Windows 11 screenshot: New > Folder) */
+.win-submenu {
+    position: absolute;
+    left: calc(100% + 4px);
+    top: -6px;
+    min-width: 170px;
+    background: rgba(30, 36, 50, 0.98);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+    border-radius: 10px;
+    padding: 6px;
+    display: none;
+    z-index: 100000;
+}
+
+.has-submenu:hover .win-submenu,
+.has-submenu.open .win-submenu {
+    display: block;
+    animation: winContextMenuIn 0.12s cubic-bezier(0, 0, 0.2, 1);
+}
+
 </style>
 </head>
 <body>
@@ -1572,12 +1821,31 @@ body {
                     </div>
                 </div>
 
+                <!-- Address Bar / Breadcrumbs -->
+                <div class="address-bar-bar" id="addressBarBar">
+                    <div class="breadcrumbs-trail" id="breadcrumbsTrail">
+                        <button class="breadcrumb-item root" id="crumbRoot" title="Root Drive">
+                            <span class="crumb-icon">💾</span>
+                            <span id="crumbRootName">HUN BUNTHA</span>
+                        </button>
+                    </div>
+                    <div class="address-actions">
+                        <button class="btn-new-folder-action" id="btnNewFolderTop" title="បង្កើតថតថ្មី (New Folder)">
+                            <span>📁➕</span>
+                            <span>បង្កើតថតថ្មី (New Folder)</span>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Empty State -->
                 <div class="empty-state" id="emptyState" style="display: none;">
                     <div class="empty-icon">☁️</div>
                     <h3 id="tNoFiles">មិនទាន់មានឯកសារនៅឡើយទេ</h3>
-                    <p class="empty-hint">អូសទម្លាក់ (Drag & Drop) ឯកសារមកទីនេះ ឬចុច "ផ្ទុកឯកសារឡើង"</p>
+                    <p class="empty-hint">ចុចកណ្ដុរស្ដាំ (Right-Click) ដើម្បីបង្កើតថតថ្មី ឬទាញទម្លាក់ឯកសារមកទីនេះ</p>
                 </div>
+
+                <!-- Folders Grid -->
+                <div class="folder-grid" id="folderGrid" style="display: none;"></div>
 
                 <!-- Grid View -->
                 <div class="file-grid" id="fileGrid"></div>
@@ -1675,6 +1943,109 @@ body {
         </div>
     </div>
 
+    <!-- Windows 11 Context Menu: Background / Empty Area -->
+    <div class="win-context-menu" id="bgContextMenu" style="display: none;">
+        <div class="win-menu-item has-submenu" id="cmenuNewGroup">
+            <div class="win-item-left">
+                <span class="win-item-icon win-icon-plus">⊕</span>
+                <span class="win-item-label">New</span>
+            </div>
+            <span class="win-item-arrow">›</span>
+            <!-- Submenu matching Windows 11 screenshot -->
+            <div class="win-submenu">
+                <div class="win-menu-item" id="cmenuNewFolder">
+                    <div class="win-item-left">
+                        <span class="win-item-icon">📁</span>
+                        <span class="win-item-label">Folder</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="win-menu-divider"></div>
+        <div class="win-menu-item" id="cmenuUpload">
+            <div class="win-item-left">
+                <span class="win-item-icon">📤</span>
+                <span class="win-item-label">Upload Files (ផ្ទុកឯកសារ)</span>
+            </div>
+        </div>
+        <div class="win-menu-item" id="cmenuRefresh">
+            <div class="win-item-left">
+                <span class="win-item-icon">🔄</span>
+                <span class="win-item-label">Refresh (ផ្ទុកឡើងវិញ)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Windows 11 Context Menu: Folder Item -->
+    <div class="win-context-menu" id="folderContextMenu" style="display: none;">
+        <div class="win-menu-item" id="fcmenuOpen">
+            <div class="win-item-left">
+                <span class="win-item-icon">📂</span>
+                <span class="win-item-label">Open (បើក)</span>
+            </div>
+        </div>
+        <div class="win-menu-item" id="fcmenuRename">
+            <div class="win-item-left">
+                <span class="win-item-icon">✏️</span>
+                <span class="win-item-label">Rename (ប្តូរឈ្មោះ)</span>
+            </div>
+        </div>
+        <div class="win-menu-divider"></div>
+        <div class="win-menu-item win-danger" id="fcmenuDelete">
+            <div class="win-item-left">
+                <span class="win-item-icon">🗑️</span>
+                <span class="win-item-label">Delete (លុបថត)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Windows 11 Context Menu: File Item -->
+    <div class="win-context-menu" id="fileContextMenu" style="display: none;">
+        <div class="win-menu-item" id="filecmenuView">
+            <div class="win-item-left">
+                <span class="win-item-icon">👁️</span>
+                <span class="win-item-label">View (បើកមើល)</span>
+            </div>
+        </div>
+        <div class="win-menu-item" id="filecmenuDownload">
+            <div class="win-item-left">
+                <span class="win-item-icon">📥</span>
+                <span class="win-item-label">Download (ទាញយក)</span>
+            </div>
+        </div>
+        <div class="win-menu-item" id="filecmenuRename">
+            <div class="win-item-left">
+                <span class="win-item-icon">✏️</span>
+                <span class="win-item-label">Rename (ប្តូរឈ្មោះ)</span>
+            </div>
+        </div>
+        <div class="win-menu-divider"></div>
+        <div class="win-menu-item win-danger" id="filecmenuDelete">
+            <div class="win-item-left">
+                <span class="win-item-icon">🗑️</span>
+                <span class="win-item-label">Delete (លុបឯកសារ)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Folder Name / Rename -->
+    <div class="modal-backdrop" id="promptModal" style="display: none;">
+        <div class="modal-card" style="max-width: 440px;">
+            <div class="modal-header">
+                <h3 id="promptModalTitle">បង្កើតថតថ្មី (New Folder)</h3>
+                <button class="btn-close-modal" id="btnClosePrompt">✕</button>
+            </div>
+            <div class="modal-body" style="padding-top: 15px;">
+                <label id="promptModalLabel" style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px; display: block;">ឈ្មោះថត៖</label>
+                <input type="text" id="promptModalInput" style="width: 100%; padding: 10px 14px; background: rgba(15,23,42,0.8); border: 1px solid var(--card-border); border-radius: 8px; color: #f8fafc; font-size: 14px; outline: none;">
+            </div>
+            <div class="modal-footer" style="margin-top: 15px;">
+                <button class="btn-secondary" id="btnCancelPrompt">បោះបង់</button>
+                <button class="btn-primary" id="btnConfirmPrompt">យល់ព្រម</button>
+            </div>
+        </div>
+    </div>
+
     <script>
 /**
  * 5TB Cloud Storage - Web Application Logic
@@ -1685,6 +2056,10 @@ let currentSearch = "";
 let currentView = "grid";
 let currentLang = "km";
 let filesData = [];
+let foldersData = [];
+let currentFolderId = null;
+let folderStack = [];
+let activeContextItem = null;
 
 // Localization dictionaries
 const i18n = {
@@ -1740,6 +2115,7 @@ const i18n = {
 
 document.addEventListener("DOMContentLoaded", () => {
     initEventListeners();
+    initContextMenuListeners();
     updateCurrentDriveHeader();
     fetchStats();
     loadFiles();
@@ -1752,6 +2128,8 @@ function initEventListeners() {
             document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
             btn.classList.add("active");
             currentCategory = btn.dataset.cat;
+            currentFolderId = null;
+            folderStack = [];
 
             updateCurrentDriveHeader();
             loadFiles();
@@ -2038,14 +2416,106 @@ async function fetchStats() {
 
 async function loadFiles() {
     try {
-        const url = `/api/files?category=${currentCategory}&search=${encodeURIComponent(currentSearch)}`;
+        let url = `/api/files?category=${currentCategory}&search=${encodeURIComponent(currentSearch)}`;
+        if (currentFolderId) {
+            url += `&folder_id=${currentFolderId}`;
+        }
         const res = await fetch(url);
         const data = await res.json();
         filesData = data.files || [];
+        foldersData = data.folders || [];
+        renderBreadcrumbs();
+        renderFolders();
         renderFiles();
     } catch (e) {
         console.error("Error loading files:", e);
     }
+}
+
+function renderBreadcrumbs() {
+    const trail = document.getElementById("breadcrumbsTrail");
+    if (!trail) return;
+    const rootName = currentCategory === "vuochlin" ? "NEANG VUOCHLIN" : (currentCategory === "trash" ? "ធុងសំរាម (Trash)" : "HUN BUNTHA");
+
+    trail.innerHTML = `
+        <button class="breadcrumb-item root ${folderStack.length === 0 ? 'active' : ''}" id="crumbRoot" title="Root Drive">
+            <span class="crumb-icon">${currentCategory === 'trash' ? '🗑️' : '💾'}</span>
+            <span>${rootName}</span>
+        </button>
+    `;
+
+    const crumbRoot = document.getElementById("crumbRoot");
+    if (crumbRoot) {
+        crumbRoot.addEventListener("click", () => {
+            currentFolderId = null;
+            folderStack = [];
+            loadFiles();
+        });
+    }
+
+    folderStack.forEach((crumb, idx) => {
+        const sep = document.createElement("span");
+        sep.className = "breadcrumb-separator";
+        sep.textContent = "›";
+        trail.appendChild(sep);
+
+        const btn = document.createElement("button");
+        btn.className = `breadcrumb-item ${idx === folderStack.length - 1 ? 'active' : ''}`;
+        btn.innerHTML = `<span>📁</span> <span>${crumb.name}</span>`;
+        btn.addEventListener("click", () => {
+            currentFolderId = crumb.id;
+            folderStack = folderStack.slice(0, idx + 1);
+            loadFiles();
+        });
+        trail.appendChild(btn);
+    });
+}
+
+function renderFolders() {
+    const fGrid = document.getElementById("folderGrid");
+    if (!fGrid) return;
+
+    if (!foldersData || foldersData.length === 0) {
+        fGrid.style.display = "none";
+        fGrid.innerHTML = "";
+        return;
+    }
+
+    fGrid.style.display = "grid";
+    fGrid.innerHTML = "";
+
+    foldersData.forEach(folder => {
+        const card = document.createElement("div");
+        card.className = "folder-card";
+        card.dataset.folderId = folder.id;
+        card.dataset.folderName = folder.folder_name;
+
+        card.innerHTML = `
+            <span class="folder-icon">📁</span>
+            <div class="folder-details">
+                <span class="folder-title" title="${folder.folder_name}">${folder.folder_name}</span>
+                <span class="folder-sub">Folder</span>
+            </div>
+        `;
+
+        card.addEventListener("click", () => {
+            openFolder(folder.id, folder.folder_name);
+        });
+
+        card.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showFolderContextMenu(e.clientX, e.clientY, folder);
+        });
+
+        fGrid.appendChild(card);
+    });
+}
+
+function openFolder(folderId, folderName) {
+    currentFolderId = folderId;
+    folderStack.push({ id: folderId, name: folderName });
+    loadFiles();
 }
 
 function getFileIcon(cat) {
@@ -2072,8 +2542,12 @@ function renderFiles() {
     const tableContainer = document.getElementById("fileTableContainer");
     const tbody = document.getElementById("fileTableBody");
     const emptyState = document.getElementById("emptyState");
+    const fGrid = document.getElementById("folderGrid");
 
-    if (filesData.length === 0) {
+    const hasFolders = foldersData && foldersData.length > 0;
+    const hasFiles = filesData && filesData.length > 0;
+
+    if (!hasFiles && !hasFolders) {
         grid.style.display = "none";
         tableContainer.style.display = "none";
         emptyState.style.display = "block";
@@ -2083,7 +2557,7 @@ function renderFiles() {
     emptyState.style.display = "none";
 
     if (currentView === "grid") {
-        grid.style.display = "grid";
+        grid.style.display = hasFiles ? "grid" : "none";
         tableContainer.style.display = "none";
         grid.innerHTML = "";
 
@@ -2135,6 +2609,12 @@ function renderFiles() {
                 if (!file.is_trash) previewFile(file.id);
             });
 
+            card.addEventListener("contextmenu", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                showFileContextMenu(e.clientX, e.clientY, file);
+            });
+
             card.querySelector(".card-star").addEventListener("click", (e) => {
                 e.stopPropagation();
                 toggleFavorite(file.id);
@@ -2172,7 +2652,7 @@ function renderFiles() {
 
     } else {
         grid.style.display = "none";
-        tableContainer.style.display = "block";
+        tableContainer.style.display = hasFiles ? "block" : "none";
         tbody.innerHTML = "";
 
         filesData.forEach(file => {
@@ -2183,6 +2663,12 @@ function renderFiles() {
                 if (e.target.tagName !== 'BUTTON' && !file.is_trash) {
                     previewFile(file.id);
                 }
+            });
+
+            tr.addEventListener("contextmenu", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                showFileContextMenu(e.clientX, e.clientY, file);
             });
 
             tr.innerHTML = `
@@ -2233,6 +2719,9 @@ async function handleFilesUpload(files, targetDrive) {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("drive", driveToUse);
+        if (currentFolderId) {
+            formData.append("folder_id", currentFolderId);
+        }
 
         try {
             const fill = item.querySelector(".progress-bar-fill");
@@ -2258,11 +2747,15 @@ async function handleFilesUpload(files, targetDrive) {
         }
     }
 
-    // Switch view to the drive where files were saved
-    currentCategory = driveToUse;
-    document.querySelectorAll(".nav-item").forEach(b => {
-        b.classList.toggle("active", b.dataset.cat === driveToUse);
-    });
+    // If uploading to different drive, switch to it
+    if (currentCategory !== driveToUse) {
+        currentCategory = driveToUse;
+        currentFolderId = null;
+        folderStack = [];
+        document.querySelectorAll(".nav-item").forEach(b => {
+            b.classList.toggle("active", b.dataset.cat === driveToUse);
+        });
+    }
     updateCurrentDriveHeader();
     fetchStats();
     loadFiles();
@@ -2502,6 +2995,323 @@ function applyLanguage() {
     renderFiles();
 }
 
+/* ==========================================================================
+   Windows 11 Context Menus & Folder Handlers
+   ========================================================================== */
+function initContextMenuListeners() {
+    const dropZone = document.getElementById("dropZone");
+
+    // Right Click on dropZone (empty area / viewport)
+    if (dropZone) {
+        dropZone.addEventListener("contextmenu", (e) => {
+            // If right-clicked on an interactive child or folder/file card, ignore here (card handles it)
+            if (e.target.closest(".folder-card") || e.target.closest(".file-card") || e.target.closest("tr") || e.target.closest("button") || e.target.closest("input") || e.target.closest("a")) {
+                return;
+            }
+            e.preventDefault();
+            showBgContextMenu(e.clientX, e.clientY);
+        });
+    }
+
+    // Top New Folder button in address bar
+    const btnNewFolderTop = document.getElementById("btnNewFolderTop");
+    if (btnNewFolderTop) {
+        btnNewFolderTop.addEventListener("click", () => {
+            promptNewFolder();
+        });
+    }
+
+    // Context menu: New > Folder
+    const cmenuNewFolder = document.getElementById("cmenuNewFolder");
+    if (cmenuNewFolder) {
+        cmenuNewFolder.addEventListener("click", () => {
+            promptNewFolder();
+        });
+    }
+
+    // Context menu: Upload
+    const cmenuUpload = document.getElementById("cmenuUpload");
+    if (cmenuUpload) {
+        cmenuUpload.addEventListener("click", () => {
+            hideAllContextMenus();
+            const fileInput = document.getElementById("fileInput");
+            if (fileInput) fileInput.click();
+        });
+    }
+
+    // Context menu: Refresh
+    const cmenuRefresh = document.getElementById("cmenuRefresh");
+    if (cmenuRefresh) {
+        cmenuRefresh.addEventListener("click", () => {
+            hideAllContextMenus();
+            fetchStats();
+            loadFiles();
+        });
+    }
+
+    // Folder Context Menu: Open
+    const fcmenuOpen = document.getElementById("fcmenuOpen");
+    if (fcmenuOpen) {
+        fcmenuOpen.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "folder") {
+                openFolder(activeContextItem.id, activeContextItem.name);
+            }
+        });
+    }
+
+    // Folder Context Menu: Rename
+    const fcmenuRename = document.getElementById("fcmenuRename");
+    if (fcmenuRename) {
+        fcmenuRename.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "folder") {
+                const fId = activeContextItem.id;
+                showPromptModal(
+                    currentLang === "km" ? "ប្តូរឈ្មោះថត (Rename Folder)" : "Rename Folder",
+                    currentLang === "km" ? "ឈ្មោះថតថ្មី៖" : "New Folder Name:",
+                    activeContextItem.name,
+                    async (newName) => {
+                        await fetch("/api/folders/rename", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ folder_id: fId, name: newName })
+                        });
+                        loadFiles();
+                    }
+                );
+            }
+        });
+    }
+
+    // Folder Context Menu: Delete
+    const fcmenuDelete = document.getElementById("fcmenuDelete");
+    if (fcmenuDelete) {
+        fcmenuDelete.addEventListener("click", async () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "folder") {
+                const confirmMsg = currentLang === "km" 
+                    ? `តើអ្នកពិតជាចង់លុបថត "${activeContextItem.name}" និងឯកសារទាំងអស់ក្នុងនោះមែនទេ?`
+                    : `Are you sure you want to delete folder "${activeContextItem.name}" and all its contents?`;
+                if (confirm(confirmMsg)) {
+                    await fetch("/api/folders/delete", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ folder_id: activeContextItem.id })
+                    });
+                    loadFiles();
+                }
+            }
+        });
+    }
+
+    // File Context Menu: View
+    const filecmenuView = document.getElementById("filecmenuView");
+    if (filecmenuView) {
+        filecmenuView.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "file") {
+                previewFile(activeContextItem.id);
+            }
+        });
+    }
+
+    // File Context Menu: Download
+    const filecmenuDownload = document.getElementById("filecmenuDownload");
+    if (filecmenuDownload) {
+        filecmenuDownload.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "file") {
+                downloadFile(activeContextItem.id);
+            }
+        });
+    }
+
+    // File Context Menu: Rename
+    const filecmenuRename = document.getElementById("filecmenuRename");
+    if (filecmenuRename) {
+        filecmenuRename.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "file") {
+                const fId = activeContextItem.id;
+                showPromptModal(
+                    currentLang === "km" ? "ប្តូរឈ្មោះឯកសារ (Rename File)" : "Rename File",
+                    currentLang === "km" ? "ឈ្មោះឯកសារថ្មី៖" : "New File Name:",
+                    activeContextItem.name,
+                    async (newName) => {
+                        await fetch("/api/files/rename", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ file_id: fId, name: newName })
+                        });
+                        loadFiles();
+                    }
+                );
+            }
+        });
+    }
+
+    // File Context Menu: Delete
+    const filecmenuDelete = document.getElementById("filecmenuDelete");
+    if (filecmenuDelete) {
+        filecmenuDelete.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "file") {
+                trashFile(activeContextItem.id);
+            }
+        });
+    }
+
+    // Dismiss context menus on click outside
+    window.addEventListener("click", (e) => {
+        if (!e.target.closest(".win-context-menu")) {
+            hideAllContextMenus();
+        }
+    });
+
+    // Dismiss context menus on Escape key or scroll
+    window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            hideAllContextMenus();
+        }
+    });
+    window.addEventListener("scroll", hideAllContextMenus, true);
+}
+
+function hideAllContextMenus() {
+    const bgMenu = document.getElementById("bgContextMenu");
+    const folderMenu = document.getElementById("folderContextMenu");
+    const fileMenu = document.getElementById("fileContextMenu");
+    if (bgMenu) bgMenu.style.display = "none";
+    if (folderMenu) folderMenu.style.display = "none";
+    if (fileMenu) fileMenu.style.display = "none";
+}
+
+function positionMenu(menu, x, y) {
+    menu.style.display = "block";
+    const rect = menu.getBoundingClientRect();
+    const winWidth = window.innerWidth;
+    const winHeight = window.innerHeight;
+
+    let posX = x;
+    let posY = y;
+
+    if (posX + rect.width > winWidth - 10) {
+        posX = winWidth - rect.width - 10;
+    }
+    if (posY + rect.height > winHeight - 10) {
+        posY = winHeight - rect.height - 10;
+    }
+
+    menu.style.left = `${Math.max(10, posX)}px`;
+    menu.style.top = `${Math.max(10, posY)}px`;
+}
+
+function showBgContextMenu(x, y) {
+    hideAllContextMenus();
+    const menu = document.getElementById("bgContextMenu");
+    if (menu) positionMenu(menu, x, y);
+}
+
+function showFolderContextMenu(x, y, folder) {
+    hideAllContextMenus();
+    activeContextItem = { type: 'folder', id: folder.id, name: folder.folder_name };
+    const menu = document.getElementById("folderContextMenu");
+    if (menu) positionMenu(menu, x, y);
+}
+
+function showFileContextMenu(x, y, file) {
+    hideAllContextMenus();
+    activeContextItem = { type: 'file', id: file.id, name: file.file_name, is_trash: file.is_trash };
+    const menu = document.getElementById("fileContextMenu");
+    if (menu) positionMenu(menu, x, y);
+}
+
+function promptNewFolder() {
+    hideAllContextMenus();
+    showPromptModal(
+        currentLang === "km" ? "បង្កើតថតថ្មី (New Folder)" : "Create New Folder",
+        currentLang === "km" ? "ឈ្មោះថតឯកសារ៖" : "Folder Name:",
+        "New folder",
+        async (folderName) => {
+            const drive = currentCategory === "vuochlin" ? "vuochlin" : "buntha";
+            const res = await fetch("/api/folders/create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: folderName,
+                    drive: drive,
+                    parent_id: currentFolderId
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                loadFiles();
+            }
+        }
+    );
+}
+
+function showPromptModal(title, label, defaultValue, onConfirm) {
+    const modal = document.getElementById("promptModal");
+    const titleEl = document.getElementById("promptModalTitle");
+    const labelEl = document.getElementById("promptModalLabel");
+    const inputEl = document.getElementById("promptModalInput");
+    const confirmBtn = document.getElementById("btnConfirmPrompt");
+    const cancelBtn = document.getElementById("btnCancelPrompt");
+    const closeBtn = document.getElementById("btnClosePrompt");
+
+    if (titleEl) titleEl.textContent = title;
+    if (labelEl) labelEl.textContent = label;
+    if (inputEl) {
+        inputEl.value = defaultValue || "";
+    }
+
+    modal.style.display = "flex";
+    setTimeout(() => {
+        if (inputEl) {
+            inputEl.focus();
+            inputEl.select();
+        }
+    }, 50);
+
+    const handleConfirm = () => {
+        const val = inputEl ? inputEl.value.trim() : "";
+        if (!val) return;
+        modal.style.display = "none";
+        cleanup();
+        onConfirm(val);
+    };
+
+    const handleCancel = () => {
+        modal.style.display = "none";
+        cleanup();
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            handleConfirm();
+        } else if (e.key === "Escape") {
+            e.preventDefault();
+            handleCancel();
+        }
+    };
+
+    function cleanup() {
+        confirmBtn.removeEventListener("click", handleConfirm);
+        cancelBtn.removeEventListener("click", handleCancel);
+        closeBtn.removeEventListener("click", handleCancel);
+        if (inputEl) inputEl.removeEventListener("keydown", handleKeyDown);
+    }
+
+    confirmBtn.addEventListener("click", handleConfirm);
+    cancelBtn.addEventListener("click", handleCancel);
+    closeBtn.addEventListener("click", handleCancel);
+    if (inputEl) inputEl.addEventListener("keydown", handleKeyDown);
+}
+
+
 </script>
 </body>
 </html>
@@ -2549,6 +3359,8 @@ def get_stats():
 def list_files():
     cat = request.args.get("category", "buntha")
     search = request.args.get("search", "").strip()
+    f_id = request.args.get("folder_id")
+    folder_id = int(f_id) if f_id and f_id.isdigit() else None
     is_trash = (cat == "trash")
     is_fav = True if cat == "favorites" else None
     
@@ -2561,16 +3373,21 @@ def list_files():
     else:
         cat_filter = cat
 
+    folders = []
+    if not is_trash and not search and not is_fav and drive_owner:
+        folders = database.get_folders(drive_owner=drive_owner, parent_id=folder_id)
+
     files = database.get_files(
         category=cat_filter,
         drive_owner=drive_owner,
         search_query=search if search else None,
         is_trash=is_trash,
         is_favorite=is_fav,
+        folder_id=folder_id,
         sort_by=request.args.get("sort_by", "date"),
         sort_desc=request.args.get("sort_desc", "true").lower() == "true"
     )
-    return jsonify({"success": True, "files": files})
+    return jsonify({"success": True, "files": files, "folders": folders})
 
 def backup_database_to_telegram():
     try:
@@ -2632,16 +3449,61 @@ def upload_file():
     if clean_name.startswith("up_"):
         clean_name = clean_name[3:]
     drive_owner = request.form.get("drive", "buntha")
+    f_id = request.form.get("folder_id")
+    folder_id = int(f_id) if f_id and f_id.isdigit() else None
     temp_path = CACHE_DIR / f"tmp_{int(time.time())}_{clean_name}"
     uploaded_file.save(str(temp_path))
     try:
-        res = engine.upload_file(str(temp_path), drive_owner=drive_owner, custom_filename=clean_name)
+        res = engine.upload_file(str(temp_path), drive_owner=drive_owner, custom_filename=clean_name, folder_id=folder_id)
         if temp_path.exists(): temp_path.unlink()
         backup_database_to_telegram()
         return jsonify({"success": True, "file": res})
     except Exception as e:
         if temp_path.exists(): temp_path.unlink()
         return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route("/api/folders/create", methods=["POST"])
+def create_folder_route():
+    data = request.json or {}
+    name = (data.get("name") or "New Folder").strip()
+    drive = data.get("drive", "buntha")
+    p_id = data.get("parent_id")
+    parent_id = int(p_id) if p_id is not None and str(p_id).isdigit() else None
+    f_id = database.create_folder(folder_name=name, drive_owner=drive, parent_id=parent_id)
+    backup_database_to_telegram()
+    return jsonify({"success": True, "folder_id": f_id, "folder_name": name})
+
+@app.route("/api/folders/rename", methods=["POST"])
+def rename_folder_route():
+    data = request.json or {}
+    f_id = data.get("folder_id")
+    new_name = (data.get("name") or "").strip()
+    if not f_id or not new_name:
+        return jsonify({"success": False, "error": "Missing params"}), 400
+    database.rename_folder(int(f_id), new_name)
+    backup_database_to_telegram()
+    return jsonify({"success": True})
+
+@app.route("/api/folders/delete", methods=["POST"])
+def delete_folder_route():
+    data = request.json or {}
+    f_id = data.get("folder_id")
+    if not f_id:
+        return jsonify({"success": False, "error": "Folder ID missing"}), 400
+    database.delete_folder(int(f_id))
+    backup_database_to_telegram()
+    return jsonify({"success": True})
+
+@app.route("/api/files/rename", methods=["POST"])
+def rename_file_route():
+    data = request.json or {}
+    file_id = data.get("file_id")
+    new_name = (data.get("name") or "").strip()
+    if not file_id or not new_name:
+        return jsonify({"success": False, "error": "Missing params"}), 400
+    database.rename_file(int(file_id), new_name)
+    backup_database_to_telegram()
+    return jsonify({"success": True})
 
 @app.route("/api/download/<int:file_id>", methods=["GET"])
 def download_file(file_id):
