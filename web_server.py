@@ -1928,6 +1928,801 @@ body.marquee-selecting {
     -webkit-user-select: none !important;
 }
 
+/* ==========================================================================
+   Windows 11 File Explorer Design System (Matching Pictures 1 & 2)
+   ========================================================================== */
+
+.win11-explorer {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: #0d1322;
+    overflow: hidden;
+}
+
+/* Windows 11 Tab Header Bar */
+.win-tabs-bar {
+    height: 40px;
+    background: #0a0f1d;
+    display: flex;
+    align-items: flex-end;
+    padding: 0 12px;
+    gap: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.win-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 8px 8px 0 0;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-bottom: none;
+    transition: all 0.15s ease;
+    max-width: 240px;
+}
+
+.win-tab:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-primary);
+}
+
+.win-tab.active {
+    background: #131b2e;
+    color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.win-tab-icon {
+    font-size: 14px;
+}
+
+.win-tab-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.win-tab-close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 11px;
+    border-radius: 4px;
+    padding: 2px 4px;
+    cursor: pointer;
+    margin-left: 4px;
+}
+
+.win-tab-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+}
+
+.win-tab-new {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    margin-bottom: 4px;
+}
+
+.win-tab-new:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary);
+}
+
+/* Windows 11 Navigation Toolbar & Breadcrumbs Bar */
+.win-nav-bar {
+    height: 44px;
+    background: #131b2e;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.win-nav-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.win-nav-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    width: 30px;
+    height: 30px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.win-nav-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f8fafc;
+}
+
+.win-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+/* Breadcrumbs Address Box */
+.win-address-bar {
+    flex: 1;
+    height: 32px;
+    background: #090e1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    gap: 6px;
+    font-size: 13px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+}
+
+.win-address-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.win-address-icon {
+    font-size: 14px;
+}
+
+.win-crumb-sep {
+    color: var(--text-muted);
+    font-size: 14px;
+    user-select: none;
+}
+
+.win-crumb-static {
+    color: var(--text-secondary);
+    font-size: 12.5px;
+    user-select: none;
+}
+
+.win-breadcrumbs-trail {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.breadcrumb-item {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 12.5px;
+    font-weight: 500;
+    padding: 3px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+}
+
+.breadcrumb-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.breadcrumb-item.active {
+    color: #38bdf8;
+    font-weight: 600;
+}
+
+/* Search Box */
+.win-search-box {
+    width: 250px;
+    height: 32px;
+    background: #090e1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    gap: 8px;
+}
+
+.win-search-box:focus-within {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+}
+
+.win-search-icon {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.win-search-box input {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 12.5px;
+    width: 100%;
+    outline: none;
+}
+
+.win-search-clear {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 12px;
+    display: none;
+}
+
+/* Windows 11 Command Ribbon Bar */
+.win-command-bar {
+    height: 46px;
+    background: #111827;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    gap: 6px;
+    user-select: none;
+}
+
+.win-cmd-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.win-cmd-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    height: 34px;
+    padding: 0 10px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.win-cmd-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.win-cmd-btn.active {
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+}
+
+.win-cmd-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.win-cmd-icon-only {
+    width: 34px;
+    padding: 0;
+    justify-content: center;
+}
+
+.win-cmd-icon {
+    font-size: 14px;
+}
+
+.win-cmd-caret {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-left: 2px;
+}
+
+.win-cmd-divider {
+    width: 1px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0 4px;
+}
+
+/* Command Dropdowns */
+.win-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    background: #162035;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    padding: 6px;
+    min-width: 190px;
+    z-index: 1000;
+    animation: winDdPop 0.15s ease-out;
+}
+
+@keyframes winDdPop {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.win-view-dropdown {
+    min-width: 220px;
+}
+
+.win-dropdown-item {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    height: 34px;
+    padding: 0 10px;
+    border-radius: 5px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.1s ease;
+}
+
+.win-dropdown-item:hover {
+    background: rgba(56, 189, 248, 0.15);
+    color: #ffffff;
+}
+
+.win-dropdown-item.win-danger:hover {
+    background: rgba(244, 63, 94, 0.2);
+    color: #fb7185;
+}
+
+.win-dd-check {
+    width: 18px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #38bdf8;
+    flex-shrink: 0;
+}
+
+.win-dd-icon {
+    font-size: 14px;
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.win-dd-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 4px 6px;
+}
+
+/* ==========================================================================
+   Windows 11 Details Table (Picture 2 Exact Match)
+   ========================================================================== */
+.win-details-container {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: auto;
+    padding: 0 4px 60px 4px;
+}
+
+.win-details-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 2px;
+    font-size: 12.5px;
+    color: var(--text-primary);
+}
+
+.win-details-table thead th {
+    position: sticky;
+    top: 0;
+    background: #0d1322;
+    z-index: 10;
+    padding: 6px 10px;
+    text-align: left;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    user-select: none;
+}
+
+.win-details-table thead th.sortable {
+    cursor: pointer;
+}
+
+.win-details-table thead th.sortable:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: #ffffff;
+}
+
+.th-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sort-arrow {
+    font-size: 10px;
+    color: #38bdf8;
+    opacity: 0.9;
+}
+
+.win-details-table th.col-check,
+.win-details-table td.col-check {
+    width: 32px;
+    text-align: center;
+    padding: 0 4px;
+}
+
+.win-details-table th.col-name { min-width: 250px; }
+.win-details-table th.col-date { width: 170px; }
+.win-details-table th.col-type { width: 180px; }
+.win-details-table th.col-size { width: 110px; text-align: right; }
+.win-details-table td.col-size { text-align: right; }
+.win-details-table th.col-actions { width: 100px; text-align: right; }
+
+.win-details-table tbody tr {
+    height: 32px;
+    transition: background 0.1s ease;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.win-details-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.win-details-table tbody tr.selected {
+    background: rgba(56, 189, 248, 0.18) !important;
+}
+
+.win-details-table tbody tr.drag-target-hover {
+    background: rgba(16, 185, 129, 0.25) !important;
+    outline: 2px dashed #10b981;
+}
+
+.win-details-table td {
+    padding: 4px 10px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    vertical-align: middle;
+}
+
+/* Item Name Cell */
+.item-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 450px;
+}
+
+.win11-folder-icon {
+    flex-shrink: 0;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+}
+
+.item-icon-wrap {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 16px;
+}
+
+.item-name-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.win-checkbox {
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+    accent-color: #38bdf8;
+    opacity: 0.3;
+    transition: opacity 0.15s ease;
+}
+
+.win-details-table tr:hover .win-checkbox,
+.win-checkbox:checked,
+.win-details-table tr.selected .win-checkbox {
+    opacity: 1;
+}
+
+/* Row Action Buttons */
+.row-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.win-details-table tr:hover .row-actions {
+    opacity: 1;
+}
+
+.btn-row-act {
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    color: var(--text-primary);
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.btn-row-act:hover {
+    background: rgba(56, 189, 248, 0.25);
+    color: #38bdf8;
+}
+
+/* ==========================================================================
+   Windows 11 Icon View Modes (Extra-Large, Large, Medium, Small, Tiles, List, Content)
+   ========================================================================== */
+.win-items-view {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+/* Extra Large Icons */
+.win-items-view.view-extra-large {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 20px;
+}
+.win-items-view.view-extra-large .win-item-card {
+    width: 100%;
+    min-height: 170px;
+}
+.win-items-view.view-extra-large .item-icon-box {
+    width: 120px;
+    height: 120px;
+    font-size: 72px;
+}
+.win-items-view.view-extra-large .win11-folder-icon {
+    width: 110px;
+    height: 110px;
+}
+
+/* Large Icons */
+.win-items-view.view-large {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 16px;
+}
+.win-items-view.view-large .win-item-card {
+    width: 100%;
+    min-height: 130px;
+}
+.win-items-view.view-large .item-icon-box {
+    width: 80px;
+    height: 80px;
+    font-size: 48px;
+}
+.win-items-view.view-large .win11-folder-icon {
+    width: 76px;
+    height: 76px;
+}
+
+/* Medium Icons */
+.win-items-view.view-medium {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 14px;
+}
+.win-items-view.view-medium .win-item-card {
+    width: 100%;
+    min-height: 105px;
+}
+.win-items-view.view-medium .item-icon-box {
+    width: 52px;
+    height: 52px;
+    font-size: 34px;
+}
+.win-items-view.view-medium .win11-folder-icon {
+    width: 50px;
+    height: 50px;
+}
+
+/* Small Icons */
+.win-items-view.view-small {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+}
+.win-items-view.view-small .win-item-card {
+    flex-direction: row;
+    height: 36px;
+    padding: 4px 8px;
+    align-items: center;
+    text-align: left;
+}
+.win-items-view.view-small .item-icon-box {
+    width: 26px;
+    height: 26px;
+    font-size: 18px;
+}
+.win-items-view.view-small .win11-folder-icon {
+    width: 24px;
+    height: 24px;
+}
+
+/* List View */
+.win-items-view.view-list {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(auto-fill, 32px);
+    grid-auto-columns: 220px;
+    gap: 4px 12px;
+}
+.win-items-view.view-list .win-item-card {
+    flex-direction: row;
+    height: 32px;
+    padding: 2px 8px;
+    align-items: center;
+    text-align: left;
+}
+.win-items-view.view-list .item-icon-box {
+    width: 20px;
+    height: 20px;
+    font-size: 16px;
+}
+.win-items-view.view-list .win11-folder-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* Tiles View */
+.win-items-view.view-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+}
+.win-items-view.view-tiles .win-item-card {
+    flex-direction: row;
+    height: 58px;
+    padding: 8px 12px;
+    align-items: center;
+    text-align: left;
+    gap: 12px;
+}
+.win-items-view.view-tiles .item-icon-box {
+    width: 42px;
+    height: 42px;
+    font-size: 28px;
+}
+.win-items-view.view-tiles .win11-folder-icon {
+    width: 42px;
+    height: 42px;
+}
+
+/* Content View */
+.win-items-view.view-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.win-items-view.view-content .win-item-card {
+    flex-direction: row;
+    height: 48px;
+    padding: 6px 14px;
+    align-items: center;
+    text-align: left;
+    gap: 16px;
+}
+.win-items-view.view-content .item-icon-box {
+    width: 36px;
+    height: 36px;
+    font-size: 24px;
+}
+.win-items-view.view-content .win11-folder-icon {
+    width: 36px;
+    height: 36px;
+}
+
+/* Common Card Styling in Icon Views */
+.win-item-card {
+    position: relative;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s ease;
+}
+
+.win-item-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.win-item-card.selected {
+    background: rgba(56, 189, 248, 0.18) !important;
+    border-color: #38bdf8 !important;
+}
+
+.win-item-card.drag-target-hover {
+    background: rgba(16, 185, 129, 0.25) !important;
+    border-color: #10b981 !important;
+    transform: scale(1.04);
+}
+
+.item-icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.item-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.item-label-box {
+    margin-top: 6px;
+    text-align: center;
+    width: 100%;
+}
+
+.item-main-title {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-all;
+}
+
+.item-sub-info {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+
 
 </style>
 </head>
@@ -1999,45 +2794,234 @@ body.marquee-selecting {
             </div>
         </aside>
 
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <!-- Top App Bar -->
-            <header class="top-bar">
-                <div class="top-left">
-                    <div class="current-drive-badge" id="currentDriveBadge">
-                        <span class="drive-badge-icon">💽</span>
-                        <span class="drive-badge-name" id="currentDriveTitle">HUN BUNTHA</span>
-                    </div>
-                    <button class="btn-primary" id="btnUploadFile">
-                        <span>📤</span>
-                        <span id="tUploadFile">ផ្ទុកឯកសារឡើង</span>
+        <!-- Main Content Area: Windows 11 File Explorer -->
+        <main class="main-content win11-explorer">
+            <!-- Windows 11 Tab Header Bar -->
+            <div class="win-tabs-bar">
+                <div class="win-tab active" id="activeDriveTab">
+                    <span class="win-tab-icon">📁</span>
+                    <span class="win-tab-title" id="tabDriveTitle">HUN BUNTHA</span>
+                    <button class="win-tab-close" id="btnTabClose" title="Close tab">✕</button>
+                </div>
+                <button class="win-tab-new" id="btnTabNew" title="New tab">➕</button>
+                <div class="win-tab-badge" id="currentDriveBadge" style="display:none;">
+                    <span class="drive-badge-name" id="currentDriveTitle">HUN BUNTHA</span>
+                </div>
+            </div>
+
+            <!-- Windows 11 Navigation Toolbar & Address Bar -->
+            <div class="win-nav-bar">
+                <div class="win-nav-controls">
+                    <button class="win-nav-btn" id="btnNavBack" title="Back (ថយក្រោយ)" disabled>
+                        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/></svg>
                     </button>
-                    <input type="file" id="fileInput" multiple style="display: none;">
-                    
-                    <button class="btn-danger" id="btnEmptyTrash" style="display: none;">
-                        <span>🗑️</span>
-                        <span id="tEmptyTrash">សម្អាតធុងសំរាម</span>
+                    <button class="win-nav-btn" id="btnNavForward" title="Forward (ទៅមុខ)" disabled>
+                        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/></svg>
+                    </button>
+                    <button class="win-nav-btn" id="btnNavUp" title="Up to parent folder (ឡើងមួយកម្រិត)">
+                        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M7.646 4.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 5.707l-5.646 5.647a.5.5 0 0 1-.708-.708l6-6z"/></svg>
+                    </button>
+                    <button class="win-nav-btn" id="btnRefresh" title="Refresh (ផ្ទុកឡើងវិញ)">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg>
                     </button>
                 </div>
 
-                <div class="top-center">
-                    <div class="search-box">
-                        <span class="search-icon">🔍</span>
-                        <input type="text" id="searchInput" placeholder="ស្វែងរកឯកសារតាមឈ្មោះ...">
-                        <button class="search-clear" id="searchClear">✕</button>
+                <!-- Windows 11 Breadcrumbs Address Bar -->
+                <div class="win-address-bar" id="winAddressBar">
+                    <span class="win-address-icon">🖥️</span>
+                    <span class="win-crumb-sep">›</span>
+                    <span class="win-crumb-static">This PC</span>
+                    <span class="win-crumb-sep">›</span>
+                    <div class="win-breadcrumbs-trail" id="breadcrumbsTrail">
+                        <button class="breadcrumb-item root" id="crumbRoot" title="Root Drive">
+                            <span class="crumb-icon">💾</span>
+                            <span id="crumbRootName">HUN BUNTHA</span>
+                        </button>
                     </div>
                 </div>
 
-                <div class="top-right">
-                    <div class="view-toggles">
-                        <button class="view-btn active" id="btnGridView" title="Grid View">⊞</button>
-                        <button class="view-btn" id="btnListView" title="List View">≡</button>
-                    </div>
-                    <button class="btn-icon" id="btnRefresh" title="Refresh">🔄</button>
+                <!-- Windows 11 Search Box -->
+                <div class="win-search-box">
+                    <span class="win-search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="ស្វែងរកក្នុង Drive...">
+                    <button class="win-search-clear" id="searchClear">✕</button>
                 </div>
-            </header>
+            </div>
 
-            <!-- Drag & Drop Zone Area -->
+            <!-- Windows 11 Command Ribbon Bar (matching user's pictures) -->
+            <div class="win-command-bar">
+                <!-- New Dropdown -->
+                <div class="win-cmd-group">
+                    <button class="win-cmd-btn win-btn-dropdown" id="btnWinNew" title="New (បង្កើតថ្មី)">
+                        <span class="win-cmd-icon">⊕</span>
+                        <span>New</span>
+                        <span class="win-cmd-caret">˅</span>
+                    </button>
+                    <div class="win-dropdown-menu" id="menuWinNew" style="display: none;">
+                        <button class="win-dropdown-item" id="btnMenuNewFolder">
+                            <span class="win-dd-icon">📁</span>
+                            <span>Folder (បង្កើតថត)</span>
+                        </button>
+                        <button class="win-dropdown-item" id="btnMenuUploadFile">
+                            <span class="win-dd-icon">📤</span>
+                            <span>Upload files (ផ្ទុកឯកសារឡើង)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="win-cmd-divider"></div>
+
+                <!-- Action icons (Cut, Copy, Rename, Delete) -->
+                <div class="win-cmd-group win-cmd-actions">
+                    <button class="win-cmd-btn win-cmd-icon-only" id="btnRibbonCut" title="Cut / Move (ផ្លាស់ទី)">
+                        <span class="win-cmd-icon">✂️</span>
+                    </button>
+                    <button class="win-cmd-btn win-cmd-icon-only" id="btnRibbonCopy" title="Copy (ចម្លង)">
+                        <span class="win-cmd-icon">📄</span>
+                    </button>
+                    <button class="win-cmd-btn win-cmd-icon-only" id="btnRibbonRename" title="Rename (ប្តូរឈ្មោះ)">
+                        <span class="win-cmd-icon">✏️</span>
+                    </button>
+                    <button class="win-cmd-btn win-cmd-icon-only" id="btnRibbonDelete" title="Delete (លុប)">
+                        <span class="win-cmd-icon">🗑️</span>
+                    </button>
+                </div>
+
+                <div class="win-cmd-divider"></div>
+
+                <!-- Sort Dropdown -->
+                <div class="win-cmd-group">
+                    <button class="win-cmd-btn win-btn-dropdown" id="btnWinSort" title="Sort (រៀបលំដាប់)">
+                        <span class="win-cmd-icon">⇅</span>
+                        <span>Sort</span>
+                        <span class="win-cmd-caret">˅</span>
+                    </button>
+                    <div class="win-dropdown-menu" id="menuWinSort" style="display: none;">
+                        <button class="win-dropdown-item" data-sort="name">
+                            <span class="win-dd-check" id="chkSortName">✓</span>
+                            <span>Name (ឈ្មោះ)</span>
+                        </button>
+                        <button class="win-dropdown-item" data-sort="date">
+                            <span class="win-dd-check" id="chkSortDate"></span>
+                            <span>Date modified (កាលបរិច្ឆេទ)</span>
+                        </button>
+                        <button class="win-dropdown-item" data-sort="type">
+                            <span class="win-dd-check" id="chkSortType"></span>
+                            <span>Type (ប្រភេទ)</span>
+                        </button>
+                        <button class="win-dropdown-item" data-sort="size">
+                            <span class="win-dd-check" id="chkSortSize"></span>
+                            <span>Size (ទំហំ)</span>
+                        </button>
+                        <div class="win-dd-divider"></div>
+                        <button class="win-dropdown-item" data-order="asc">
+                            <span class="win-dd-check" id="chkOrderAsc">✓</span>
+                            <span>Ascending (ពីតូចទៅធំ)</span>
+                        </button>
+                        <button class="win-dropdown-item" data-order="desc">
+                            <span class="win-dd-check" id="chkOrderDesc"></span>
+                            <span>Descending (ពីធំទៅតូច)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- View Dropdown (EXACT MATCH TO PICTURE 1) -->
+                <div class="win-cmd-group">
+                    <button class="win-cmd-btn win-btn-dropdown active" id="btnWinView" title="View (ទិដ្ឋភាព)">
+                        <span class="win-cmd-icon">≡</span>
+                        <span>View</span>
+                        <span class="win-cmd-caret">˅</span>
+                    </button>
+                    <div class="win-dropdown-menu win-view-dropdown" id="menuWinView" style="display: none;">
+                        <button class="win-dropdown-item" data-view="extra-large">
+                            <span class="win-dd-check" id="chkViewExtraLarge"></span>
+                            <span class="win-dd-icon">🔲</span>
+                            <span>Extra large icons</span>
+                        </button>
+                        <button class="win-dropdown-item" data-view="large">
+                            <span class="win-dd-check" id="chkViewLarge"></span>
+                            <span class="win-dd-icon">🔲</span>
+                            <span>Large icons</span>
+                        </button>
+                        <button class="win-dropdown-item" data-view="medium">
+                            <span class="win-dd-check" id="chkViewMedium"></span>
+                            <span class="win-dd-icon">▣</span>
+                            <span>Medium-sized icons</span>
+                        </button>
+                        <button class="win-dropdown-item" data-view="small">
+                            <span class="win-dd-check" id="chkViewSmall"></span>
+                            <span class="win-dd-icon">⸬</span>
+                            <span>Small icons</span>
+                        </button>
+                        <button class="win-dropdown-item" data-view="list">
+                            <span class="win-dd-check" id="chkViewList"></span>
+                            <span class="win-dd-icon">☰</span>
+                            <span>List</span>
+                        </button>
+                        <button class="win-dropdown-item active" data-view="details">
+                            <span class="win-dd-check" id="chkViewDetails">✓</span>
+                            <span class="win-dd-icon">🗂️</span>
+                            <span>Details</span>
+                        </button>
+                        <button class="win-dropdown-item" data-view="tiles">
+                            <span class="win-dd-check" id="chkViewTiles"></span>
+                            <span class="win-dd-icon">🪟</span>
+                            <span>Tiles</span>
+                        </button>
+                        <button class="win-dropdown-item" data-view="content">
+                            <span class="win-dd-check" id="chkViewContent"></span>
+                            <span class="win-dd-icon">📋</span>
+                            <span>Content</span>
+                        </button>
+                        <div class="win-dd-divider"></div>
+                        <button class="win-dropdown-item" id="btnToggleDetailsPane">
+                            <span class="win-dd-check" id="chkDetailsPane"></span>
+                            <span class="win-dd-icon">📑</span>
+                            <span>Details pane</span>
+                        </button>
+                        <button class="win-dropdown-item" id="btnTogglePreviewPane">
+                            <span class="win-dd-check" id="chkPreviewPane"></span>
+                            <span class="win-dd-icon">👁️</span>
+                            <span>Preview pane</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- More Options (...) -->
+                <div class="win-cmd-group">
+                    <button class="win-cmd-btn win-cmd-icon-only" id="btnWinMore" title="More options">
+                        <span class="win-cmd-icon">•••</span>
+                    </button>
+                    <div class="win-dropdown-menu" id="menuWinMore" style="display: none;">
+                        <button class="win-dropdown-item" id="btnMenuSelectAll">
+                            <span class="win-dd-icon">☑️</span>
+                            <span>Select all (ជ្រើសទាំងអស់)</span>
+                        </button>
+                        <button class="win-dropdown-item" id="btnMenuClearSelection">
+                            <span class="win-dd-icon">⬜</span>
+                            <span>Clear selection (លុបការជ្រើសរើស)</span>
+                        </button>
+                        <div class="win-dd-divider"></div>
+                        <button class="win-dropdown-item win-danger" id="btnMenuEmptyTrash" style="display: none;">
+                            <span class="win-dd-icon">🗑️</span>
+                            <span id="tEmptyTrash">Empty trash (សម្អាតធុងសំរាម)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hidden inputs/compatibility buttons -->
+                <input type="file" id="fileInput" multiple style="display: none;">
+                <button id="btnUploadFile" style="display: none;"></button>
+                <button id="btnEmptyTrash" style="display: none;"></button>
+                <div class="view-toggles" style="display: none;">
+                    <button id="btnGridView"></button>
+                    <button id="btnListView"></button>
+                </div>
+                <button id="btnToggleSelectAll" style="display: none;"></button>
+                <button id="btnNewFolderTop" style="display: none;"></button>
+            </div>
+
+            <!-- Content Viewport / File List Area -->
             <div class="content-viewport" id="dropZone">
                 <!-- Drop Overlay with Dual Target Drives -->
                 <div class="drop-overlay" id="dropOverlay">
@@ -2074,54 +3058,64 @@ body.marquee-selecting {
                     </div>
                 </div>
 
-                <!-- Address Bar / Breadcrumbs -->
-                <div class="address-bar-bar" id="addressBarBar">
-                    <div class="breadcrumbs-trail" id="breadcrumbsTrail">
-                        <button class="breadcrumb-item root" id="crumbRoot" title="Root Drive">
-                            <span class="crumb-icon">💾</span>
-                            <span id="crumbRootName">HUN BUNTHA</span>
-                        </button>
-                    </div>
-                    <div class="address-actions">
-                        <button class="btn-address-action" id="btnToggleSelectAll" title="ជ្រើសរើសទាំងអស់ (Select All)">
-                            <span>☑️</span>
-                            <span id="txtSelectAll">ជ្រើសទាំងអស់</span>
-                        </button>
-                        <button class="btn-new-folder-action" id="btnNewFolderTop" title="បង្កើតថតថ្មី (New Folder)">
-                            <span>📁➕</span>
-                            <span>បង្កើតថតថ្មី (New Folder)</span>
-                        </button>
-                    </div>
-                </div>
-
                 <!-- Empty State -->
                 <div class="empty-state" id="emptyState" style="display: none;">
-                    <div class="empty-icon">☁️</div>
-                    <h3 id="tNoFiles">មិនទាន់មានឯកសារនៅឡើយទេ</h3>
-                    <p class="empty-hint">ចុចកណ្ដុរស្ដាំ (Right-Click) ដើម្បីបង្កើតថតថ្មី ឬទាញទម្លាក់ឯកសារមកទីនេះ</p>
+                    <div class="empty-icon">📁</div>
+                    <h3 id="tNoFiles">ថតនេះទទេ (This folder is empty)</h3>
+                    <p class="empty-hint">ចុចកណ្ដុរស្ដាំ (Right-Click) ឬចុច "New" ខាងលើដើម្បីបង្កើតថត ឬទាញទម្លាក់ឯកសារមកទីនេះ</p>
                 </div>
 
-                <!-- Folders Grid -->
-                <div class="folder-grid" id="folderGrid" style="display: none;"></div>
-
-                <!-- Grid View -->
-                <div class="file-grid" id="fileGrid"></div>
-
-                <!-- List View (Table) -->
-                <div class="file-table-container" id="fileTableContainer" style="display: none;">
-                    <table class="file-table">
+                <!-- Windows 11 Details View Table (EXACT MATCH TO PICTURE 2) -->
+                <div class="win-details-container" id="winDetailsContainer">
+                    <table class="win-details-table">
                         <thead>
                             <tr>
-                                <th id="thName">ឈ្មោះឯកសារ</th>
-                                <th id="thSize">ទំហំ</th>
-                                <th id="thDate">កាលបរិច្ឆេទ</th>
-                                <th>Security</th>
-                                <th>Cloud Parts</th>
-                                <th style="text-align: right;" id="thActions">សកម្មភាព</th>
+                                <th class="col-check">
+                                    <input type="checkbox" id="thMasterCheckbox" class="win-checkbox" title="Select all">
+                                </th>
+                                <th class="col-name sortable active-sort" data-sort="name" id="thColName">
+                                    <div class="th-content">
+                                        <span id="thName">Name</span>
+                                        <span class="sort-arrow" id="sortArrowName">▲</span>
+                                    </div>
+                                </th>
+                                <th class="col-date sortable" data-sort="date" id="thColDate">
+                                    <div class="th-content">
+                                        <span id="thDate">Date modified</span>
+                                        <span class="sort-arrow" id="sortArrowDate"></span>
+                                    </div>
+                                </th>
+                                <th class="col-type sortable" data-sort="type" id="thColType">
+                                    <div class="th-content">
+                                        <span id="thType">Type</span>
+                                        <span class="sort-arrow" id="sortArrowType"></span>
+                                    </div>
+                                </th>
+                                <th class="col-size sortable" data-sort="size" id="thColSize">
+                                    <div class="th-content">
+                                        <span id="thSize">Size</span>
+                                        <span class="sort-arrow" id="sortArrowSize"></span>
+                                    </div>
+                                </th>
+                                <th class="col-actions"></th>
                             </tr>
                         </thead>
-                        <tbody id="fileTableBody"></tbody>
+                        <tbody id="winDetailsTbody">
+                            <!-- Folders & Files combined rendered here -->
+                        </tbody>
                     </table>
+                </div>
+
+                <!-- Windows 11 Icon Views (Extra Large, Large, Medium, Small, Tiles, List, Content) -->
+                <div class="win-items-view" id="winItemsView" style="display: none;">
+                    <!-- Rendered dynamically -->
+                </div>
+
+                <!-- Hidden legacy containers for JS fallback -->
+                <div class="folder-grid" id="folderGrid" style="display: none;"></div>
+                <div class="file-grid" id="fileGrid" style="display: none;"></div>
+                <div class="file-table-container" id="fileTableContainer" style="display: none;">
+                    <tbody id="fileTableBody"></tbody>
                 </div>
             </div>
 
@@ -2356,7 +3350,7 @@ body.marquee-selecting {
 
 let currentCategory = "buntha";
 let currentSearch = "";
-let currentView = "grid";
+let currentView = localStorage.getItem("win11_view_mode") || "details";
 let currentLang = "km";
 let filesData = [];
 let foldersData = [];
@@ -2364,6 +3358,11 @@ let currentFolderId = null;
 let folderStack = [];
 let activeContextItem = null;
 let selectedFileIds = new Set();
+let selectedFolderIds = new Set();
+let currentSortCol = "name";
+let currentSortDir = "asc";
+let navHistory = [{ folderId: null, stack: [] }];
+let historyIndex = 0;
 
 // Localization dictionaries
 const i18n = {
@@ -2526,29 +3525,222 @@ function initEventListeners() {
         applyLanguage();
     });
 
-    // View toggles
-    document.getElementById("btnGridView").addEventListener("click", () => setViewMode("grid"));
-    document.getElementById("btnListView").addEventListener("click", () => setViewMode("list"));
+    // Windows 11 Ribbon Dropdowns Toggle Logic
+    const initDropdown = (btnId, menuId) => {
+        const btn = document.getElementById(btnId);
+        const menu = document.getElementById(menuId);
+        if (btn && menu) {
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const isShowing = menu.style.display === "block";
+                closeAllRibbonDropdowns();
+                if (!isShowing) {
+                    menu.style.display = "block";
+                    btn.classList.add("active");
+                }
+            });
+        }
+    };
+    initDropdown("btnWinNew", "menuWinNew");
+    initDropdown("btnWinSort", "menuWinSort");
+    initDropdown("btnWinView", "menuWinView");
+    initDropdown("btnWinMore", "menuWinMore");
+
+    window.addEventListener("click", () => {
+        closeAllRibbonDropdowns();
+    });
+
+    // Windows 11 Ribbon 'New' Dropdown Actions
+    const btnMenuNewFolder = document.getElementById("btnMenuNewFolder");
+    if (btnMenuNewFolder) {
+        btnMenuNewFolder.addEventListener("click", () => {
+            closeAllRibbonDropdowns();
+            promptNewFolder();
+        });
+    }
+
+    const btnMenuUploadFile = document.getElementById("btnMenuUploadFile");
+    if (btnMenuUploadFile) {
+        btnMenuUploadFile.addEventListener("click", () => {
+            closeAllRibbonDropdowns();
+            const fi = document.getElementById("fileInput");
+            if (fi) fi.click();
+        });
+    }
+
+    // Windows 11 Ribbon Actions: Cut, Copy, Rename, Delete
+    const btnRibbonCut = document.getElementById("btnRibbonCut");
+    if (btnRibbonCut) {
+        btnRibbonCut.addEventListener("click", () => {
+            if (selectedFileIds.size > 0) {
+                openMoveModal(Array.from(selectedFileIds));
+            }
+        });
+    }
+
+    const btnRibbonCopy = document.getElementById("btnRibbonCopy");
+    if (btnRibbonCopy) {
+        btnRibbonCopy.addEventListener("click", () => {
+            if (selectedFileIds.size > 0) {
+                const names = filesData.filter(f => selectedFileIds.has(f.id)).map(f => f.file_name).join("\n");
+                navigator.clipboard.writeText(names);
+            }
+        });
+    }
+
+    const btnRibbonRename = document.getElementById("btnRibbonRename");
+    if (btnRibbonRename) {
+        btnRibbonRename.addEventListener("click", () => {
+            if (selectedFolderIds.size === 1) {
+                const folderId = Array.from(selectedFolderIds)[0];
+                const folder = foldersData.find(f => f.id === folderId);
+                if (folder) promptRenameFolder(folder.id, folder.folder_name);
+            } else if (selectedFileIds.size === 1) {
+                const fileId = Array.from(selectedFileIds)[0];
+                const file = filesData.find(f => f.id === fileId);
+                if (file) promptRenameFile(file.id, file.file_name);
+            }
+        });
+    }
+
+    const btnRibbonDelete = document.getElementById("btnRibbonDelete");
+    if (btnRibbonDelete) {
+        btnRibbonDelete.addEventListener("click", () => {
+            deleteSelectedFiles();
+        });
+    }
+
+    // Windows 11 Ribbon 'Sort' Dropdown Items
+    document.querySelectorAll("#menuWinSort [data-sort]").forEach(item => {
+        item.addEventListener("click", () => {
+            closeAllRibbonDropdowns();
+            setSort(item.dataset.sort);
+        });
+    });
+
+    document.querySelectorAll("#menuWinSort [data-order]").forEach(item => {
+        item.addEventListener("click", () => {
+            closeAllRibbonDropdowns();
+            setOrder(item.dataset.order);
+        });
+    });
+
+    // Windows 11 Ribbon 'View' Dropdown Items (Picture 1)
+    document.querySelectorAll("#menuWinView [data-view]").forEach(item => {
+        item.addEventListener("click", () => {
+            closeAllRibbonDropdowns();
+            setViewMode(item.dataset.view);
+        });
+    });
+
+    // Windows 11 Ribbon 'More' Actions
+    const btnMenuSelectAll = document.getElementById("btnMenuSelectAll");
+    if (btnMenuSelectAll) {
+        btnMenuSelectAll.addEventListener("click", () => {
+            closeAllRibbonDropdowns();
+            selectAllFiles();
+        });
+    }
+
+    const btnMenuClearSelection = document.getElementById("btnMenuClearSelection");
+    if (btnMenuClearSelection) {
+        btnMenuClearSelection.addEventListener("click", () => {
+            closeAllRibbonDropdowns();
+            clearSelection();
+        });
+    }
+
+    const btnMenuEmptyTrash = document.getElementById("btnMenuEmptyTrash");
+    if (btnMenuEmptyTrash) {
+        btnMenuEmptyTrash.addEventListener("click", () => {
+            closeAllRibbonDropdowns();
+            emptyTrash();
+        });
+    }
+
+    // Windows 11 Navigation Controls
+    const btnNavBack = document.getElementById("btnNavBack");
+    if (btnNavBack) btnNavBack.addEventListener("click", navBack);
+
+    const btnNavForward = document.getElementById("btnNavForward");
+    if (btnNavForward) btnNavForward.addEventListener("click", navForward);
+
+    const btnNavUp = document.getElementById("btnNavUp");
+    if (btnNavUp) btnNavUp.addEventListener("click", navUp);
+
+    // Table Header Click Sorting (Picture 2)
+    ["name", "date", "type", "size"].forEach(col => {
+        const th = document.getElementById(`thCol${col.charAt(0).toUpperCase() + col.slice(1)}`);
+        if (th) {
+            th.addEventListener("click", () => {
+                toggleSortCol(col);
+            });
+        }
+    });
+
+    // Master Table Checkbox
+    const thMasterCheckbox = document.getElementById("thMasterCheckbox");
+    if (thMasterCheckbox) {
+        thMasterCheckbox.addEventListener("change", (e) => {
+            if (e.target.checked) {
+                selectedFileIds.clear();
+                selectedFolderIds.clear();
+                filesData.forEach(f => selectedFileIds.add(f.id));
+                foldersData.forEach(f => selectedFolderIds.add(f.id));
+            } else {
+                clearSelection();
+            }
+            updateSelectionUI();
+        });
+    }
 
     // Search
     const searchInput = document.getElementById("searchInput");
     const searchClear = document.getElementById("searchClear");
-    searchInput.addEventListener("input", (e) => {
-        currentSearch = e.target.value.trim();
-        searchClear.style.display = currentSearch ? "block" : "none";
-        loadFiles();
-    });
-    searchClear.addEventListener("click", () => {
-        searchInput.value = "";
-        currentSearch = "";
-        searchClear.style.display = "none";
-        loadFiles();
-    });
+    if (searchInput) {
+        searchInput.addEventListener("input", (e) => {
+            currentSearch = e.target.value.trim();
+            if (searchClear) searchClear.style.display = currentSearch ? "block" : "none";
+            loadFiles();
+        });
+    }
+    if (searchClear) {
+        searchClear.addEventListener("click", () => {
+            if (searchInput) searchInput.value = "";
+            currentSearch = "";
+            searchClear.style.display = "none";
+            loadFiles();
+        });
+    }
 
     // Refresh
-    document.getElementById("btnRefresh").addEventListener("click", () => {
-        fetchStats();
-        loadFiles();
+    const btnRefresh = document.getElementById("btnRefresh");
+    if (btnRefresh) {
+        btnRefresh.addEventListener("click", () => {
+            fetchStats();
+            loadFiles();
+        });
+    }
+
+    // Keyboard Shortcuts
+    window.addEventListener("keydown", (e) => {
+        if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+        if (e.key === "F5") {
+            e.preventDefault();
+            fetchStats();
+            loadFiles();
+        } else if (e.altKey && e.key === "ArrowLeft") {
+            e.preventDefault();
+            navBack();
+        } else if (e.altKey && e.key === "ArrowRight") {
+            e.preventDefault();
+            navForward();
+        } else if ((e.altKey && e.key === "ArrowUp") || e.key === "Backspace") {
+            e.preventDefault();
+            navUp();
+        } else if (e.key === "Delete") {
+            deleteSelectedFiles();
+        }
     });
 
     // Upload button & input
@@ -2711,11 +3903,245 @@ function initEventListeners() {
     });
 }
 
+function closeAllRibbonDropdowns() {
+    document.querySelectorAll(".win-dropdown-menu").forEach(m => m.style.display = "none");
+    document.querySelectorAll(".win-btn-dropdown").forEach(b => b.classList.remove("active"));
+}
+
 function setViewMode(mode) {
     currentView = mode;
-    document.getElementById("btnGridView").classList.toggle("active", mode === "grid");
-    document.getElementById("btnListView").classList.toggle("active", mode === "list");
+    localStorage.setItem("win11_view_mode", mode);
+    updateViewCheckmarks();
     renderFiles();
+}
+
+function updateViewCheckmarks() {
+    const viewModes = ["extra-large", "large", "medium", "small", "list", "details", "tiles", "content"];
+    viewModes.forEach(vm => {
+        const item = document.querySelector(`.win-view-dropdown [data-view="${vm}"]`);
+        if (item) {
+            item.classList.toggle("active", currentView === vm);
+            const chk = item.querySelector(".win-dd-check");
+            if (chk) chk.textContent = currentView === vm ? "✓" : "";
+        }
+    });
+}
+
+function setSort(col) {
+    if (currentSortCol === col) {
+        currentSortDir = currentSortDir === "asc" ? "desc" : "asc";
+    } else {
+        currentSortCol = col;
+        currentSortDir = "asc";
+    }
+    updateSortUI();
+    renderFiles();
+}
+
+function setOrder(order) {
+    currentSortDir = order;
+    updateSortUI();
+    renderFiles();
+}
+
+function toggleSortCol(col) {
+    setSort(col);
+}
+
+function updateSortUI() {
+    ["name", "date", "type", "size"].forEach(c => {
+        const chk = document.getElementById(`chkSort${c.charAt(0).toUpperCase() + c.slice(1)}`);
+        if (chk) chk.textContent = currentSortCol === c ? "✓" : "";
+    });
+    const chkAsc = document.getElementById("chkOrderAsc");
+    const chkDesc = document.getElementById("chkOrderDesc");
+    if (chkAsc) chkAsc.textContent = currentSortDir === "asc" ? "✓" : "";
+    if (chkDesc) chkDesc.textContent = currentSortDir === "desc" ? "✓" : "";
+
+    ["name", "date", "type", "size"].forEach(c => {
+        const th = document.getElementById(`thCol${c.charAt(0).toUpperCase() + c.slice(1)}`);
+        const arrow = document.getElementById(`sortArrow${c.charAt(0).toUpperCase() + c.slice(1)}`);
+        if (th && arrow) {
+            if (currentSortCol === c) {
+                th.classList.add("active-sort");
+                arrow.textContent = currentSortDir === "asc" ? "▲" : "▼";
+            } else {
+                th.classList.remove("active-sort");
+                arrow.textContent = "";
+            }
+        }
+    });
+}
+
+function getWin11FolderSvg(size = 22) {
+    return `<svg class="win11-folder-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2.5 5.5C2.5 4.39543 3.39543 3.5 4.5 3.5H9.37868C9.90912 3.5 10.4178 3.71071 10.7929 4.08579L12.4142 5.70711C12.7893 6.08219 13.298 6.29289 13.8284 6.29289H19.5C20.6046 6.29289 21.5 7.18746 21.5 8.29289V18.5C21.5 19.6046 20.6046 20.5 19.5 20.5H4.5C3.39543 20.5 2.5 19.6046 2.5 18.5V5.5Z" fill="#D98A09"/>
+        <path d="M4 8.5C4 7.67157 4.67157 7 5.5 7H18.5C19.3284 7 20 7.67157 20 8.5V11H4V8.5Z" fill="#FFF9E6" fill-opacity="0.35"/>
+        <path d="M2.5 9.5C2.5 8.39543 3.39543 7.5 4.5 7.5H19.5C20.6046 7.5 21.5 8.39543 21.5 9.5V18.5C21.5 19.6046 20.6046 20.5 19.5 20.5H4.5C3.39543 20.5 2.5 19.6046 2.5 18.5V9.5Z" fill="url(#win11FolderYellowGrad_${size})"/>
+        <defs>
+            <linearGradient id="win11FolderYellowGrad_${size}" x1="12" y1="7.5" x2="12" y2="20.5" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#FFDD6B"/>
+                <stop offset="0.35" stop-color="#FCCA3F"/>
+                <stop offset="1" stop-color="#F5B318"/>
+            </linearGradient>
+        </defs>
+    </svg>`;
+}
+
+function formatWinDate(dateStr) {
+    if (!dateStr) return "-";
+    try {
+        const d = new Date(dateStr.replace(" ", "T"));
+        if (isNaN(d.getTime())) return dateStr;
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+    } catch (_) {
+        return dateStr;
+    }
+}
+
+function formatWinSize(bytes, isFolder = false) {
+    if (isFolder || bytes === undefined || bytes === null) return "";
+    const kb = Math.ceil(bytes / 1024);
+    return `${kb.toLocaleString()} KB`;
+}
+
+function getWinFileType(fileName, category) {
+    if (!fileName) return "File";
+    const ext = fileName.includes('.') ? fileName.split('.').pop().toLowerCase() : '';
+    const map = {
+        mp4: "MP4 Video",
+        mkv: "MKV Video File",
+        mov: "QuickTime Movie",
+        avi: "AVI Video",
+        webm: "WebM Video",
+        mp3: "MP3 Audio File",
+        wav: "WAV Audio File",
+        flac: "FLAC Audio File",
+        m4a: "M4A Audio File",
+        jpg: "JPEG Image",
+        jpeg: "JPEG Image",
+        png: "PNG Image",
+        gif: "GIF Image",
+        webp: "WebP Image",
+        svg: "SVG Image",
+        bmp: "BMP Image",
+        pdf: "Adobe Acrobat Document",
+        doc: "Microsoft Word 97-2003 Document",
+        docx: "Microsoft Word Document",
+        xls: "Microsoft Excel Worksheet",
+        xlsx: "Microsoft Excel Worksheet",
+        ppt: "Microsoft PowerPoint Presentation",
+        pptx: "Microsoft PowerPoint Presentation",
+        txt: "Text Document",
+        json: "JSON Source File",
+        zip: "Compressed (zipped) Folder",
+        rar: "WinRAR archive",
+        "7z": "7-Zip archive",
+        tar: "TAR Archive",
+        gz: "GZ Archive",
+        exe: "Application",
+        msi: "Windows Installer Package",
+        apk: "Android Package",
+        dmg: "Apple Disk Image",
+        iso: "Disc Image File"
+    };
+    if (map[ext]) return map[ext];
+    if (category === "videos") return "Video File";
+    if (category === "images") return "Image File";
+    if (category === "music") return "Audio File";
+    if (category === "documents") return "Document";
+    if (category === "archives") return "Archive";
+    return ext ? `${ext.toUpperCase()} File` : "File";
+}
+
+function sortItems(folders, files) {
+    const sortedFolders = [...folders];
+    const sortedFiles = [...files];
+    const mult = currentSortDir === "asc" ? 1 : -1;
+
+    sortedFolders.sort((a, b) => {
+        if (currentSortCol === "date") {
+            return mult * (new Date(a.created_at || 0) - new Date(b.created_at || 0));
+        }
+        return mult * (a.folder_name || "").localeCompare(b.folder_name || "");
+    });
+
+    sortedFiles.sort((a, b) => {
+        if (currentSortCol === "size") {
+            return mult * ((a.file_size || 0) - (b.file_size || 0));
+        }
+        if (currentSortCol === "date") {
+            return mult * (new Date(a.created_at || 0) - new Date(b.created_at || 0));
+        }
+        if (currentSortCol === "type") {
+            const tA = getWinFileType(a.file_name, a.category);
+            const tB = getWinFileType(b.file_name, b.category);
+            return mult * tA.localeCompare(tB);
+        }
+        return mult * (a.file_name || "").localeCompare(b.file_name || "");
+    });
+
+    return { sortedFolders, sortedFiles };
+}
+
+function openFolder(folderId, folderName) {
+    currentFolderId = folderId;
+    folderStack.push({ id: folderId, name: folderName });
+
+    if (historyIndex < navHistory.length - 1) {
+        navHistory = navHistory.slice(0, historyIndex + 1);
+    }
+    navHistory.push({ folderId: currentFolderId, stack: [...folderStack] });
+    historyIndex = navHistory.length - 1;
+
+    clearSelection();
+    loadFiles();
+}
+
+function navBack() {
+    if (historyIndex > 0) {
+        historyIndex--;
+        const item = navHistory[historyIndex];
+        currentFolderId = item.folderId;
+        folderStack = [...item.stack];
+        clearSelection();
+        loadFiles();
+    }
+}
+
+function navForward() {
+    if (historyIndex < navHistory.length - 1) {
+        historyIndex++;
+        const item = navHistory[historyIndex];
+        currentFolderId = item.folderId;
+        folderStack = [...item.stack];
+        clearSelection();
+        loadFiles();
+    }
+}
+
+function navUp() {
+    if (folderStack.length > 1) {
+        folderStack.pop();
+        const parent = folderStack[folderStack.length - 1];
+        currentFolderId = parent.id;
+        navHistory.push({ folderId: currentFolderId, stack: [...folderStack] });
+        historyIndex = navHistory.length - 1;
+        clearSelection();
+        loadFiles();
+    } else if (folderStack.length === 1) {
+        folderStack = [];
+        currentFolderId = null;
+        navHistory.push({ folderId: null, stack: [] });
+        historyIndex = navHistory.length - 1;
+        clearSelection();
+        loadFiles();
+    }
 }
 
 async function fetchStats() {
@@ -2736,13 +4162,15 @@ async function fetchStats() {
             valText = `${(usedGb / 1024).toFixed(2)} TB / 1,000 TB`;
         }
 
-        document.getElementById("quotaValue").textContent = valText;
-        document.getElementById("quotaFill").style.width = `${pct}%`;
-        document.getElementById("quotaSub").textContent = `${i18n[currentLang].quota_free} ${freeTb.toFixed(2)} TB (${(100 - pct).toFixed(1)}%)`;
+        const qv = document.getElementById("quotaValue");
+        const qf = document.getElementById("quotaFill");
+        const qs = document.getElementById("quotaSub");
+        if (qv) qv.textContent = valText;
+        if (qf) qf.style.width = `${pct}%`;
+        if (qs) qs.textContent = `${i18n[currentLang].quota_free} ${freeTb.toFixed(2)} TB (${(100 - pct).toFixed(1)}%)`;
 
         const statusBtn = document.getElementById("cloudStatusBtn");
         const statusTxt = document.getElementById("cloudStatusText");
-
         if (statusBtn && statusTxt) {
             statusBtn.className = "status-pill connected";
             statusTxt.textContent = "Mercy Dental Care";
@@ -2798,8 +4226,27 @@ async function loadFiles() {
 
 function renderBreadcrumbs() {
     const trail = document.getElementById("breadcrumbsTrail");
-    if (!trail) return;
     const rootName = currentCategory === "vuochlin" ? "NEANG VUOCHLIN" : (currentCategory === "trash" ? "ធុងសំរាម (Trash)" : "HUN BUNTHA");
+
+    // Update Tab Title
+    const tabTitle = document.getElementById("tabDriveTitle");
+    if (tabTitle) {
+        if (folderStack.length > 0) {
+            tabTitle.textContent = folderStack[folderStack.length - 1].name;
+        } else {
+            tabTitle.textContent = rootName;
+        }
+    }
+
+    // Update Navigation Buttons
+    const btnNavBack = document.getElementById("btnNavBack");
+    const btnNavForward = document.getElementById("btnNavForward");
+    const btnNavUp = document.getElementById("btnNavUp");
+    if (btnNavBack) btnNavBack.disabled = historyIndex <= 0;
+    if (btnNavForward) btnNavForward.disabled = historyIndex >= navHistory.length - 1;
+    if (btnNavUp) btnNavUp.disabled = folderStack.length === 0;
+
+    if (!trail) return;
 
     trail.innerHTML = `
         <button class="breadcrumb-item root ${folderStack.length === 0 ? 'active' : ''}" id="crumbRoot" title="Root Drive">
@@ -2813,11 +4260,15 @@ function renderBreadcrumbs() {
         crumbRoot.addEventListener("click", () => {
             currentFolderId = null;
             folderStack = [];
+            if (historyIndex < navHistory.length - 1) {
+                navHistory = navHistory.slice(0, historyIndex + 1);
+            }
+            navHistory.push({ folderId: null, stack: [] });
+            historyIndex = navHistory.length - 1;
             clearSelection();
             loadFiles();
         });
 
-        // Drop target for moving files back to Root
         crumbRoot.addEventListener("dragover", (e) => {
             e.preventDefault();
             e.dataTransfer.dropEffect = "move";
@@ -2836,7 +4287,7 @@ function renderBreadcrumbs() {
 
     folderStack.forEach((crumb, idx) => {
         const sep = document.createElement("span");
-        sep.className = "breadcrumb-separator";
+        sep.className = "win-crumb-sep";
         sep.textContent = "›";
         trail.appendChild(sep);
 
@@ -2846,11 +4297,15 @@ function renderBreadcrumbs() {
         btn.addEventListener("click", () => {
             currentFolderId = crumb.id;
             folderStack = folderStack.slice(0, idx + 1);
+            if (historyIndex < navHistory.length - 1) {
+                navHistory = navHistory.slice(0, historyIndex + 1);
+            }
+            navHistory.push({ folderId: currentFolderId, stack: [...folderStack] });
+            historyIndex = navHistory.length - 1;
             clearSelection();
             loadFiles();
         });
 
-        // Drop target for moving files to this parent folder
         btn.addEventListener("dragover", (e) => {
             e.preventDefault();
             e.dataTransfer.dropEffect = "move";
@@ -2871,76 +4326,7 @@ function renderBreadcrumbs() {
 }
 
 function renderFolders() {
-    const fGrid = document.getElementById("folderGrid");
-    if (!fGrid) return;
-
-    if (!foldersData || foldersData.length === 0) {
-        fGrid.style.display = "none";
-        fGrid.innerHTML = "";
-        return;
-    }
-
-    fGrid.style.display = "grid";
-    fGrid.innerHTML = "";
-
-    foldersData.forEach(folder => {
-        const card = document.createElement("div");
-        card.className = "folder-card";
-        card.dataset.folderId = folder.id;
-        card.dataset.folderName = folder.folder_name;
-
-        card.innerHTML = `
-            <span class="folder-icon">📁</span>
-            <div class="folder-details">
-                <span class="folder-title" title="${folder.folder_name}">${folder.folder_name}</span>
-                <span class="folder-sub">Folder</span>
-            </div>
-        `;
-
-        card.addEventListener("click", () => {
-            openFolder(folder.id, folder.folder_name);
-        });
-
-        card.addEventListener("contextmenu", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            showFolderContextMenu(e.clientX, e.clientY, folder);
-        });
-
-        // Drag & Drop Target: "ទាញចូល folder"
-        card.addEventListener("dragover", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            e.dataTransfer.dropEffect = "move";
-            card.classList.add("drag-target-hover");
-            const icon = card.querySelector(".folder-icon");
-            if (icon) icon.textContent = "📂";
-        });
-
-        card.addEventListener("dragleave", (e) => {
-            // Only remove if leaving card itself
-            if (!card.contains(e.relatedTarget)) {
-                card.classList.remove("drag-target-hover");
-                const icon = card.querySelector(".folder-icon");
-                if (icon) icon.textContent = "📁";
-            }
-        });
-
-        card.addEventListener("drop", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            card.classList.remove("drag-target-hover");
-            const icon = card.querySelector(".folder-icon");
-            if (icon) icon.textContent = "📁";
-
-            let fileIds = getDraggedFileIds(e);
-            if (fileIds && fileIds.length > 0) {
-                moveFilesToFolder(fileIds, folder.id, folder.folder_name);
-            }
-        });
-
-        fGrid.appendChild(card);
-    });
+    // Kept for backward compatibility; rendering is unified in renderFiles()
 }
 
 function getDraggedFileIds(e) {
@@ -2955,13 +4341,6 @@ function getDraggedFileIds(e) {
         }
     }
     return fileIds;
-}
-
-function openFolder(folderId, folderName) {
-    currentFolderId = folderId;
-    folderStack.push({ id: folderId, name: folderName });
-    clearSelection();
-    loadFiles();
 }
 
 function getFileIcon(cat) {
@@ -2983,82 +4362,201 @@ function formatSize(bytes) {
     return (bytes / (1024 ** 3)).toFixed(2) + " GB";
 }
 
+/* Unified Windows 11 Explorer Renderer: Folders + Files Combined */
 function renderFiles() {
-    const grid = document.getElementById("fileGrid");
-    const tableContainer = document.getElementById("fileTableContainer");
-    const tbody = document.getElementById("fileTableBody");
+    const detailsContainer = document.getElementById("winDetailsContainer");
+    const itemsView = document.getElementById("winItemsView");
+    const tbody = document.getElementById("winDetailsTbody");
     const emptyState = document.getElementById("emptyState");
-    const fGrid = document.getElementById("folderGrid");
+
+    updateViewCheckmarks();
+    updateSortUI();
 
     const hasFolders = foldersData && foldersData.length > 0;
     const hasFiles = filesData && filesData.length > 0;
 
     if (!hasFiles && !hasFolders) {
-        grid.style.display = "none";
-        tableContainer.style.display = "none";
-        emptyState.style.display = "block";
+        if (detailsContainer) detailsContainer.style.display = "none";
+        if (itemsView) itemsView.style.display = "none";
+        if (emptyState) emptyState.style.display = "block";
+        updateSelectionUI();
         return;
     }
 
-    emptyState.style.display = "none";
+    if (emptyState) emptyState.style.display = "none";
 
-    if (currentView === "grid") {
-        grid.style.display = hasFiles ? "grid" : "none";
-        tableContainer.style.display = "none";
-        grid.innerHTML = "";
+    const { sortedFolders, sortedFiles } = sortItems(foldersData, filesData);
 
-        filesData.forEach(file => {
-            const card = document.createElement("div");
-            card.className = `file-card ${selectedFileIds.has(file.id) ? 'selected' : ''}`;
-            card.dataset.fileId = file.id;
-            card.dataset.fileName = file.file_name;
-            card.draggable = true;
+    if (currentView === "details") {
+        if (detailsContainer) detailsContainer.style.display = "block";
+        if (itemsView) itemsView.style.display = "none";
+        if (!tbody) return;
+        tbody.innerHTML = "";
 
-            const icon = getFileIcon(file.category);
-            const isFav = file.is_favorite ? "active" : "";
-            const ext = file.file_name.toLowerCase().split('.').pop();
-            const isImage = file.category === "images" || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'].includes(ext);
-            const isSelected = selectedFileIds.has(file.id);
+        // 1. Render Folders in Details View (Picture 2)
+        sortedFolders.forEach(folder => {
+            const tr = document.createElement("tr");
+            const isSel = selectedFolderIds.has(folder.id);
+            tr.className = `win-row folder-row ${isSel ? 'selected' : ''}`;
+            tr.dataset.folderId = folder.id;
+            tr.dataset.folderName = folder.folder_name;
 
-            card.innerHTML = `
-                <div class="card-select-checkbox ${isSelected ? 'checked' : ''}" title="ជ្រើសរើស (Select)">
-                    ${isSelected ? '✓' : ''}
-                </div>
-                <div class="card-top" style="margin-bottom: ${isImage ? '6px' : '12px'}; padding-left: 26px;">
-                    <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">
-                        ${isImage ? '🖼️ រូបភាព' : icon}
-                    </span>
-                    <button class="card-star ${isFav}" title="Favorite">★</button>
-                </div>
-                ${isImage ? `
-                    <div class="card-media-preview" title="ចុចដើម្បីបើកមើល (Click to preview)">
-                        <img src="/api/view/${file.id}" alt="${file.file_name}" class="card-thumb-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                        <span class="card-thumb-fallback" style="display: none;">${icon}</span>
+            tr.innerHTML = `
+                <td class="col-check">
+                    <input type="checkbox" class="win-checkbox row-select-cb folder-select-cb" ${isSel ? 'checked' : ''}>
+                </td>
+                <td class="col-name">
+                    <div class="item-name-cell">
+                        ${getWin11FolderSvg(22)}
+                        <span class="item-name-text" title="${folder.folder_name}">${folder.folder_name}</span>
                     </div>
-                ` : ''}
-                <div class="card-name" title="${file.file_name}">${file.file_name}</div>
-                <div class="card-meta">
-                    <span>${formatSize(file.file_size)}</span>
-                    <span>${file.is_encrypted ? "🔒" : "☁️"}</span>
-                </div>
-                <div class="card-actions">
-                    ${!file.is_trash ? `
-                        <button class="btn-card-action btn-view" title="${currentLang === 'km' ? 'បើកមើល' : 'View'}">
-                            👁️ ${currentLang === 'km' ? 'បើកមើល' : 'View'}
-                        </button>
-                        <button class="btn-card-action btn-dl" title="${i18n[currentLang].download}">
-                            📥 ${currentLang === 'km' ? 'ទាញយក' : 'Download'}
-                        </button>
-                        <button class="btn-card-action btn-del" title="${i18n[currentLang].delete}">🗑️</button>
-                    ` : `
-                        <button class="btn-card-action btn-restore" title="${i18n[currentLang].restore}">♻️ ${i18n[currentLang].restore}</button>
-                        <button class="btn-card-action btn-perm" style="color: #f43f5e;" title="${i18n[currentLang].permanent}">❌</button>
-                    `}
-                </div>
+                </td>
+                <td class="col-date">${formatWinDate(folder.created_at)}</td>
+                <td class="col-type">File folder</td>
+                <td class="col-size"></td>
+                <td class="col-actions">
+                    <div class="row-actions">
+                        <button class="btn-row-act btn-f-rename" title="Rename (ប្តូរឈ្មោះ)">✏️</button>
+                        <button class="btn-row-act btn-f-del" title="Delete (លុបថត)">🗑️</button>
+                    </div>
+                </td>
             `;
 
-            // Selection Checkbox Click
-            const cb = card.querySelector(".card-select-checkbox");
+            // Open folder on name click or double click
+            tr.querySelector(".item-name-cell").addEventListener("click", (e) => {
+                e.stopPropagation();
+                openFolder(folder.id, folder.folder_name);
+            });
+            tr.addEventListener("dblclick", () => {
+                openFolder(folder.id, folder.folder_name);
+            });
+
+            // Single click row selection
+            tr.addEventListener("click", (e) => {
+                if (e.target.closest(".row-actions") || e.target.closest(".win-checkbox")) return;
+                if (e.ctrlKey || e.metaKey || selectedFolderIds.size > 0 || selectedFileIds.size > 0) {
+                    toggleSelectFolder(folder.id);
+                } else {
+                    clearSelection();
+                    toggleSelectFolder(folder.id);
+                }
+            });
+
+            // Checkbox click
+            const cb = tr.querySelector(".folder-select-cb");
+            if (cb) {
+                cb.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    toggleSelectFolder(folder.id);
+                });
+            }
+
+            // Folder row actions
+            const btnRename = tr.querySelector(".btn-f-rename");
+            if (btnRename) {
+                btnRename.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    promptRenameFolder(folder.id, folder.folder_name);
+                });
+            }
+            const btnDel = tr.querySelector(".btn-f-del");
+            if (btnDel) {
+                btnDel.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    confirmDeleteFolder(folder.id, folder.folder_name);
+                });
+            }
+
+            // Context menu
+            tr.addEventListener("contextmenu", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                showFolderContextMenu(e.clientX, e.clientY, folder);
+            });
+
+            // Drag & Drop Target: Move files into this folder
+            tr.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.dataTransfer.dropEffect = "move";
+                tr.classList.add("drag-target-hover");
+            });
+            tr.addEventListener("dragleave", (e) => {
+                if (!tr.contains(e.relatedTarget)) {
+                    tr.classList.remove("drag-target-hover");
+                }
+            });
+            tr.addEventListener("drop", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                tr.classList.remove("drag-target-hover");
+                let fileIds = getDraggedFileIds(e);
+                if (fileIds && fileIds.length > 0) {
+                    moveFilesToFolder(fileIds, folder.id, folder.folder_name);
+                }
+            });
+
+            tbody.appendChild(tr);
+        });
+
+        // 2. Render Files in Details View (Picture 2)
+        sortedFiles.forEach(file => {
+            const tr = document.createElement("tr");
+            const isSel = selectedFileIds.has(file.id);
+            tr.className = `win-row file-row ${isSel ? 'selected' : ''}`;
+            tr.dataset.fileId = file.id;
+            tr.dataset.fileName = file.file_name;
+            tr.draggable = true;
+
+            const icon = getFileIcon(file.category);
+            const winType = getWinFileType(file.file_name, file.category);
+            const winSize = formatWinSize(file.file_size);
+
+            tr.innerHTML = `
+                <td class="col-check">
+                    <input type="checkbox" class="win-checkbox row-select-cb file-select-cb" ${isSel ? 'checked' : ''}>
+                </td>
+                <td class="col-name">
+                    <div class="item-name-cell">
+                        <div class="item-icon-wrap">${icon}</div>
+                        <span class="item-name-text" title="${file.file_name}">${file.file_name}</span>
+                    </div>
+                </td>
+                <td class="col-date">${formatWinDate(file.created_at)}</td>
+                <td class="col-type">${winType}</td>
+                <td class="col-size">${winSize}</td>
+                <td class="col-actions">
+                    <div class="row-actions">
+                        ${!file.is_trash ? `
+                            <button class="btn-row-act btn-view" title="${currentLang === 'km' ? 'បើកមើល' : 'View'}">👁️</button>
+                            <button class="btn-row-act btn-dl" title="${i18n[currentLang].download}">📥</button>
+                            <button class="btn-row-act btn-del" title="${i18n[currentLang].delete}">🗑️</button>
+                        ` : `
+                            <button class="btn-row-act btn-restore" title="${i18n[currentLang].restore}">♻️</button>
+                            <button class="btn-row-act btn-perm" style="color: #f43f5e;" title="${i18n[currentLang].permanent}">❌</button>
+                        `}
+                    </div>
+                </td>
+            `;
+
+            // Double click opens preview or downloads
+            tr.addEventListener("dblclick", () => {
+                if (!file.is_trash) previewFile(file.id);
+            });
+
+            // Single click row selection
+            tr.addEventListener("click", (e) => {
+                if (e.target.closest(".row-actions") || e.target.closest(".win-checkbox")) return;
+                if (e.ctrlKey || e.metaKey || selectedFileIds.size > 0 || selectedFolderIds.size > 0) {
+                    toggleSelectFile(file.id);
+                } else {
+                    clearSelection();
+                    toggleSelectFile(file.id);
+                }
+            });
+
+            // Checkbox click
+            const cb = tr.querySelector(".file-select-cb");
             if (cb) {
                 cb.addEventListener("click", (e) => {
                     e.stopPropagation();
@@ -3066,98 +4564,7 @@ function renderFiles() {
                 });
             }
 
-            // Drag Start & Drag End ("ទាញចូល folder")
-            card.addEventListener("dragstart", (e) => {
-                if (!selectedFileIds.has(file.id)) {
-                    if (selectedFileIds.size === 0) {
-                        selectedFileIds.add(file.id);
-                        updateSelectionUI();
-                    }
-                }
-                const dragIds = Array.from(selectedFileIds.has(file.id) ? selectedFileIds : [file.id]);
-                e.dataTransfer.setData("application/json", JSON.stringify(dragIds));
-                e.dataTransfer.effectAllowed = "move";
-                card.classList.add("dragging");
-                document.body.classList.add("has-selection");
-            });
-
-            card.addEventListener("dragend", () => {
-                card.classList.remove("dragging");
-                document.querySelectorAll(".drag-target-hover").forEach(el => el.classList.remove("drag-target-hover"));
-            });
-
-            // Card Click Events
-            card.style.cursor = "pointer";
-            card.addEventListener("click", (e) => {
-                if (e.target.closest(".card-actions") || e.target.closest(".card-star") || e.target.closest(".card-select-checkbox")) {
-                    return;
-                }
-                if (e.ctrlKey || e.metaKey) {
-                    toggleSelectFile(file.id);
-                    return;
-                }
-                if (selectedFileIds.size > 0) {
-                    toggleSelectFile(file.id);
-                    return;
-                }
-                if (!file.is_trash) previewFile(file.id);
-            });
-
-            card.addEventListener("contextmenu", (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                showFileContextMenu(e.clientX, e.clientY, file);
-            });
-
-            card.querySelector(".card-star").addEventListener("click", (e) => {
-                e.stopPropagation();
-                toggleFavorite(file.id);
-            });
-
-            if (!file.is_trash) {
-                const viewBtn = card.querySelector(".btn-view");
-                if (viewBtn) {
-                    viewBtn.addEventListener("click", (e) => {
-                        e.stopPropagation();
-                        previewFile(file.id);
-                    });
-                }
-                card.querySelector(".btn-dl").addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    downloadFile(file.id);
-                });
-                card.querySelector(".btn-del").addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    trashFile(file.id);
-                });
-            } else {
-                card.querySelector(".btn-restore").addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    restoreFile(file.id);
-                });
-                card.querySelector(".btn-perm").addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    deletePermanent(file.id);
-                });
-            }
-
-            grid.appendChild(card);
-        });
-
-    } else {
-        grid.style.display = "none";
-        tableContainer.style.display = hasFiles ? "block" : "none";
-        tbody.innerHTML = "";
-
-        filesData.forEach(file => {
-            const tr = document.createElement("tr");
-            const icon = getFileIcon(file.category);
-            const isSelected = selectedFileIds.has(file.id);
-            tr.dataset.fileId = file.id;
-            tr.className = isSelected ? "selected-row" : "";
-            tr.draggable = true;
-            tr.style.cursor = "pointer";
-
+            // Dragstart for moving
             tr.addEventListener("dragstart", (e) => {
                 if (!selectedFileIds.has(file.id)) {
                     if (selectedFileIds.size === 0) {
@@ -3176,60 +4583,180 @@ function renderFiles() {
                 document.querySelectorAll(".drag-target-hover").forEach(el => el.classList.remove("drag-target-hover"));
             });
 
-            tr.addEventListener("click", (e) => {
-                if (e.target.tagName !== 'BUTTON' && !file.is_trash) {
-                    if (e.ctrlKey || e.metaKey || selectedFileIds.size > 0) {
-                        toggleSelectFile(file.id);
-                    } else {
-                        previewFile(file.id);
-                    }
-                }
-            });
+            // File row quick actions
+            if (!file.is_trash) {
+                const btnV = tr.querySelector(".btn-view");
+                if (btnV) btnV.addEventListener("click", (e) => { e.stopPropagation(); previewFile(file.id); });
+                const btnD = tr.querySelector(".btn-dl");
+                if (btnD) btnD.addEventListener("click", (e) => { e.stopPropagation(); downloadFile(file.id); });
+                const btnDel = tr.querySelector(".btn-del");
+                if (btnDel) btnDel.addEventListener("click", (e) => { e.stopPropagation(); trashFile(file.id); });
+            } else {
+                const btnRes = tr.querySelector(".btn-restore");
+                if (btnRes) btnRes.addEventListener("click", (e) => { e.stopPropagation(); restoreFile(file.id); });
+                const btnPerm = tr.querySelector(".btn-perm");
+                if (btnPerm) btnPerm.addEventListener("click", (e) => { e.stopPropagation(); deletePermanent(file.id); });
+            }
 
+            // Context menu
             tr.addEventListener("contextmenu", (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 showFileContextMenu(e.clientX, e.clientY, file);
             });
 
-            tr.innerHTML = `
-                <td>
-                    <input type="checkbox" class="table-select-cb" ${isSelected ? 'checked' : ''} style="margin-right: 8px; cursor: pointer;">
-                    ${icon} ${file.file_name}
-                </td>
-                <td>${formatSize(file.file_size)}</td>
-                <td>${file.created_at}</td>
-                <td>${file.is_encrypted ? "🔒 AES-256" : "🔓 Plain"}</td>
-                <td>${file.chunk_count || 1} parts</td>
-                <td style="text-align: right;">
-                    ${!file.is_trash ? `
-                        <button class="btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); padding: 4px 10px; font-size: 11px; margin-right: 4px;" onclick="event.stopPropagation(); previewFile(${file.id})">👁️ ${currentLang === 'km' ? 'បើកមើល' : 'View'}</button>
-                        <button class="btn-primary" style="padding: 4px 8px; font-size: 11px; margin-right: 4px;" onclick="event.stopPropagation(); downloadFile(${file.id})">📥</button>
-                        <button class="btn-secondary" style="padding: 4px 8px;" onclick="event.stopPropagation(); trashFile(${file.id})">🗑️</button>
-                    ` : `
-                        <button class="btn-secondary" style="padding: 4px 8px; margin-right: 4px;" onclick="event.stopPropagation(); restoreFile(${file.id})">♻️ ${i18n[currentLang].restore}</button>
-                        <button class="btn-secondary" style="padding: 4px 8px; color: #f43f5e;" onclick="event.stopPropagation(); deletePermanent(${file.id})">❌</button>
-                    `}
-                </td>
-            `;
-
-            const cb = tr.querySelector(".table-select-cb");
-            if (cb) {
-                cb.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    toggleSelectFile(file.id);
-                });
-            }
-
             tbody.appendChild(tr);
         });
+
+    } else {
+        // Icon View Modes: Extra-large, Large, Medium, Small, List, Tiles, Content
+        if (detailsContainer) detailsContainer.style.display = "none";
+        if (itemsView) {
+            itemsView.style.display = "grid";
+            itemsView.className = `win-items-view view-${currentView}`;
+            itemsView.innerHTML = "";
+
+            const iconSizeMap = {
+                "extra-large": 110,
+                "large": 76,
+                "medium": 50,
+                "small": 24,
+                "list": 20,
+                "tiles": 42,
+                "content": 36
+            };
+            const iconSize = iconSizeMap[currentView] || 50;
+
+            // Render Folders in Icon View
+            sortedFolders.forEach(folder => {
+                const card = document.createElement("div");
+                const isSel = selectedFolderIds.has(folder.id);
+                card.className = `win-item-card folder-card ${isSel ? 'selected' : ''}`;
+                card.dataset.folderId = folder.id;
+                card.dataset.folderName = folder.folder_name;
+
+                card.innerHTML = `
+                    <div class="item-icon-box">
+                        ${getWin11FolderSvg(iconSize)}
+                    </div>
+                    <div class="item-label-box">
+                        <div class="item-main-title" title="${folder.folder_name}">${folder.folder_name}</div>
+                        ${(currentView === "tiles" || currentView === "content") ? `<div class="item-sub-info">File folder</div>` : ''}
+                    </div>
+                `;
+
+                card.addEventListener("click", (e) => {
+                    if (e.ctrlKey || e.metaKey || selectedFolderIds.size > 0 || selectedFileIds.size > 0) {
+                        toggleSelectFolder(folder.id);
+                    } else {
+                        openFolder(folder.id, folder.folder_name);
+                    }
+                });
+
+                card.addEventListener("dblclick", () => {
+                    openFolder(folder.id, folder.folder_name);
+                });
+
+                card.addEventListener("contextmenu", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showFolderContextMenu(e.clientX, e.clientY, folder);
+                });
+
+                // Drop target: move files into folder
+                card.addEventListener("dragover", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.dataTransfer.dropEffect = "move";
+                    card.classList.add("drag-target-hover");
+                });
+                card.addEventListener("dragleave", (e) => {
+                    if (!card.contains(e.relatedTarget)) {
+                        card.classList.remove("drag-target-hover");
+                    }
+                });
+                card.addEventListener("drop", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    card.classList.remove("drag-target-hover");
+                    let fileIds = getDraggedFileIds(e);
+                    if (fileIds && fileIds.length > 0) {
+                        moveFilesToFolder(fileIds, folder.id, folder.folder_name);
+                    }
+                });
+
+                itemsView.appendChild(card);
+            });
+
+            // Render Files in Icon View
+            sortedFiles.forEach(file => {
+                const card = document.createElement("div");
+                const isSel = selectedFileIds.has(file.id);
+                card.className = `win-item-card file-card ${isSel ? 'selected' : ''}`;
+                card.dataset.fileId = file.id;
+                card.dataset.fileName = file.file_name;
+                card.draggable = true;
+
+                const icon = getFileIcon(file.category);
+                const winType = getWinFileType(file.file_name, file.category);
+                const winSize = formatWinSize(file.file_size);
+                const ext = file.file_name.toLowerCase().split('.').pop();
+                const isImage = file.category === "images" || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'].includes(ext);
+
+                card.innerHTML = `
+                    <div class="item-icon-box">
+                        ${isImage && (currentView === "extra-large" || currentView === "large" || currentView === "medium")
+                            ? `<img src="/api/view/${file.id}" alt="${file.file_name}" class="item-thumb-img" loading="lazy" onerror="this.outerHTML='<span style=\\'font-size:${iconSize}px\\'>${icon}</span>'">`
+                            : `<span style="font-size: ${iconSize}px;">${icon}</span>`}
+                    </div>
+                    <div class="item-label-box">
+                        <div class="item-main-title" title="${file.file_name}">${file.file_name}</div>
+                        ${(currentView === "tiles" || currentView === "content") ? `<div class="item-sub-info">${winType} • ${winSize}</div>` : ''}
+                    </div>
+                `;
+
+                card.addEventListener("click", (e) => {
+                    if (e.ctrlKey || e.metaKey || selectedFileIds.size > 0 || selectedFolderIds.size > 0) {
+                        toggleSelectFile(file.id);
+                    } else {
+                        if (!file.is_trash) previewFile(file.id);
+                    }
+                });
+
+                card.addEventListener("dragstart", (e) => {
+                    if (!selectedFileIds.has(file.id)) {
+                        if (selectedFileIds.size === 0) {
+                            selectedFileIds.add(file.id);
+                            updateSelectionUI();
+                        }
+                    }
+                    const dragIds = Array.from(selectedFileIds.has(file.id) ? selectedFileIds : [file.id]);
+                    e.dataTransfer.setData("application/json", JSON.stringify(dragIds));
+                    e.dataTransfer.effectAllowed = "move";
+                    card.classList.add("dragging");
+                });
+
+                card.addEventListener("dragend", () => {
+                    card.classList.remove("dragging");
+                    document.querySelectorAll(".drag-target-hover").forEach(el => el.classList.remove("drag-target-hover"));
+                });
+
+                card.addEventListener("contextmenu", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showFileContextMenu(e.clientX, e.clientY, file);
+                });
+
+                itemsView.appendChild(card);
+            });
+        }
     }
 
     updateSelectionUI();
 }
 
 /* ==========================================================================
-   Multi-Selection Logic
+   Multi-Selection Logic (Files & Folders)
    ========================================================================== */
 function toggleSelectFile(id) {
     if (selectedFileIds.has(id)) {
@@ -3240,35 +4767,69 @@ function toggleSelectFile(id) {
     updateSelectionUI();
 }
 
+function toggleSelectFolder(id) {
+    if (selectedFolderIds.has(id)) {
+        selectedFolderIds.delete(id);
+    } else {
+        selectedFolderIds.add(id);
+    }
+    updateSelectionUI();
+}
+
 function selectAllFiles() {
-    if (selectedFileIds.size === filesData.length && filesData.length > 0) {
-        selectedFileIds.clear();
+    const totalItems = filesData.length + foldersData.length;
+    const currentSelected = selectedFileIds.size + selectedFolderIds.size;
+
+    if (currentSelected === totalItems && totalItems > 0) {
+        clearSelection();
     } else {
         selectedFileIds.clear();
+        selectedFolderIds.clear();
         filesData.forEach(f => selectedFileIds.add(f.id));
+        foldersData.forEach(f => selectedFolderIds.add(f.id));
     }
     updateSelectionUI();
 }
 
 function clearSelection() {
     selectedFileIds.clear();
+    selectedFolderIds.clear();
     updateSelectionUI();
 }
 
 function updateSelectionUI() {
-    const count = selectedFileIds.size;
+    const totalCount = selectedFileIds.size + selectedFolderIds.size;
     const bar = document.getElementById("selectionFloatingBar");
     const countText = document.getElementById("selectionCountText");
     const txtSelectAll = document.getElementById("txtSelectAll");
     const btnSelectAll = document.getElementById("btnToggleSelectAll");
+    const thMasterCheckbox = document.getElementById("thMasterCheckbox");
 
-    if (count > 0) {
+    // Master Table Checkbox State
+    if (thMasterCheckbox) {
+        const total = filesData.length + foldersData.length;
+        thMasterCheckbox.checked = total > 0 && totalCount === total;
+        thMasterCheckbox.indeterminate = totalCount > 0 && totalCount < total;
+    }
+
+    // Ribbon Action Buttons Enabled/Disabled
+    const btnRibbonCut = document.getElementById("btnRibbonCut");
+    const btnRibbonCopy = document.getElementById("btnRibbonCopy");
+    const btnRibbonRename = document.getElementById("btnRibbonRename");
+    const btnRibbonDelete = document.getElementById("btnRibbonDelete");
+
+    if (btnRibbonCut) btnRibbonCut.disabled = selectedFileIds.size === 0;
+    if (btnRibbonCopy) btnRibbonCopy.disabled = selectedFileIds.size === 0;
+    if (btnRibbonRename) btnRibbonRename.disabled = totalCount !== 1;
+    if (btnRibbonDelete) btnRibbonDelete.disabled = totalCount === 0;
+
+    if (totalCount > 0) {
         document.body.classList.add("has-selection");
         if (bar) bar.style.display = "flex";
         if (countText) {
             countText.textContent = currentLang === "km"
-                ? `${count} ឯកសារបានជ្រើសរើស`
-                : `${count} file${count > 1 ? 's' : ''} selected`;
+                ? `${totalCount} ធាតុបានជ្រើសរើស (Items selected)`
+                : `${totalCount} item${totalCount > 1 ? 's' : ''} selected`;
         }
     } else {
         document.body.classList.remove("has-selection");
@@ -3276,31 +4837,41 @@ function updateSelectionUI() {
     }
 
     if (txtSelectAll) {
-        txtSelectAll.textContent = (count === filesData.length && filesData.length > 0)
+        const total = filesData.length + foldersData.length;
+        txtSelectAll.textContent = (totalCount === total && total > 0)
             ? (currentLang === "km" ? "ដោះជម្រើសទាំងអស់" : "Deselect All")
             : (currentLang === "km" ? "ជ្រើសទាំងអស់" : "Select All");
     }
     if (btnSelectAll) {
-        btnSelectAll.classList.toggle("active", count > 0);
+        btnSelectAll.classList.toggle("active", totalCount > 0);
     }
 
-    document.querySelectorAll(".file-card").forEach(card => {
-        const id = parseInt(card.dataset.fileId);
-        const isSel = selectedFileIds.has(id);
-        card.classList.toggle("selected", isSel);
-        const cb = card.querySelector(".card-select-checkbox");
-        if (cb) {
-            cb.classList.toggle("checked", isSel);
-            cb.textContent = isSel ? "✓" : "";
-        }
-    });
-
-    document.querySelectorAll(".file-table tbody tr").forEach(tr => {
+    // Update details table row classes & checkboxes
+    document.querySelectorAll(".win-details-table tbody tr.file-row").forEach(tr => {
         const id = parseInt(tr.dataset.fileId);
         const isSel = selectedFileIds.has(id);
-        tr.classList.toggle("selected-row", isSel);
-        const cb = tr.querySelector(".table-select-cb");
+        tr.classList.toggle("selected", isSel);
+        const cb = tr.querySelector(".file-select-cb");
         if (cb) cb.checked = isSel;
+    });
+
+    document.querySelectorAll(".win-details-table tbody tr.folder-row").forEach(tr => {
+        const id = parseInt(tr.dataset.folderId);
+        const isSel = selectedFolderIds.has(id);
+        tr.classList.toggle("selected", isSel);
+        const cb = tr.querySelector(".folder-select-cb");
+        if (cb) cb.checked = isSel;
+    });
+
+    // Update icon view cards
+    document.querySelectorAll(".win-items-view .file-card").forEach(card => {
+        const id = parseInt(card.dataset.fileId);
+        card.classList.toggle("selected", selectedFileIds.has(id));
+    });
+
+    document.querySelectorAll(".win-items-view .folder-card").forEach(card => {
+        const id = parseInt(card.dataset.folderId);
+        card.classList.toggle("selected", selectedFolderIds.has(id));
     });
 }
 
@@ -4086,23 +5657,29 @@ function initMarqueeSelection() {
     let isSelecting = false;
     let startX = 0;
     let startY = 0;
-    let initialSelected = new Set();
+    let initialSelectedFiles = new Set();
+    let initialSelectedFolders = new Set();
 
     dropZone.addEventListener("mousedown", (e) => {
         // Only trigger on primary left click
         if (e.button !== 0) return;
 
-        // If clicking on an interactive element or on a card/row, ignore
-        if (e.target.closest(".file-card") ||
-            e.target.closest(".folder-card") ||
-            e.target.closest("button") ||
+        // If clicking on an interactive element or directly on a card/row item, ignore
+        if (e.target.closest("button") ||
             e.target.closest("input") ||
             e.target.closest("a") ||
-            e.target.closest("table") ||
+            e.target.closest(".row-actions") ||
             e.target.closest(".win-context-menu") ||
             e.target.closest(".selection-floating-bar") ||
             e.target.closest(".modal-backdrop") ||
-            e.target.closest(".address-bar-bar")) {
+            e.target.closest(".win-nav-bar") ||
+            e.target.closest(".win-command-bar") ||
+            e.target.closest(".win-tabs-bar")) {
+            return;
+        }
+
+        // If clicking inside table body on a specific row cell, check if row was clicked
+        if (e.target.closest("tr.win-row") || e.target.closest(".win-item-card")) {
             return;
         }
 
@@ -4112,9 +5689,11 @@ function initMarqueeSelection() {
         startY = e.clientY;
 
         if (e.ctrlKey || e.metaKey || e.shiftKey) {
-            initialSelected = new Set(selectedFileIds);
+            initialSelectedFiles = new Set(selectedFileIds);
+            initialSelectedFolders = new Set(selectedFolderIds);
         } else {
-            initialSelected = new Set();
+            initialSelectedFiles = new Set();
+            initialSelectedFolders = new Set();
             clearSelection();
         }
     });
@@ -4154,33 +5733,13 @@ function initMarqueeSelection() {
             bottom: top + height
         };
 
-        // Determine intersected cards
-        const newlySelected = new Set(initialSelected);
+        const newlySelectedFiles = new Set(initialSelectedFiles);
+        const newlySelectedFolders = new Set(initialSelectedFolders);
 
-        document.querySelectorAll(".file-card").forEach(card => {
-            const cardId = parseInt(card.dataset.fileId);
-            if (!cardId) return;
-
-            const rect = card.getBoundingClientRect();
-            const intersects = !(
-                rect.right < marqueeRect.left ||
-                rect.left > marqueeRect.right ||
-                rect.bottom < marqueeRect.top ||
-                rect.top > marqueeRect.bottom
-            );
-
-            if (intersects) {
-                newlySelected.add(cardId);
-            } else if (!initialSelected.has(cardId)) {
-                newlySelected.delete(cardId);
-            }
-        });
-
-        // Also check table rows in list view
-        document.querySelectorAll(".file-table tbody tr").forEach(tr => {
-            const trId = parseInt(tr.dataset.fileId);
-            if (!trId) return;
-
+        // Check Windows 11 Details Table Rows
+        document.querySelectorAll(".win-details-table tbody tr").forEach(tr => {
+            const fileId = parseInt(tr.dataset.fileId);
+            const folderId = parseInt(tr.dataset.folderId);
             const rect = tr.getBoundingClientRect();
             const intersects = !(
                 rect.right < marqueeRect.left ||
@@ -4189,14 +5748,38 @@ function initMarqueeSelection() {
                 rect.top > marqueeRect.bottom
             );
 
-            if (intersects) {
-                newlySelected.add(trId);
-            } else if (!initialSelected.has(trId)) {
-                newlySelected.delete(trId);
+            if (fileId) {
+                if (intersects) newlySelectedFiles.add(fileId);
+                else if (!initialSelectedFiles.has(fileId)) newlySelectedFiles.delete(fileId);
+            } else if (folderId) {
+                if (intersects) newlySelectedFolders.add(folderId);
+                else if (!initialSelectedFolders.has(folderId)) newlySelectedFolders.delete(folderId);
             }
         });
 
-        selectedFileIds = newlySelected;
+        // Check Windows 11 Icon View Cards
+        document.querySelectorAll(".win-items-view .win-item-card").forEach(card => {
+            const fileId = parseInt(card.dataset.fileId);
+            const folderId = parseInt(card.dataset.folderId);
+            const rect = card.getBoundingClientRect();
+            const intersects = !(
+                rect.right < marqueeRect.left ||
+                rect.left > marqueeRect.right ||
+                rect.bottom < marqueeRect.top ||
+                rect.top > marqueeRect.bottom
+            );
+
+            if (fileId) {
+                if (intersects) newlySelectedFiles.add(fileId);
+                else if (!initialSelectedFiles.has(fileId)) newlySelectedFiles.delete(fileId);
+            } else if (folderId) {
+                if (intersects) newlySelectedFolders.add(folderId);
+                else if (!initialSelectedFolders.has(folderId)) newlySelectedFolders.delete(folderId);
+            }
+        });
+
+        selectedFileIds = newlySelectedFiles;
+        selectedFolderIds = newlySelectedFolders;
         updateSelectionUI();
     });
 
