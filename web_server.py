@@ -1676,6 +1676,239 @@ body {
     animation: winContextMenuIn 0.12s cubic-bezier(0, 0, 0.2, 1);
 }
 
+/* ==========================================================================
+   Multi-Selection & Drag into Folder Styles
+   ========================================================================== */
+.btn-address-action {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--card-border);
+    color: #cbd5e1;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.btn-address-action:hover,
+.btn-address-action.active {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: #38bdf8;
+    color: #38bdf8;
+}
+
+/* Card Selection Checkbox */
+.card-select-checkbox {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 1.5px solid rgba(255, 255, 255, 0.35);
+    background: rgba(15, 23, 42, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.15s ease;
+    z-index: 6;
+    font-size: 12px;
+    font-weight: 700;
+    color: transparent;
+    user-select: none;
+}
+
+.file-card:hover .card-select-checkbox,
+.card-select-checkbox.show,
+body.has-selection .card-select-checkbox {
+    opacity: 1;
+}
+
+.file-card.selected {
+    border-color: #38bdf8 !important;
+    background: rgba(30, 48, 80, 0.85) !important;
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.35) !important;
+}
+
+.file-card.selected .card-select-checkbox {
+    opacity: 1;
+    background: #38bdf8;
+    border-color: #38bdf8;
+    color: #070b14;
+}
+
+/* Draggable & Drag Over States */
+.file-card[draggable="true"] {
+    cursor: grab;
+}
+
+.file-card[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+.file-card.dragging {
+    opacity: 0.45;
+    transform: scale(0.96);
+    border: 2px dashed #38bdf8 !important;
+}
+
+/* Folder Drop Target Glow */
+.folder-card.drag-target-hover {
+    border: 2px dashed #10b981 !important;
+    background: rgba(16, 185, 129, 0.22) !important;
+    transform: scale(1.05) translateY(-3px) !important;
+    box-shadow: 0 12px 28px rgba(16, 185, 129, 0.4) !important;
+}
+
+.folder-card.drag-target-hover .folder-icon {
+    transform: scale(1.15);
+    transition: transform 0.15s ease;
+}
+
+/* Breadcrumb Drop Target Glow */
+.breadcrumb-item.drag-target-hover {
+    background: rgba(16, 185, 129, 0.25) !important;
+    color: #10b981 !important;
+    border: 1px dashed #10b981 !important;
+    border-radius: 6px;
+}
+
+/* Floating Multi-Selection Action Bar */
+.selection-floating-bar {
+    position: fixed;
+    bottom: 26px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(22, 30, 49, 0.96);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7), 0 0 20px rgba(56, 189, 248, 0.25);
+    border-radius: 30px;
+    padding: 8px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 9999;
+    animation: selectionSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes selectionSlideUp {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 20px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+    }
+}
+
+.selection-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.selection-badge-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #38bdf8;
+    color: #070b14;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.selection-count-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #f8fafc;
+    white-space: nowrap;
+}
+
+.selection-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-selection-act {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--card-border);
+    color: #f8fafc;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.btn-selection-act:hover {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: #38bdf8;
+    color: #38bdf8;
+    transform: translateY(-1px);
+}
+
+.btn-selection-act.btn-danger:hover {
+    background: rgba(244, 63, 94, 0.25);
+    border-color: #f43f5e;
+    color: #fb7185;
+}
+
+.btn-selection-act.btn-close {
+    padding: 6px 10px;
+    color: #94a3b8;
+}
+
+.btn-selection-act.btn-close:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+
+/* Destination Folder List in Move Modal */
+.folder-dest-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--card-border);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.folder-dest-item:hover {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: #38bdf8;
+    transform: translateX(4px);
+}
+
+.folder-dest-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #f8fafc;
+}
+
 </style>
 </head>
 <body>
@@ -1830,6 +2063,10 @@ body {
                         </button>
                     </div>
                     <div class="address-actions">
+                        <button class="btn-address-action" id="btnToggleSelectAll" title="ជ្រើសរើសទាំងអស់ (Select All)">
+                            <span>☑️</span>
+                            <span id="txtSelectAll">ជ្រើសទាំងអស់</span>
+                        </button>
                         <button class="btn-new-folder-action" id="btnNewFolderTop" title="បង្កើតថតថ្មី (New Folder)">
                             <span>📁➕</span>
                             <span>បង្កើតថតថ្មី (New Folder)</span>
@@ -2019,6 +2256,12 @@ body {
                 <span class="win-item-label">Rename (ប្តូរឈ្មោះ)</span>
             </div>
         </div>
+        <div class="win-menu-item" id="filecmenuMove">
+            <div class="win-item-left">
+                <span class="win-item-icon">📁</span>
+                <span class="win-item-label">Move to Folder (ផ្លាស់ទីចូលថត)</span>
+            </div>
+        </div>
         <div class="win-menu-divider"></div>
         <div class="win-menu-item win-danger" id="filecmenuDelete">
             <div class="win-item-left">
@@ -2046,6 +2289,46 @@ body {
         </div>
     </div>
 
+    <!-- Move to Folder Modal -->
+    <div class="modal-backdrop" id="moveModal" style="display: none;">
+        <div class="modal-card" style="max-width: 480px;">
+            <div class="modal-header">
+                <h3 id="moveModalTitle">📁 ផ្លាស់ទីចូលក្នុងថត (Move to Folder)</h3>
+                <button class="btn-close-modal" id="btnCloseMoveModal">✕</button>
+            </div>
+            <div class="modal-body" style="padding-top: 15px;">
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">សូមជ្រើសរើស Folder ដែលអ្នកចង់ផ្លាស់ទីឯកសារចូល ឬផ្លាស់ទីមកក្រៅ (Root Drive)៖</p>
+                <div class="folder-destination-list" id="moveFolderList" style="max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+            <div class="modal-footer" style="margin-top: 15px;">
+                <button class="btn-secondary" id="btnCancelMove">បោះបង់</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Multi-Selection Action Bar -->
+    <div class="selection-floating-bar" id="selectionFloatingBar" style="display: none;">
+        <div class="selection-bar-left">
+            <span class="selection-badge-icon">✓</span>
+            <span class="selection-count-text" id="selectionCountText">1 ឯកសារបានជ្រើស</span>
+        </div>
+        <div class="selection-bar-actions">
+            <button class="btn-selection-act" id="btnSelectionMove" title="Move to Folder">
+                <span>📁</span>
+                <span>ផ្លាស់ទីចូលថត (Move)</span>
+            </button>
+            <button class="btn-selection-act btn-danger" id="btnSelectionDelete" title="Delete Selected">
+                <span>🗑️</span>
+                <span>លុប (Delete)</span>
+            </button>
+            <button class="btn-selection-act btn-close" id="btnSelectionClear" title="Clear Selection">
+                ✕ ជម្រះ
+            </button>
+        </div>
+    </div>
+
     <script>
 /**
  * 5TB Cloud Storage - Web Application Logic
@@ -2060,6 +2343,7 @@ let foldersData = [];
 let currentFolderId = null;
 let folderStack = [];
 let activeContextItem = null;
+let selectedFileIds = new Set();
 
 // Localization dictionaries
 const i18n = {
@@ -2130,11 +2414,70 @@ function initEventListeners() {
             currentCategory = btn.dataset.cat;
             currentFolderId = null;
             folderStack = [];
+            clearSelection();
 
             updateCurrentDriveHeader();
             loadFiles();
         });
     });
+
+    // Select All Button
+    const btnSelectAll = document.getElementById("btnToggleSelectAll");
+    if (btnSelectAll) {
+        btnSelectAll.addEventListener("click", () => {
+            selectAllFiles();
+        });
+    }
+
+    // Floating Selection Bar Actions
+    const btnSelMove = document.getElementById("btnSelectionMove");
+    if (btnSelMove) {
+        btnSelMove.addEventListener("click", () => {
+            if (selectedFileIds.size > 0) {
+                openMoveModal(Array.from(selectedFileIds));
+            }
+        });
+    }
+
+    const btnSelDelete = document.getElementById("btnSelectionDelete");
+    if (btnSelDelete) {
+        btnSelDelete.addEventListener("click", () => {
+            deleteSelectedFiles();
+        });
+    }
+
+    const btnSelClear = document.getElementById("btnSelectionClear");
+    if (btnSelClear) {
+        btnSelClear.addEventListener("click", () => {
+            clearSelection();
+        });
+    }
+
+    // Move Modal Close Actions
+    const moveModal = document.getElementById("moveModal");
+    const btnCloseMove = document.getElementById("btnCloseMoveModal");
+    const btnCancelMove = document.getElementById("btnCancelMove");
+    if (btnCloseMove) btnCloseMove.addEventListener("click", () => { if (moveModal) moveModal.style.display = "none"; });
+    if (btnCancelMove) btnCancelMove.addEventListener("click", () => { if (moveModal) moveModal.style.display = "none"; });
+    if (moveModal) {
+        moveModal.addEventListener("click", (e) => {
+            if (e.target === moveModal) moveModal.style.display = "none";
+        });
+    }
+
+    // Context Menu: Move to Folder
+    const filecmenuMove = document.getElementById("filecmenuMove");
+    if (filecmenuMove) {
+        filecmenuMove.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "file") {
+                const targetIds = selectedFileIds.has(activeContextItem.id) && selectedFileIds.size > 1
+                    ? Array.from(selectedFileIds)
+                    : [activeContextItem.id];
+                openMoveModal(targetIds);
+            }
+        });
+    }
 
     // Preview Modal Close
     const previewModal = document.getElementById("previewModal");
@@ -2449,7 +2792,24 @@ function renderBreadcrumbs() {
         crumbRoot.addEventListener("click", () => {
             currentFolderId = null;
             folderStack = [];
+            clearSelection();
             loadFiles();
+        });
+
+        // Drop target for moving files back to Root
+        crumbRoot.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            crumbRoot.classList.add("drag-target-hover");
+        });
+        crumbRoot.addEventListener("dragleave", () => crumbRoot.classList.remove("drag-target-hover"));
+        crumbRoot.addEventListener("drop", (e) => {
+            e.preventDefault();
+            crumbRoot.classList.remove("drag-target-hover");
+            let fileIds = getDraggedFileIds(e);
+            if (fileIds && fileIds.length > 0) {
+                moveFilesToFolder(fileIds, null, rootName);
+            }
         });
     }
 
@@ -2465,8 +2825,26 @@ function renderBreadcrumbs() {
         btn.addEventListener("click", () => {
             currentFolderId = crumb.id;
             folderStack = folderStack.slice(0, idx + 1);
+            clearSelection();
             loadFiles();
         });
+
+        // Drop target for moving files to this parent folder
+        btn.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            btn.classList.add("drag-target-hover");
+        });
+        btn.addEventListener("dragleave", () => btn.classList.remove("drag-target-hover"));
+        btn.addEventListener("drop", (e) => {
+            e.preventDefault();
+            btn.classList.remove("drag-target-hover");
+            let fileIds = getDraggedFileIds(e);
+            if (fileIds && fileIds.length > 0) {
+                moveFilesToFolder(fileIds, crumb.id, crumb.name);
+            }
+        });
+
         trail.appendChild(btn);
     });
 }
@@ -2508,13 +2886,60 @@ function renderFolders() {
             showFolderContextMenu(e.clientX, e.clientY, folder);
         });
 
+        // Drag & Drop Target: "ទាញចូល folder"
+        card.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.dataTransfer.dropEffect = "move";
+            card.classList.add("drag-target-hover");
+            const icon = card.querySelector(".folder-icon");
+            if (icon) icon.textContent = "📂";
+        });
+
+        card.addEventListener("dragleave", (e) => {
+            // Only remove if leaving card itself
+            if (!card.contains(e.relatedTarget)) {
+                card.classList.remove("drag-target-hover");
+                const icon = card.querySelector(".folder-icon");
+                if (icon) icon.textContent = "📁";
+            }
+        });
+
+        card.addEventListener("drop", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            card.classList.remove("drag-target-hover");
+            const icon = card.querySelector(".folder-icon");
+            if (icon) icon.textContent = "📁";
+
+            let fileIds = getDraggedFileIds(e);
+            if (fileIds && fileIds.length > 0) {
+                moveFilesToFolder(fileIds, folder.id, folder.folder_name);
+            }
+        });
+
         fGrid.appendChild(card);
     });
+}
+
+function getDraggedFileIds(e) {
+    let fileIds = [];
+    try {
+        const raw = e.dataTransfer.getData("application/json");
+        if (raw) fileIds = JSON.parse(raw);
+    } catch (_) {}
+    if (!fileIds || fileIds.length === 0) {
+        if (selectedFileIds.size > 0) {
+            fileIds = Array.from(selectedFileIds);
+        }
+    }
+    return fileIds;
 }
 
 function openFolder(folderId, folderName) {
     currentFolderId = folderId;
     folderStack.push({ id: folderId, name: folderName });
+    clearSelection();
     loadFiles();
 }
 
@@ -2563,14 +2988,22 @@ function renderFiles() {
 
         filesData.forEach(file => {
             const card = document.createElement("div");
-            card.className = "file-card";
+            card.className = `file-card ${selectedFileIds.has(file.id) ? 'selected' : ''}`;
+            card.dataset.fileId = file.id;
+            card.dataset.fileName = file.file_name;
+            card.draggable = true;
+
             const icon = getFileIcon(file.category);
             const isFav = file.is_favorite ? "active" : "";
             const ext = file.file_name.toLowerCase().split('.').pop();
             const isImage = file.category === "images" || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'].includes(ext);
+            const isSelected = selectedFileIds.has(file.id);
 
             card.innerHTML = `
-                <div class="card-top" style="margin-bottom: ${isImage ? '6px' : '12px'};">
+                <div class="card-select-checkbox ${isSelected ? 'checked' : ''}" title="ជ្រើសរើស (Select)">
+                    ${isSelected ? '✓' : ''}
+                </div>
+                <div class="card-top" style="margin-bottom: ${isImage ? '6px' : '12px'}; padding-left: 26px;">
                     <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">
                         ${isImage ? '🖼️ រូបភាព' : icon}
                     </span>
@@ -2603,9 +3036,49 @@ function renderFiles() {
                 </div>
             `;
 
-            // Card Events
+            // Selection Checkbox Click
+            const cb = card.querySelector(".card-select-checkbox");
+            if (cb) {
+                cb.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    toggleSelectFile(file.id);
+                });
+            }
+
+            // Drag Start & Drag End ("ទាញចូល folder")
+            card.addEventListener("dragstart", (e) => {
+                if (!selectedFileIds.has(file.id)) {
+                    if (selectedFileIds.size === 0) {
+                        selectedFileIds.add(file.id);
+                        updateSelectionUI();
+                    }
+                }
+                const dragIds = Array.from(selectedFileIds.has(file.id) ? selectedFileIds : [file.id]);
+                e.dataTransfer.setData("application/json", JSON.stringify(dragIds));
+                e.dataTransfer.effectAllowed = "move";
+                card.classList.add("dragging");
+                document.body.classList.add("has-selection");
+            });
+
+            card.addEventListener("dragend", () => {
+                card.classList.remove("dragging");
+                document.querySelectorAll(".drag-target-hover").forEach(el => el.classList.remove("drag-target-hover"));
+            });
+
+            // Card Click Events
             card.style.cursor = "pointer";
-            card.addEventListener("click", () => {
+            card.addEventListener("click", (e) => {
+                if (e.target.closest(".card-actions") || e.target.closest(".card-star") || e.target.closest(".card-select-checkbox")) {
+                    return;
+                }
+                if (e.ctrlKey || e.metaKey) {
+                    toggleSelectFile(file.id);
+                    return;
+                }
+                if (selectedFileIds.size > 0) {
+                    toggleSelectFile(file.id);
+                    return;
+                }
                 if (!file.is_trash) previewFile(file.id);
             });
 
@@ -2658,10 +3131,37 @@ function renderFiles() {
         filesData.forEach(file => {
             const tr = document.createElement("tr");
             const icon = getFileIcon(file.category);
+            const isSelected = selectedFileIds.has(file.id);
+            tr.dataset.fileId = file.id;
+            tr.className = isSelected ? "selected-row" : "";
+            tr.draggable = true;
             tr.style.cursor = "pointer";
+
+            tr.addEventListener("dragstart", (e) => {
+                if (!selectedFileIds.has(file.id)) {
+                    if (selectedFileIds.size === 0) {
+                        selectedFileIds.add(file.id);
+                        updateSelectionUI();
+                    }
+                }
+                const dragIds = Array.from(selectedFileIds.has(file.id) ? selectedFileIds : [file.id]);
+                e.dataTransfer.setData("application/json", JSON.stringify(dragIds));
+                e.dataTransfer.effectAllowed = "move";
+                tr.classList.add("dragging");
+            });
+
+            tr.addEventListener("dragend", () => {
+                tr.classList.remove("dragging");
+                document.querySelectorAll(".drag-target-hover").forEach(el => el.classList.remove("drag-target-hover"));
+            });
+
             tr.addEventListener("click", (e) => {
                 if (e.target.tagName !== 'BUTTON' && !file.is_trash) {
-                    previewFile(file.id);
+                    if (e.ctrlKey || e.metaKey || selectedFileIds.size > 0) {
+                        toggleSelectFile(file.id);
+                    } else {
+                        previewFile(file.id);
+                    }
                 }
             });
 
@@ -2672,7 +3172,10 @@ function renderFiles() {
             });
 
             tr.innerHTML = `
-                <td>${icon} ${file.file_name}</td>
+                <td>
+                    <input type="checkbox" class="table-select-cb" ${isSelected ? 'checked' : ''} style="margin-right: 8px; cursor: pointer;">
+                    ${icon} ${file.file_name}
+                </td>
                 <td>${formatSize(file.file_size)}</td>
                 <td>${file.created_at}</td>
                 <td>${file.is_encrypted ? "🔒 AES-256" : "🔓 Plain"}</td>
@@ -2688,10 +3191,241 @@ function renderFiles() {
                     `}
                 </td>
             `;
+
+            const cb = tr.querySelector(".table-select-cb");
+            if (cb) {
+                cb.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    toggleSelectFile(file.id);
+                });
+            }
+
             tbody.appendChild(tr);
         });
     }
+
+    updateSelectionUI();
 }
+
+/* ==========================================================================
+   Multi-Selection Logic
+   ========================================================================== */
+function toggleSelectFile(id) {
+    if (selectedFileIds.has(id)) {
+        selectedFileIds.delete(id);
+    } else {
+        selectedFileIds.add(id);
+    }
+    updateSelectionUI();
+}
+
+function selectAllFiles() {
+    if (selectedFileIds.size === filesData.length && filesData.length > 0) {
+        selectedFileIds.clear();
+    } else {
+        selectedFileIds.clear();
+        filesData.forEach(f => selectedFileIds.add(f.id));
+    }
+    updateSelectionUI();
+}
+
+function clearSelection() {
+    selectedFileIds.clear();
+    updateSelectionUI();
+}
+
+function updateSelectionUI() {
+    const count = selectedFileIds.size;
+    const bar = document.getElementById("selectionFloatingBar");
+    const countText = document.getElementById("selectionCountText");
+    const txtSelectAll = document.getElementById("txtSelectAll");
+    const btnSelectAll = document.getElementById("btnToggleSelectAll");
+
+    if (count > 0) {
+        document.body.classList.add("has-selection");
+        if (bar) bar.style.display = "flex";
+        if (countText) {
+            countText.textContent = currentLang === "km"
+                ? `${count} ឯកសារបានជ្រើសរើស`
+                : `${count} file${count > 1 ? 's' : ''} selected`;
+        }
+    } else {
+        document.body.classList.remove("has-selection");
+        if (bar) bar.style.display = "none";
+    }
+
+    if (txtSelectAll) {
+        txtSelectAll.textContent = (count === filesData.length && filesData.length > 0)
+            ? (currentLang === "km" ? "ដោះជម្រើសទាំងអស់" : "Deselect All")
+            : (currentLang === "km" ? "ជ្រើសទាំងអស់" : "Select All");
+    }
+    if (btnSelectAll) {
+        btnSelectAll.classList.toggle("active", count > 0);
+    }
+
+    document.querySelectorAll(".file-card").forEach(card => {
+        const id = parseInt(card.dataset.fileId);
+        const isSel = selectedFileIds.has(id);
+        card.classList.toggle("selected", isSel);
+        const cb = card.querySelector(".card-select-checkbox");
+        if (cb) {
+            cb.classList.toggle("checked", isSel);
+            cb.textContent = isSel ? "✓" : "";
+        }
+    });
+
+    document.querySelectorAll(".file-table tbody tr").forEach(tr => {
+        const id = parseInt(tr.dataset.fileId);
+        const isSel = selectedFileIds.has(id);
+        tr.classList.toggle("selected-row", isSel);
+        const cb = tr.querySelector(".table-select-cb");
+        if (cb) cb.checked = isSel;
+    });
+}
+
+/* ==========================================================================
+   Move Files to Folder Logic ("ទាញចូល folder")
+   ========================================================================== */
+async function moveFilesToFolder(fileIds, targetFolderId, targetFolderName) {
+    if (!fileIds || fileIds.length === 0) return;
+    try {
+        const res = await fetch("/api/files/move", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                file_ids: fileIds,
+                target_folder_id: targetFolderId
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showMoveNotification(fileIds.length, targetFolderName || "Folder");
+            clearSelection();
+            loadFiles();
+        } else {
+            alert(data.error || "Failed to move files");
+        }
+    } catch (e) {
+        console.error("Error moving files:", e);
+        alert("Error moving files: " + e.message);
+    }
+}
+
+function showMoveNotification(count, folderName) {
+    const toast = document.createElement("div");
+    toast.className = "move-toast";
+    toast.style.cssText = `
+        position: fixed;
+        top: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(16, 185, 129, 0.95);
+        color: #ffffff;
+        padding: 10px 22px;
+        border-radius: 30px;
+        font-size: 14px;
+        font-weight: 600;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        z-index: 100000;
+        animation: winContextMenuIn 0.2s cubic-bezier(0, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    `;
+    toast.innerHTML = `<span>✓</span> <span>បានផ្លាស់ទី ${count} ឯកសារ ចូលទៅក្នុងថត [${folderName}] ដោយជោគជ័យ!</span>`;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transition = "opacity 0.3s ease";
+        setTimeout(() => toast.remove(), 300);
+    }, 2800);
+}
+
+async function openMoveModal(fileIds) {
+    const modal = document.getElementById("moveModal");
+    const list = document.getElementById("moveFolderList");
+    if (!modal || !list) return;
+
+    list.innerHTML = `<div style="color: #94a3b8; padding: 10px; font-size: 13px;">កំពុងទាញយកបញ្ជី Folder...</div>`;
+    modal.style.display = "flex";
+
+    const driveOwner = currentCategory === "vuochlin" ? "vuochlin" : "buntha";
+    try {
+        const res = await fetch(`/api/files?category=${driveOwner}`);
+        const data = await res.json();
+        const allFolders = data.folders || [];
+
+        list.innerHTML = "";
+
+        // Option 1: Move to Root Drive (if inside a folder)
+        if (currentFolderId !== null) {
+            const rootItem = document.createElement("div");
+            rootItem.className = "folder-dest-item";
+            rootItem.innerHTML = `
+                <span style="font-size: 22px;">💾</span>
+                <div>
+                    <div class="folder-dest-name">${driveOwner === "vuochlin" ? "NEANG VUOCHLIN" : "HUN BUNTHA"} (Root)</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">ផ្លាស់ទីឯកសារមកខាងក្រៅ Drive ដើម</div>
+                </div>
+            `;
+            rootItem.addEventListener("click", () => {
+                modal.style.display = "none";
+                moveFilesToFolder(fileIds, null, "Root Drive");
+            });
+            list.appendChild(rootItem);
+        }
+
+        const availableFolders = allFolders.filter(f => f.id !== currentFolderId);
+
+        if (availableFolders.length === 0 && currentFolderId === null) {
+            list.innerHTML = `<div style="color: #94a3b8; padding: 14px; text-align: center; font-size: 13px;">មិនទាន់មាន Folder ផ្សេងសម្រាប់ផ្លាស់ទីចូលទេ។ សូមបង្កើត Folder ថ្មីជាមុនសិន។</div>`;
+            return;
+        }
+
+        availableFolders.forEach(f => {
+            const item = document.createElement("div");
+            item.className = "folder-dest-item";
+            item.innerHTML = `
+                <span style="font-size: 22px;">📁</span>
+                <div>
+                    <div class="folder-dest-name">${f.folder_name}</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">${f.created_at || 'Folder'}</div>
+                </div>
+            `;
+            item.addEventListener("click", () => {
+                modal.style.display = "none";
+                moveFilesToFolder(fileIds, f.id, f.folder_name);
+            });
+            list.appendChild(item);
+        });
+
+    } catch (err) {
+        list.innerHTML = `<div style="color: #f43f5e; padding: 10px;">Error: ${err.message}</div>`;
+    }
+}
+
+async function deleteSelectedFiles() {
+    const count = selectedFileIds.size;
+    if (count === 0) return;
+    const msg = currentLang === "km"
+        ? `តើអ្នកពិតជាចង់លុប ${count} ឯកសារដែលបានជ្រើសរើសចូលក្នុងធុងសំរាមមែនទេ?`
+        : `Are you sure you want to delete ${count} selected files?`;
+    if (!confirm(msg)) return;
+
+    try {
+        await fetch("/api/files/batch-trash", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ file_ids: Array.from(selectedFileIds) })
+        });
+        clearSelection();
+        fetchStats();
+        loadFiles();
+    } catch (e) {
+        console.error(e);
+    }
+}
+
 
 // Upload Handling
 async function handleFilesUpload(files, targetDrive) {
@@ -3502,6 +4236,35 @@ def rename_file_route():
     if not file_id or not new_name:
         return jsonify({"success": False, "error": "Missing params"}), 400
     database.rename_file(int(file_id), new_name)
+    backup_database_to_telegram()
+    return jsonify({"success": True})
+
+@app.route("/api/files/move", methods=["POST"])
+def move_files_route():
+    data = request.json or {}
+    file_ids = data.get("file_ids", [])
+    target_folder_id = data.get("target_folder_id")
+    if target_folder_id is not None:
+        try:
+            target_folder_id = int(target_folder_id)
+        except Exception:
+            target_folder_id = None
+    if not file_ids:
+        return jsonify({"success": False, "error": "No files specified"}), 400
+    file_ids_int = [int(fid) for fid in file_ids if str(fid).isdigit()]
+    database.move_files_to_folder(file_ids_int, target_folder_id)
+    backup_database_to_telegram()
+    return jsonify({"success": True, "count": len(file_ids_int)})
+
+@app.route("/api/files/batch-trash", methods=["POST"])
+def batch_trash_route():
+    data = request.json or {}
+    file_ids = data.get("file_ids", [])
+    for fid in file_ids:
+        try:
+            database.move_to_trash(int(fid))
+        except Exception:
+            pass
     backup_database_to_telegram()
     return jsonify({"success": True})
 
