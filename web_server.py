@@ -984,7 +984,6 @@ body {
                     <span class="brand-icon">☁️</span>
                     <span class="brand-name">Cloud 1000TB</span>
                 </div>
-                <span class="badge-free">FREE 1000TB (1 PB)</span>
             </div>
 
             <!-- 1000TB Quota Card -->
@@ -1008,30 +1007,6 @@ body {
                 <button class="nav-item active" data-cat="all">
                     <span class="nav-icon">📁</span>
                     <span class="nav-label" id="tAllFiles">ឯកសារទាំងអស់</span>
-                </button>
-                <button class="nav-item" data-cat="documents">
-                    <span class="nav-icon">📄</span>
-                    <span class="nav-label" id="tDocuments">ឯកសារអត្ថបទ</span>
-                </button>
-                <button class="nav-item" data-cat="images">
-                    <span class="nav-icon">🖼️</span>
-                    <span class="nav-label" id="tImages">រូបភាព</span>
-                </button>
-                <button class="nav-item" data-cat="videos">
-                    <span class="nav-icon">🎬</span>
-                    <span class="nav-label" id="tVideos">វីដេអូ</span>
-                </button>
-                <button class="nav-item" data-cat="music">
-                    <span class="nav-icon">🎵</span>
-                    <span class="nav-label" id="tMusic">តន្ត្រី / សំឡេង</span>
-                </button>
-                <button class="nav-item" data-cat="archives">
-                    <span class="nav-icon">📦</span>
-                    <span class="nav-label" id="tArchives">ឯកសារបង្ហាប់</span>
-                </button>
-                <button class="nav-item" data-cat="favorites">
-                    <span class="nav-icon">⭐</span>
-                    <span class="nav-label" id="tFavorites">សំណព្វចិត្ត</span>
                 </button>
                 <button class="nav-item" data-cat="trash">
                     <span class="nav-icon">🗑️</span>
@@ -1680,21 +1655,26 @@ async function saveSettingsToServer() {
 
 function applyLanguage() {
     const t = i18n[currentLang];
-    document.getElementById("tAllFiles").textContent = t.all_files;
-    document.getElementById("tDocuments").textContent = t.documents;
-    document.getElementById("tImages").textContent = t.images;
-    document.getElementById("tVideos").textContent = t.videos;
-    document.getElementById("tMusic").textContent = t.music;
-    document.getElementById("tArchives").textContent = t.archives;
-    document.getElementById("tFavorites").textContent = t.favorites;
-    document.getElementById("tTrash").textContent = t.trash;
-    document.getElementById("tQuotaTitle").textContent = t.quota_title;
-    document.getElementById("tUploadFile").textContent = t.upload_file;
-    document.getElementById("tEmptyTrash").textContent = t.empty_trash;
-    document.getElementById("searchInput").placeholder = t.search_placeholder;
-    document.getElementById("tDropHint").textContent = t.drop_hint;
-    document.getElementById("tNoFiles").textContent = t.no_files;
-    document.getElementById("btnLangToggle").textContent = t.lang_btn;
+    const setTxt = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+    setTxt("tAllFiles", t.all_files);
+    setTxt("tDocuments", t.documents);
+    setTxt("tImages", t.images);
+    setTxt("tVideos", t.videos);
+    setTxt("tMusic", t.music);
+    setTxt("tArchives", t.archives);
+    setTxt("tFavorites", t.favorites);
+    setTxt("tTrash", t.trash);
+    setTxt("tQuotaTitle", t.quota_title);
+    setTxt("tUploadFile", t.upload_file);
+    setTxt("tEmptyTrash", t.empty_trash);
+    const searchEl = document.getElementById("searchInput");
+    if (searchEl) searchEl.placeholder = t.search_placeholder;
+    setTxt("tDropHint", t.drop_hint);
+    setTxt("tNoFiles", t.no_files);
+    setTxt("btnLangToggle", t.lang_btn);
     fetchStats();
     renderFiles();
 }
