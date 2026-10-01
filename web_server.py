@@ -376,7 +376,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 6px;
-    cursor: pointer;
+    cursor: default;
     border: 1px solid #059669;
     background-color: rgba(6, 78, 59, 0.4);
     color: #34d399;
@@ -997,10 +997,10 @@ body {
                     <div class="progress-bar-fill" id="quotaFill" style="width: 1%;"></div>
                 </div>
                 <div class="quota-sub" id="quotaSub">នៅសល់ 1000.00 TB (100%)</div>
-                <button class="status-pill connected" id="cloudStatusBtn">
+                <div class="status-pill connected" id="cloudStatusBtn" style="cursor: default; user-select: none;">
                     <span class="status-dot"></span>
-                    <span id="cloudStatusText">Cloud 1000TB Connected</span>
-                </button>
+                    <span id="cloudStatusText">Mercy Dental Care</span>
+                </div>
             </div>
 
             <!-- Categories Menu -->
@@ -1205,8 +1205,8 @@ const i18n = {
         search_placeholder: "ស្វែងរកឯកសារតាមឈ្មោះ...",
         drop_hint: "ទម្លាក់ឯកសារនៅទីនេះដើម្បីផ្ទុកឡើង",
         no_files: "មិនទាន់មានឯកសារនៅឡើយទេ",
-        connected: "Cloud 5TB Connected",
-        offline: "Local Mode (ចុចភ្ជាប់ Cloud 5TB)",
+        connected: "Mercy Dental Care",
+        offline: "Mercy Dental Care",
         download: "ទាញយក",
         delete: "លុប",
         restore: "ស្តារឡើងវិញ",
@@ -1229,8 +1229,8 @@ const i18n = {
         search_placeholder: "Search files by name...",
         drop_hint: "Drop files here to upload",
         no_files: "No files found",
-        connected: "Cloud 5TB Connected",
-        offline: "Local Mode (Click to setup)",
+        connected: "Mercy Dental Care",
+        offline: "Mercy Dental Care",
         download: "Download",
         delete: "Delete",
         restore: "Restore",
@@ -1334,7 +1334,6 @@ function initEventListeners() {
         settingsModal.style.display = "flex";
     };
     document.getElementById("btnSettingsOpen").addEventListener("click", openSettings);
-    document.getElementById("cloudStatusBtn").addEventListener("click", openSettings);
     document.getElementById("btnCloseSettings").addEventListener("click", () => settingsModal.style.display = "none");
     document.getElementById("btnCancelSettings").addEventListener("click", () => settingsModal.style.display = "none");
 
@@ -1389,12 +1388,9 @@ async function fetchStats() {
         const statusBtn = document.getElementById("cloudStatusBtn");
         const statusTxt = document.getElementById("cloudStatusText");
 
-        if (data.is_cloud_connected) {
+        if (statusBtn && statusTxt) {
             statusBtn.className = "status-pill connected";
-            statusTxt.textContent = i18n[currentLang].connected;
-        } else {
-            statusBtn.className = "status-pill warning";
-            statusTxt.textContent = i18n[currentLang].offline;
+            statusTxt.textContent = "Mercy Dental Care";
         }
     } catch (e) {
         console.error("Error fetching stats:", e);
