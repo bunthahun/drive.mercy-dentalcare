@@ -33,6 +33,10 @@ def init_db():
             updated_at TEXT NOT NULL
         )
     """)
+    try:
+        cursor.execute("ALTER TABLE files ADD COLUMN drive_owner TEXT DEFAULT 'buntha'")
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     conn.close()
 
@@ -65,7 +69,8 @@ def add_file(
     is_encrypted: bool,
     cloud_backend: str,
     chunks: List[Dict[str, Any]],
-    category: Optional[str] = None
+    category: Optional[str] = None,
+    drive_owner: str = "buntha"
 ) -> int:
     if not category:
         category = categorize_file(file_name)
@@ -77,8 +82,8 @@ def add_file(
         INSERT INTO files (
             file_name, file_size, mime_type, category, sha256,
             is_encrypted, is_favorite, is_trash, cloud_backend,
-            chunk_count, chunks_data, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?)
+            chunk_count, chunks_data, drive_owner, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?, ?)
     """, (
         file_name,
         file_size,
@@ -89,6 +94,7 @@ def add_file(
         cloud_backend,
         len(chunks),
         json.dumps(chunks),
+        drive_owner,
         now,
         now
     ))
@@ -99,6 +105,7 @@ def add_file(
 
 def get_files(
     category: Optional[str] = None,
+    drive_owner: Optional[str] = None,
     search_query: Optional[str] = None,
     is_trash: bool = False,
     is_favorite: Optional[bool] = None,
@@ -111,7 +118,14 @@ def get_files(
     query = "SELECT * FROM files WHERE is_trash = ?"
     params: List[Any] = [1 if is_trash else 0]
     
-    if category and category != "all" and not is_trash:
+    if drive_owner and not is_trash:
+        if drive_owner == "buntha":
+            query += " AND (drive_owner = 'buntha' OR drive_owner IS NULL)"
+        else:
+            query += " AND drive_owner = ?"
+            params.append(drive_owner)
+
+    if category and category not in ["all", "buntha", "vuochlin", "trash", "favorites"] and not is_trash:
         query += " AND category = ?"
         params.append(category)
         
@@ -237,12 +251,24 @@ def get_storage_stats() -> Dict[str, Any]:
     trash_bytes = t_row["trash_bytes"] if t_row else 0
     trash_count = t_row["trash_count"] if t_row else 0
     
+    # Per-drive stats
+    try:
+        cursor.execute("SELECT COALESCE(SUM(file_size), 0) AS bytes FROM files WHERE is_trash = 0 AND (drive_owner = 'buntha' OR drive_owner IS NULL)")
+        buntha_bytes = cursor.fetchone()["bytes"]
+        cursor.execute("SELECT COALESCE(SUM(file_size), 0) AS bytes FROM files WHERE is_trash = 0 AND drive_owner = 'vuochlin'")
+        vuochlin_bytes = cursor.fetchone()["bytes"]
+    except Exception:
+        buntha_bytes = total_bytes
+        vuochlin_bytes = 0
+
     conn.close()
     return {
         "used_bytes": total_bytes,
         "file_count": file_count,
         "trash_bytes": trash_bytes,
-        "trash_count": trash_count
+        "trash_count": trash_count,
+        "buntha_bytes": buntha_bytes,
+        "vuochlin_bytes": vuochlin_bytes
     }
 
 def rename_file(file_id: int, new_name: str):
