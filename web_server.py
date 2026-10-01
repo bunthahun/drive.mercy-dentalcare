@@ -9,7 +9,7 @@ import mimetypes
 import hashlib
 import requests
 from pathlib import Path
-from flask import Flask, render_template_string, request, jsonify, send_file
+from flask import Flask, render_template_string, request, jsonify, send_file, make_response
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
@@ -702,25 +702,158 @@ body {
 
 .drop-overlay {
     position: absolute;
-    inset: 12px;
-    border: 2px dashed #38bdf8;
-    background: rgba(11, 15, 25, 0.92);
-    backdrop-filter: blur(8px);
-    border-radius: var(--radius-lg);
+    inset: 0;
+    background: rgba(7, 11, 20, 0.94);
+    backdrop-filter: blur(12px);
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 100;
+    z-index: 200;
+    padding: 24px;
 }
 
-.drop-content {
+.drop-modal-card {
+    background: #0d1527;
+    border: 2px dashed #38bdf8;
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 760px;
+    width: 100%;
     text-align: center;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(56, 189, 248, 0.15);
+    animation: dropPulse 2s infinite alternate;
 }
 
-.drop-icon {
-    font-size: 54px;
-    display: block;
+@keyframes dropPulse {
+    0% { border-color: #38bdf8; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 25px rgba(56, 189, 248, 0.15); }
+    100% { border-color: #10b981; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 35px rgba(16, 185, 129, 0.25); }
+}
+
+.drop-header-icon {
+    font-size: 50px;
+    display: inline-block;
+    margin-bottom: 8px;
+    animation: bounce 1.2s infinite;
+}
+
+.drop-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #f8fafc;
+    margin-bottom: 6px;
+}
+
+.drop-subtitle {
+    font-size: 14px;
+    color: #94a3b8;
+    margin-bottom: 24px;
+}
+
+.drop-targets-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.drop-target-box {
+    background: rgba(19, 27, 46, 0.85);
+    border: 2px dashed #334155;
+    border-radius: 16px;
+    padding: 24px 16px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+}
+
+.drop-target-box:hover,
+.drop-target-box.drag-hover {
+    background: rgba(30, 41, 69, 0.95);
+    border-color: #10b981;
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 12px 28px rgba(16, 185, 129, 0.25);
+}
+
+.drop-target-box#dropTargetVuochlin:hover,
+.drop-target-box#dropTargetVuochlin.drag-hover {
+    border-color: #ec4899;
+    box-shadow: 0 12px 28px rgba(236, 72, 153, 0.25);
+}
+
+.drop-target-icon-wrap {
+    position: relative;
+    width: 60px;
+    height: 52px;
     margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.drop-target-drive-img {
+    width: 54px;
+    height: 46px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+.drop-target-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #f8fafc;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+}
+
+.drop-target-desc {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.drop-badge {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px;
+    color: #38bdf8;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.drop-target-box.drag-hover .drop-badge {
+    background: #10b981;
+    color: #070b14;
+    border-color: #10b981;
+}
+
+.drop-target-box#dropTargetVuochlin.drag-hover .drop-badge {
+    background: #ec4899;
+    color: #ffffff;
+    border-color: #ec4899;
+}
+
+.drop-footer-hint {
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 10px;
+}
+
+.drop-footer-hint b {
+    color: #38bdf8;
+}
+
+/* Sidebar Drag Hover Highlight */
+.nav-item.drag-hover-sidebar {
+    background: rgba(56, 189, 248, 0.2) !important;
+    border: 2px dashed #38bdf8 !important;
+    transform: scale(1.02);
 }
 
 /* Empty State */
@@ -1330,12 +1463,38 @@ body {
 
             <!-- Drag & Drop Zone Area -->
             <div class="content-viewport" id="dropZone">
-                <!-- Drop Overlay -->
+                <!-- Drop Overlay with Dual Target Drives -->
                 <div class="drop-overlay" id="dropOverlay">
-                    <div class="drop-content">
-                        <span class="drop-icon">📥</span>
-                        <h2 id="tDropHint">ទម្លាក់ឯកសារនៅទីនេះដើម្បីផ្ទុកឡើង</h2>
-                        <p>5TB Secure Cloud Storage with AES-256</p>
+                    <div class="drop-modal-card">
+                        <div class="drop-header">
+                            <span class="drop-header-icon">📂</span>
+                            <h2 class="drop-title">ទាញទម្លាក់ឯកសារចូល Drive (Drag & Drop)</h2>
+                            <p class="drop-subtitle">សូមទម្លាក់ចំ Drive ខាងក្រោមដើម្បីផ្ទុកឯកសារចូលដោយឡែកពីគ្នា មិនច្របូកច្របល់៖</p>
+                        </div>
+                        <div class="drop-targets-container">
+                            <div class="drop-target-box" id="dropTargetBuntha" data-drive="buntha">
+                                <div class="drop-target-icon-wrap">
+                                    <img src="data:image/png;base64,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" class="drop-target-drive-img" alt="HUN BUNTHA Drive">
+                                    <span class="drive-led green"></span>
+                                </div>
+                                <div class="drop-target-name">HUN BUNTHA</div>
+                                <div class="drop-target-desc">ទម្លាក់នៅទីនេះដើម្បីផ្ទុកចូល Drive <b>HUN BUNTHA</b></div>
+                                <div class="drop-badge">💾 ផ្ទុកចូលទីនេះ</div>
+                            </div>
+
+                            <div class="drop-target-box" id="dropTargetVuochlin" data-drive="vuochlin">
+                                <div class="drop-target-icon-wrap">
+                                    <img src="data:image/png;base64,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" class="drop-target-drive-img" alt="NEANG VUOCHLIN Drive">
+                                    <span class="drive-led green"></span>
+                                </div>
+                                <div class="drop-target-name">NEANG VUOCHLIN</div>
+                                <div class="drop-target-desc">ទម្លាក់នៅទីនេះដើម្បីផ្ទុកចូល Drive <b>NEANG VUOCHLIN</b></div>
+                                <div class="drop-badge">💾 ផ្ទុកចូលទីនេះ</div>
+                            </div>
+                        </div>
+                        <div class="drop-footer-hint">
+                            <span>💡 ឬលែងដៃនៅកន្លែងណាក៏បាន ឯកសារនឹងចូលទៅក្នុង Drive ដែលកំពុងបើកស្រាប់ (<b id="dropActiveDriveHint">HUN BUNTHA</b>)</span>
+                        </div>
                     </div>
                 </div>
 
@@ -1385,6 +1544,7 @@ body {
                     <span class="modal-title" id="previewFileName" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 450px;">File Preview</span>
                 </div>
                 <div class="preview-header-actions">
+                    <a href="#" target="_blank" class="btn-secondary" id="btnPreviewNewTab" style="text-decoration: none; padding: 6px 12px; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">🌐 បើកក្នុង Tab ថ្មី</a>
                     <button class="btn-primary" id="btnPreviewDownload" style="padding: 6px 14px; font-size: 13px;">📥 ទាញយក</button>
                     <button class="btn-close-modal" id="btnClosePreview">✕</button>
                 </div>
@@ -1585,30 +1745,126 @@ function initEventListeners() {
         }
     });
 
-    // Drag and Drop
+    // Drag and Drop with Dual Drive Targets
     const dropZone = document.getElementById("dropZone");
     const dropOverlay = document.getElementById("dropOverlay");
+    const dropBuntha = document.getElementById("dropTargetBuntha");
+    const dropVuochlin = document.getElementById("dropTargetVuochlin");
+    const dropActiveHint = document.getElementById("dropActiveDriveHint");
+
+    let dragCounter = 0;
 
     window.addEventListener("dragenter", (e) => {
         e.preventDefault();
-        dropOverlay.style.display = "flex";
-    });
-
-    dropOverlay.addEventListener("dragleave", (e) => {
-        if (e.relatedTarget === null || e.relatedTarget.id === "dropZone") {
-            dropOverlay.style.display = "none";
+        dragCounter++;
+        if (dropActiveHint) {
+            dropActiveHint.textContent = currentCategory === "vuochlin" ? "NEANG VUOCHLIN" : "HUN BUNTHA";
         }
+        if (dropOverlay) dropOverlay.style.display = "flex";
     });
 
-    dropOverlay.addEventListener("dragover", (e) => e.preventDefault());
-
-    dropOverlay.addEventListener("drop", (e) => {
+    window.addEventListener("dragleave", (e) => {
         e.preventDefault();
-        dropOverlay.style.display = "none";
-        if (e.dataTransfer.files.length > 0) {
-            handleFilesUpload(Array.from(e.dataTransfer.files));
+        dragCounter--;
+        if (dragCounter <= 0) {
+            dragCounter = 0;
+            if (dropOverlay) dropOverlay.style.display = "none";
         }
     });
+
+    window.addEventListener("dragover", (e) => e.preventDefault());
+
+    if (dropBuntha) {
+        dropBuntha.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropBuntha.classList.add("drag-hover");
+        });
+        dropBuntha.addEventListener("dragleave", () => dropBuntha.classList.remove("drag-hover"));
+        dropBuntha.addEventListener("drop", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dragCounter = 0;
+            if (dropOverlay) dropOverlay.style.display = "none";
+            dropBuntha.classList.remove("drag-hover");
+            if (e.dataTransfer.files.length > 0) {
+                handleFilesUpload(Array.from(e.dataTransfer.files), "buntha");
+            }
+        });
+    }
+
+    if (dropVuochlin) {
+        dropVuochlin.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropVuochlin.classList.add("drag-hover");
+        });
+        dropVuochlin.addEventListener("dragleave", () => dropVuochlin.classList.remove("drag-hover"));
+        dropVuochlin.addEventListener("drop", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dragCounter = 0;
+            if (dropOverlay) dropOverlay.style.display = "none";
+            dropVuochlin.classList.remove("drag-hover");
+            if (e.dataTransfer.files.length > 0) {
+                handleFilesUpload(Array.from(e.dataTransfer.files), "vuochlin");
+            }
+        });
+    }
+
+    if (dropOverlay) {
+        dropOverlay.addEventListener("drop", (e) => {
+            e.preventDefault();
+            dragCounter = 0;
+            dropOverlay.style.display = "none";
+            if (dropBuntha) dropBuntha.classList.remove("drag-hover");
+            if (dropVuochlin) dropVuochlin.classList.remove("drag-hover");
+            if (e.dataTransfer.files.length > 0) {
+                const targetDrive = currentCategory === "vuochlin" ? "vuochlin" : "buntha";
+                handleFilesUpload(Array.from(e.dataTransfer.files), targetDrive);
+            }
+        });
+    }
+
+    // Sidebar Drive Drag & Drop Support
+    const navBuntha = document.getElementById("btnNavBuntha");
+    const navVuochlin = document.getElementById("btnNavVuochlin");
+    if (navBuntha) {
+        navBuntha.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            navBuntha.classList.add("drag-hover-sidebar");
+        });
+        navBuntha.addEventListener("dragleave", () => navBuntha.classList.remove("drag-hover-sidebar"));
+        navBuntha.addEventListener("drop", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            navBuntha.classList.remove("drag-hover-sidebar");
+            dragCounter = 0;
+            if (dropOverlay) dropOverlay.style.display = "none";
+            if (e.dataTransfer.files.length > 0) {
+                handleFilesUpload(Array.from(e.dataTransfer.files), "buntha");
+            }
+        });
+    }
+    if (navVuochlin) {
+        navVuochlin.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            navVuochlin.classList.add("drag-hover-sidebar");
+        });
+        navVuochlin.addEventListener("dragleave", () => navVuochlin.classList.remove("drag-hover-sidebar"));
+        navVuochlin.addEventListener("drop", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            navVuochlin.classList.remove("drag-hover-sidebar");
+            dragCounter = 0;
+            if (dropOverlay) dropOverlay.style.display = "none";
+            if (e.dataTransfer.files.length > 0) {
+                handleFilesUpload(Array.from(e.dataTransfer.files), "vuochlin");
+            }
+        });
+    }
 
     // Settings Modal
     const settingsModal = document.getElementById("settingsModal");
@@ -1868,7 +2124,10 @@ function renderFiles() {
 }
 
 // Upload Handling
-async function handleFilesUpload(files) {
+async function handleFilesUpload(files, targetDrive) {
+    const driveToUse = targetDrive || (currentCategory === "vuochlin" ? "vuochlin" : "buntha");
+    const driveLabel = driveToUse === "vuochlin" ? "NEANG VUOCHLIN" : "HUN BUNTHA";
+
     const panel = document.getElementById("transferPanel");
     const list = document.getElementById("transferList");
     panel.style.display = "block";
@@ -1879,22 +2138,22 @@ async function handleFilesUpload(files) {
         item.innerHTML = `
             <div class="transfer-info">
                 <span>📤 ${file.name}</span>
-                <span class="status-txt">Uploading to Cloud...</span>
+                <span class="status-txt">កំពុងផ្ទុកចូល Drive [${driveLabel}]...</span>
             </div>
             <div class="progress-bar-bg">
-                <div class="progress-bar-fill" style="width: 20%;"></div>
+                <div class="progress-bar-fill" style="width: 25%;"></div>
             </div>
         `;
         list.appendChild(item);
 
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("drive", currentCategory === "vuochlin" ? "vuochlin" : "buntha");
+        formData.append("drive", driveToUse);
 
         try {
             const fill = item.querySelector(".progress-bar-fill");
             const status = item.querySelector(".status-txt");
-            fill.style.width = "60%";
+            fill.style.width = "65%";
 
             const res = await fetch("/api/upload", {
                 method: "POST",
@@ -1904,7 +2163,7 @@ async function handleFilesUpload(files) {
             const result = await res.json();
             if (result.success) {
                 fill.style.width = "100%";
-                status.textContent = "✓ ជោគជ័យ (Done)";
+                status.textContent = `✓ ជោគជ័យ (បានចូលក្នុង ${driveLabel})`;
                 status.style.color = "#10b981";
             } else {
                 status.textContent = "✕ បរាជ័យ: " + (result.error || "Error");
@@ -1915,6 +2174,12 @@ async function handleFilesUpload(files) {
         }
     }
 
+    // Switch view to the drive where files were saved
+    currentCategory = driveToUse;
+    document.querySelectorAll(".nav-item").forEach(b => {
+        b.classList.toggle("active", b.dataset.cat === driveToUse);
+    });
+    updateCurrentDriveHeader();
     fetchStats();
     loadFiles();
 }
@@ -1957,6 +2222,7 @@ function previewFile(id) {
     const nameEl = document.getElementById("previewFileName");
     const iconEl = document.getElementById("previewFileIcon");
     const dlBtn = document.getElementById("btnPreviewDownload");
+    const newTabBtn = document.getElementById("btnPreviewNewTab");
 
     if (nameEl) nameEl.textContent = file.file_name;
     if (iconEl) iconEl.textContent = getFileIcon(file.category);
@@ -1965,12 +2231,16 @@ function previewFile(id) {
     const ext = file.file_name.toLowerCase().split('.').pop();
     const viewUrl = `/api/view/${file.id}`;
 
+    if (newTabBtn) {
+        newTabBtn.href = viewUrl;
+    }
+
     // Supported preview types
     const imageExts = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico'];
     const videoExts = ['mp4', 'webm', 'ogg', 'mov', 'm4v'];
     const audioExts = ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'];
     const isPdf = ext === 'pdf';
-    const textExts = ['txt', 'log', 'csv', 'json', 'md', 'html', 'xml', 'js', 'py', 'css', 'sql'];
+    const textExts = ['txt', 'log', 'csv', 'json', 'md', 'html', 'xml', 'js', 'py', 'css', 'sql', 'sh', 'bat'];
 
     body.innerHTML = `<div class="preview-loading">⏳ កំពុងទាញយកមកបើកមើល... (Loading preview...)</div>`;
     modal.style.display = "flex";
@@ -2008,7 +2278,10 @@ function previewFile(id) {
         `;
     } else if (textExts.includes(ext)) {
         fetch(viewUrl)
-            .then(res => res.text())
+            .then(res => {
+                if (!res.ok) throw new Error("Status " + res.status);
+                return res.text();
+            })
             .then(txt => {
                 const escaped = txt.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
                 body.innerHTML = `<pre class="preview-text-content"><code>${escaped}</code></pre>`;
@@ -2023,7 +2296,7 @@ function previewFile(id) {
                 <div class="generic-name">${file.file_name}</div>
                 <div class="generic-size">${formatSize(file.file_size)}</div>
                 <p style="color: var(--text-muted); font-size: 13px; margin: 15px 0;">ប្រភេទ File នេះត្រូវទាញយកមកបើកក្នុងកុំព្យូទ័រ ឬទូរស័ព្ទដៃ</p>
-                <div style="display: flex; gap: 10px; justify-content: center;">
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                     <a href="${viewUrl}" target="_blank" class="btn-primary" style="text-decoration: none; padding: 8px 16px;">🌐 បើកក្នុង Tab ថ្មី (Open in Tab)</a>
                     <button class="btn-secondary" onclick="downloadFile(${file.id})" style="padding: 8px 16px;">📥 ទាញយក (Download)</button>
                 </div>
@@ -2243,17 +2516,57 @@ def download_file(file_id):
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+MIME_MAP = {
+    "pdf": "application/pdf",
+    "png": "image/png",
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "gif": "image/gif",
+    "webp": "image/webp",
+    "svg": "image/svg+xml",
+    "ico": "image/x-icon",
+    "bmp": "image/bmp",
+    "mp4": "video/mp4",
+    "webm": "video/webm",
+    "ogg": "video/ogg",
+    "mov": "video/quicktime",
+    "m4v": "video/mp4",
+    "mp3": "audio/mpeg",
+    "wav": "audio/wav",
+    "m4a": "audio/mp4",
+    "aac": "audio/aac",
+    "flac": "audio/flac",
+    "txt": "text/plain; charset=utf-8",
+    "md": "text/plain; charset=utf-8",
+    "csv": "text/plain; charset=utf-8",
+    "json": "application/json; charset=utf-8",
+    "js": "text/plain; charset=utf-8",
+    "py": "text/plain; charset=utf-8",
+    "html": "text/html; charset=utf-8",
+    "css": "text/css; charset=utf-8",
+}
+
 @app.route("/api/view/<int:file_id>", methods=["GET"])
 def view_file_content(file_id):
     file_info = database.get_file_by_id(file_id)
     if not file_info: return jsonify({"success": False, "error": "Not found"}), 404
     name = file_info["file_name"]
-    mime_type = file_info.get("mime_type") or mimetypes.guess_type(name)[0] or "application/octet-stream"
+    ext = name.lower().split('.')[-1] if '.' in name else ''
+    mime_type = MIME_MAP.get(ext) or file_info.get("mime_type") or mimetypes.guess_type(name)[0] or "application/octet-stream"
     temp_path = CACHE_DIR / f"view_{file_id}_{name}"
     try:
         if not temp_path.exists():
             engine.download_file(file_id, str(temp_path))
-        return send_file(str(temp_path), mimetype=mime_type, as_attachment=False, download_name=name)
+        resp = make_response(send_file(
+            str(temp_path),
+            mimetype=mime_type,
+            as_attachment=False,
+            download_name=name,
+            conditional=True
+        ))
+        resp.headers["Content-Disposition"] = f'inline; filename="{name}"'
+        resp.headers["Cache-Control"] = "public, max-age=86400"
+        return resp
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
