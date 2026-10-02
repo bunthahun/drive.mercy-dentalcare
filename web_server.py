@@ -650,6 +650,7 @@ def settings_route():
         curr.update(request.json or {})
         save_settings(curr)
         engine.reload_backend()
+        backup_database_to_telegram()
         return jsonify({"success": True, "settings": curr})
     return jsonify({"success": True, "settings": load_settings()})
 
