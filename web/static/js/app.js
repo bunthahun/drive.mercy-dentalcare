@@ -2754,30 +2754,96 @@ function previewFile(id) {
         `;
     } else if (videoExts.includes(ext)) {
         body.innerHTML = `
-            <div class="preview-media-container" style="position: relative; min-height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
-                <div id="videoLoadingNotice" style="display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--text-muted); font-size: 14px; margin-bottom: 12px;">
-                    <div style="width: 32px; height: 32px; border: 3px solid rgba(255,255,255,0.15); border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-                    <span>⚡ កំពុងទាញយកវីដេអូពី Cloud Storage (${formatSize(file.file_size)})...</span>
-                </div>
-                <video controls autoplay playsinline class="preview-video" style="max-height: 70vh; width: 100%; border-radius: 8px; background: #000;"
-                    oncanplay="const el = document.getElementById('videoLoadingNotice'); if(el) el.style.display='none';"
-                    onloadeddata="const el = document.getElementById('videoLoadingNotice'); if(el) el.style.display='none';"
-                    onerror="
-                        const el = document.getElementById('videoLoadingNotice');
-                        if (el) el.style.display = 'none';
-                        const errBox = document.getElementById('videoErrorNotice');
-                        if (errBox) errBox.style.display = 'flex';
-                    ">
-                    <source src="${viewUrl}">
-                    Browser របស់អ្នកមិនគាំទ្រការចាក់វីដេអូនេះទេ។
-                </video>
-                <div id="videoErrorNotice" style="display: none; flex-direction: column; align-items: center; gap: 10px; margin-top: 15px; padding: 16px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; text-align: center; width: 90%;">
-                    <span style="color: #f87171; font-weight: bold; font-size: 14px;">⚠️ វីដេអូទំហំធំ (${formatSize(file.file_size)})</span>
-                    <span style="color: var(--text-muted); font-size: 13px;">ប្រព័ន្ធកំពុងទាញយក ឬ Browser មិនអាចចាក់ផ្ទាល់បាន។ សូមទាញយកមកបើកលើឧបករណ៍របស់អ្នក៖</span>
-                    <a href="${viewUrl}" download="${file.file_name}" class="btn-primary" style="text-decoration: none; padding: 8px 18px; border-radius: 8px; margin-top: 5px;">📥 ទាញយកវីដេអូនេះ (${formatSize(file.file_size)})</a>
+            <div class="preview-media-container" id="videoContainer" style="position: relative; min-height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
+                <div id="videoPrepBox" style="text-align: center; padding: 25px 20px; width: 100%; max-width: 500px;">
+                    <div style="font-size: 38px; margin-bottom: 10px;">⚡</div>
+                    <div style="font-size: 16px; font-weight: 600; color: #f8fafc; margin-bottom: 6px;">កំពុងរៀបចំចាក់វីដេអូពី Cloud 1000TB...</div>
+                    <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 18px;">
+                        ឯកសារ: <strong style="color:#e2e8f0;">${file.file_name}</strong> • ទំហំ: <strong>${formatSize(file.file_size)}</strong>
+                    </div>
+                    <div class="progress-bar-bg" style="width: 100%; height: 9px; background: #1e293b; border-radius: 10px; overflow: hidden; margin-bottom: 12px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);">
+                        <div id="videoPrepFill" style="width: 5%; height: 100%; background: linear-gradient(90deg, #06b6d4, #3b82f6); border-radius: 10px; transition: width 0.3s ease;"></div>
+                    </div>
+                    <div id="videoPrepStatus" style="font-size: 13px; color: #38bdf8; font-weight: 500;">កំពុងចាប់ផ្ដើមទាញយក Multi-Stream...</div>
+                    <div style="margin-top: 24px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                        <a href="${viewUrl}" download="${file.file_name}" class="btn-primary" style="text-decoration: none; padding: 8px 18px; border-radius: 8px; font-size: 13px;">📥 ទាញយកផ្ទាល់ (Direct Download)</a>
+                        <a href="${viewUrl}" target="_blank" class="btn-secondary" style="text-decoration: none; padding: 8px 18px; border-radius: 8px; font-size: 13px;">🌐 បើកក្នុង Tab ថ្មី</a>
+                    </div>
                 </div>
             </div>
         `;
+
+        let isCancelled = false;
+        const modalCloseBtn = document.getElementById("btnClosePreview");
+        const onModalClose = () => { isCancelled = true; };
+        if (modalCloseBtn) modalCloseBtn.addEventListener("click", onModalClose, { once: true });
+
+        function mountPlayer() {
+            const container = document.getElementById("videoContainer");
+            if (!container || isCancelled) return;
+            container.innerHTML = `
+                <video controls autoplay playsinline class="preview-video" style="max-height: 70vh; width: 100%; border-radius: 8px; background: #000; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+                    <source src="${viewUrl}" type="${file.mime_type || 'video/mp4'}">
+                    Browser របស់អ្នកមិនគាំទ្រការចាក់វីដេអូនេះទេ។
+                </video>
+            `;
+        }
+
+        async function checkAndPoll() {
+            try {
+                const prepRes = await fetch(`/api/prepare/${file.id}`);
+                const prepData = await prepRes.json();
+                if (isCancelled) return;
+
+                if (prepData.ready) {
+                    mountPlayer();
+                    return;
+                }
+
+                const pollInterval = setInterval(async () => {
+                    if (isCancelled) {
+                        clearInterval(pollInterval);
+                        return;
+                    }
+                    try {
+                        const sRes = await fetch(`/api/prepare/status/${file.id}`);
+                        const sData = await sRes.json();
+                        if (isCancelled) {
+                            clearInterval(pollInterval);
+                            return;
+                        }
+                        const fill = document.getElementById("videoPrepFill");
+                        const statusEl = document.getElementById("videoPrepStatus");
+
+                        if (sData.percent && fill) {
+                            fill.style.width = `${Math.min(99, Math.max(5, sData.percent))}%`;
+                        }
+                        if (sData.status && statusEl) {
+                            statusEl.textContent = `⚡ ${sData.status}`;
+                        }
+
+                        if (sData.ready) {
+                            clearInterval(pollInterval);
+                            if (fill) fill.style.width = "100%";
+                            if (statusEl) statusEl.textContent = "✓ ទាញយកពេញលេញ! កំពុងបើកចាក់វីដេអូ...";
+                            setTimeout(() => {
+                                if (!isCancelled) mountPlayer();
+                            }, 400);
+                        } else if (sData.error) {
+                            clearInterval(pollInterval);
+                            if (statusEl) {
+                                statusEl.textContent = "✕ បរាជ័យ: " + sData.error;
+                                statusEl.style.color = "#f43f5e";
+                            }
+                        }
+                    } catch (e) {}
+                }, 1000);
+            } catch (e) {
+                mountPlayer();
+            }
+        }
+
+        checkAndPoll();
     } else if (audioExts.includes(ext)) {
         body.innerHTML = `
             <div class="preview-audio-container">
