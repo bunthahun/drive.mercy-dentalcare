@@ -432,5 +432,37 @@ def rename_file(file_id: int, new_name: str):
     conn.commit()
     conn.close()
 
+def get_db_settings() -> Dict[str, Any]:
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT)")
+        cursor.execute("SELECT key, value FROM app_settings")
+        rows = cursor.fetchall()
+        settings = {}
+        for r in rows:
+            try:
+                settings[r["key"]] = json.loads(r["value"])
+            except Exception:
+                settings[r["key"]] = r["value"]
+        conn.close()
+        return settings
+    except Exception:
+        return {}
+
+def save_db_settings(settings: Dict[str, Any]) -> bool:
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT)")
+        for k, v in settings.items():
+            cursor.execute("INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)", (k, json.dumps(v, ensure_ascii=False)))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Error saving settings to db: {e}")
+        return False
+
 # Initialize database immediately on module import
 init_db()
