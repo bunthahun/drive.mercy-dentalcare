@@ -34,6 +34,10 @@ DEFAULT_SETTINGS = {
     "theme": "dark",
     "view_mode": "grid",  # "grid" or "list"
     "cache_dir": str(CACHE_DIR),
+    "website_password": os.environ.get("WEBSITE_PASSWORD", "1234"),
+    "password_buntha": os.environ.get("PASSWORD_BUNTHA", "1111"),
+    "password_vuochlin": os.environ.get("PASSWORD_VUOCHLIN", "2222"),
+    "password_mercy": os.environ.get("PASSWORD_MERCY", "3333"),
 }
 
 def load_settings() -> dict:
