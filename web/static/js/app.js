@@ -95,7 +95,7 @@ function updateAdminVisibility() {
 
 function normalizeKhmerInput(str) {
     if (!str) return "";
-    const khmerDigits = ["០","១","២","៣","៤","៥","៦","៧","៨","៩"];
+    const khmerDigits = ["០", "១", "២", "៣", "៤", "៥", "៦", "៧", "៨", "៩"];
     let res = String(str);
     khmerDigits.forEach((kd, idx) => {
         res = res.replaceAll(kd, idx.toString());
@@ -237,7 +237,7 @@ function requestDriveAccess(driveKey, onUnlocked) {
     }
 
     const isUnlocked = sessionStorage.getItem("unlocked_drive_" + driveKey) === "true" ||
-                       localStorage.getItem("unlocked_drive_" + driveKey) === "true";
+        localStorage.getItem("unlocked_drive_" + driveKey) === "true";
     if (isUnlocked) {
         onUnlocked();
         return;
@@ -1208,7 +1208,7 @@ async function fetchStats() {
         const bSub = document.getElementById("driveNavSubBuntha");
         if (bFill) bFill.style.width = `${bPct}%`;
         if (bSub) {
-            bSub.textContent = currentLang === "km" 
+            bSub.textContent = currentLang === "km"
                 ? `នៅសល់ ${bFreeTb.toFixed(2)} TB នៃ 1,000 TB`
                 : `${bFreeTb.toFixed(2)} TB free of 1,000 TB`;
         }
@@ -1221,7 +1221,7 @@ async function fetchStats() {
         const vSub = document.getElementById("driveNavSubVuochlin");
         if (vFill) vFill.style.width = `${vPct}%`;
         if (vSub) {
-            vSub.textContent = currentLang === "km" 
+            vSub.textContent = currentLang === "km"
                 ? `នៅសល់ ${vFreeTb.toFixed(2)} TB នៃ 1,000 TB`
                 : `${vFreeTb.toFixed(2)} TB free of 1,000 TB`;
         }
@@ -1234,7 +1234,7 @@ async function fetchStats() {
         const mSub = document.getElementById("driveNavSubMercy");
         if (mFill) mFill.style.width = `${mPct}%`;
         if (mSub) {
-            mSub.textContent = currentLang === "km" 
+            mSub.textContent = currentLang === "km"
                 ? `នៅសល់ ${mFreeTb.toFixed(2)} TB នៃ 1,000 TB`
                 : `${mFreeTb.toFixed(2)} TB free of 1,000 TB`;
         }
@@ -1392,7 +1392,7 @@ function getDraggedItems(e) {
                 folderIds = parsed.folder_ids || [];
             }
         }
-    } catch (_) {}
+    } catch (_) { }
     try {
         const rawF = e.dataTransfer.getData("application/folder-ids");
         if (rawF) {
@@ -1401,7 +1401,7 @@ function getDraggedItems(e) {
                 folderIds = Array.from(new Set([...folderIds, ...fArr]));
             }
         }
-    } catch (_) {}
+    } catch (_) { }
     try {
         const rawFiles = e.dataTransfer.getData("application/file-ids");
         if (rawFiles) {
@@ -1410,7 +1410,7 @@ function getDraggedItems(e) {
                 fileIds = Array.from(new Set([...fileIds, ...flArr]));
             }
         }
-    } catch (_) {}
+    } catch (_) { }
 
     if (fileIds.length === 0 && folderIds.length === 0) {
         if (selectedFileIds.size > 0) fileIds = Array.from(selectedFileIds);
@@ -1870,8 +1870,8 @@ function renderFiles() {
                 card.innerHTML = `
                     <div class="item-icon-box">
                         ${isImage && (currentView === "extra-large" || currentView === "large" || currentView === "medium")
-                            ? `<img src="/api/view/${file.id}" alt="${file.file_name}" class="item-thumb-img" loading="lazy" onerror="this.outerHTML='<span style=\\'font-size:${iconSize}px\\'>${icon}</span>'">`
-                            : `<span style="font-size: ${iconSize}px;">${icon}</span>`}
+                        ? `<img src="/api/view/${file.id}" alt="${file.file_name}" class="item-thumb-img" loading="lazy" onerror="this.outerHTML='<span style=\\'font-size:${iconSize}px\\'>${icon}</span>'">`
+                        : `<span style="font-size: ${iconSize}px;">${icon}</span>`}
                     </div>
                     <div class="item-label-box">
                         <div class="item-main-title" title="${file.file_name}">${file.file_name}</div>
@@ -2126,8 +2126,8 @@ function showMoveNotification(count, folderName, isFolder = false) {
         align-items: center;
         gap: 8px;
     `;
-    const itemType = isFolder 
-        ? (currentLang === "km" ? "ថត (Folder)" : "folder(s)") 
+    const itemType = isFolder
+        ? (currentLang === "km" ? "ថត (Folder)" : "folder(s)")
         : (currentLang === "km" ? "ឯកសារ" : "file(s)");
     toast.innerHTML = `<span>✓</span> <span>បានផ្លាស់ទី ${count} ${itemType} ចូលទៅក្នុងថត [${folderName}] ដោយជោគជ័យ!</span>`;
     document.body.appendChild(toast);
@@ -2242,59 +2242,220 @@ async function deleteSelectedFiles() {
     }
 }
 
-// Upload Handling
+// Turbo Upload Handling with Real-time Percentage, Live Speed Meter & Concurrency
 async function handleFilesUpload(files, targetDrive) {
-    const driveToUse = targetDrive || (currentCategory === "vuochlin" ? "vuochlin" : "buntha");
-    const driveLabel = driveToUse === "vuochlin" ? "NEANG VUOCHLIN" : "HUN BUNTHA";
+    if (!files || files.length === 0) return;
+    const driveToUse = targetDrive || (currentCategory === "vuochlin" ? "vuochlin" : (currentCategory === "mercy" ? "mercy" : "buntha"));
+    const driveLabel = driveToUse === "vuochlin" ? "NEANG VUOCHLIN" : (driveToUse === "mercy" ? "Mercy Dental Care" : "HUN BUNTHA");
 
     const panel = document.getElementById("transferPanel");
     const list = document.getElementById("transferList");
-    panel.style.display = "block";
+    const transferTitle = document.getElementById("transferTitle");
+    if (panel) panel.style.display = "block";
 
-    for (const file of files) {
-        const item = document.createElement("div");
-        item.className = "transfer-item";
-        item.innerHTML = `
-            <div class="transfer-info">
-                <span>📤 ${file.name}</span>
-                <span class="status-txt">កំពុងផ្ទុកចូល Drive [${driveLabel}]...</span>
-            </div>
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill" style="width: 25%;"></div>
-            </div>
-        `;
-        list.appendChild(item);
+    const uploadQueue = Array.from(files);
+    const MAX_CONCURRENT = 2;
+    let pendingCount = uploadQueue.length;
 
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("drive", driveToUse);
-        if (currentFolderId) {
-            formData.append("folder_id", currentFolderId);
-        }
-
-        try {
-            const fill = item.querySelector(".progress-bar-fill");
-            const status = item.querySelector(".status-txt");
-            fill.style.width = "65%";
-
-            const res = await fetch("/api/upload", {
-                method: "POST",
-                body: formData
-            });
-
-            const result = await res.json();
-            if (result.success) {
-                fill.style.width = "100%";
-                status.textContent = `✓ ជោគជ័យ (បានចូលក្នុង ${driveLabel})`;
-                status.style.color = "#10b981";
-            } else {
-                status.textContent = "✕ បរាជ័យ: " + (result.error || "Error");
-                status.style.color = "#f43f5e";
-            }
-        } catch (err) {
-            item.querySelector(".status-txt").textContent = "✕ Error: " + err.message;
+    function updateTitleCount() {
+        if (transferTitle) {
+            transferTitle.textContent = `⚡ ការផ្ទេរទិន្នន័យ (${pendingCount})`;
         }
     }
+    updateTitleCount();
+
+    function uploadSingleFile(file) {
+        return new Promise((resolve) => {
+            const item = document.createElement("div");
+            item.className = "transfer-item";
+            const formattedSize = formatSize(file.size);
+            const isVideo = file.type.startsWith("video/") || file.name.match(/\.(mp4|mkv|avi|mov|wmv|webm)$/i);
+            const isImg = file.type.startsWith("image/");
+            const fileIcon = isVideo ? "🎬" : (isImg ? "🖼️" : "📄");
+            const uploadId = "up_" + Date.now() + "_" + Math.random().toString(36).substring(2, 8);
+
+            item.innerHTML = `
+                <div class="transfer-info">
+                    <div class="transfer-file-title">
+                        <span style="font-size: 16px;">${fileIcon}</span>
+                        <span class="transfer-file-name" title="${file.name}">${file.name}</span>
+                        <span class="transfer-file-size">${formattedSize}</span>
+                    </div>
+                    <div class="transfer-badges">
+                        <span class="transfer-speed-pill">⚡ 0.0 MB/s</span>
+                        <span class="transfer-percent-pill">0%</span>
+                    </div>
+                </div>
+                <div class="progress-bar-bg" style="width:100%; height:8px; background:#1e293b; border-radius:10px; overflow:hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);">
+                    <div class="progress-bar-fill" style="width: 0%; height:100%; background:linear-gradient(90deg, #06b6d4, #3b82f6); border-radius:10px; transition: width 0.18s ease;"></div>
+                </div>
+                <div class="transfer-sub-bar">
+                    <span class="transfer-bytes-txt">0 MB / ${formattedSize}</span>
+                    <span class="transfer-status-txt">កំពុងចាប់ផ្ដើម...</span>
+                    <span class="transfer-eta-txt">~...</span>
+                </div>
+            `;
+            if (list) list.appendChild(item);
+
+            const fill = item.querySelector(".progress-bar-fill");
+            const percentPill = item.querySelector(".transfer-percent-pill");
+            const speedPill = item.querySelector(".transfer-speed-pill");
+            const bytesTxt = item.querySelector(".transfer-bytes-txt");
+            const statusTxt = item.querySelector(".transfer-status-txt");
+            const etaTxt = item.querySelector(".transfer-eta-txt");
+
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("drive", driveToUse);
+            formData.append("upload_id", uploadId);
+            if (currentFolderId) {
+                formData.append("folder_id", currentFolderId);
+            }
+
+            const xhr = new XMLHttpRequest();
+            const startTime = Date.now();
+            let lastLoaded = 0;
+            let lastTime = startTime;
+            let isFinished = false;
+            let pollTimer = null;
+
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable && e.total > 0) {
+                    const now = Date.now();
+                    const rawPct = Math.round((e.loaded / e.total) * 100);
+                    // Map browser transfer phase to 0% - 50%
+                    const displayPct = Math.min(50, Math.round((e.loaded / e.total) * 50));
+                    fill.style.width = `${displayPct}%`;
+                    percentPill.textContent = `${displayPct}%`;
+
+                    // Calculate speed
+                    const timeDelta = (now - lastTime) / 1000;
+                    let speedBytesPerSec = 0;
+                    if (timeDelta > 0.3) {
+                        speedBytesPerSec = (e.loaded - lastLoaded) / timeDelta;
+                        lastLoaded = e.loaded;
+                        lastTime = now;
+                    } else {
+                        const totalElapsed = (now - startTime) / 1000 || 0.1;
+                        speedBytesPerSec = e.loaded / totalElapsed;
+                    }
+                    const speedMB = (speedBytesPerSec / (1024 * 1024)).toFixed(1);
+                    speedPill.innerHTML = `⚡ ${speedMB} MB/s`;
+                    bytesTxt.textContent = `${formatSize(e.loaded)} / ${formattedSize}`;
+
+                    const remBytes = Math.max(0, e.total - e.loaded);
+                    const remSec = speedBytesPerSec > 0 ? Math.ceil(remBytes / speedBytesPerSec) : 0;
+                    etaTxt.textContent = remSec > 0 ? `នៅសល់ ~${remSec}s` : "";
+                    statusTxt.textContent = `📤 កំពុងបញ្ជូន (${rawPct}%)...`;
+                }
+            };
+
+            xhr.upload.onload = () => {
+                fill.style.width = "52%";
+                percentPill.textContent = "52%";
+                fill.style.background = "linear-gradient(90deg, #3b82f6, #8b5cf6)";
+                statusTxt.textContent = "⚡ កំពុងអ៊ិនគ្រីប AES-256 & ផ្ទុកចូល Cloud (Turbo Parallel)...";
+
+                // Poll cloud progress every 350ms
+                pollTimer = setInterval(async () => {
+                    if (isFinished) {
+                        clearInterval(pollTimer);
+                        return;
+                    }
+                    try {
+                        const res = await fetch(`/api/upload/progress/${uploadId}`);
+                        const pData = await res.json();
+                        if (pData && pData.active) {
+                            // Map cloud upload progress from 50% to 98%
+                            const mapped = Math.max(50, Math.min(98, Math.round(50 + (pData.percent || 0) * 0.48)));
+                            fill.style.width = `${mapped}%`;
+                            percentPill.textContent = `${mapped}%`;
+                            if (pData.speed_mb > 0) {
+                                speedPill.innerHTML = `⚡ ${pData.speed_mb} MB/s`;
+                            }
+                            if (pData.status) {
+                                statusTxt.textContent = pData.status;
+                            }
+                            if (pData.bytes_done && pData.total_bytes) {
+                                bytesTxt.textContent = `${formatSize(pData.bytes_done)} / ${formatSize(pData.total_bytes)}`;
+                            }
+                        }
+                    } catch (err) {}
+                }, 350);
+            };
+
+            xhr.onload = () => {
+                isFinished = true;
+                if (pollTimer) clearInterval(pollTimer);
+                pendingCount = Math.max(0, pendingCount - 1);
+                updateTitleCount();
+
+                try {
+                    const result = JSON.parse(xhr.responseText || "{}");
+                    if (xhr.status >= 200 && xhr.status < 300 && result.success) {
+                        fill.style.width = "100%";
+                        fill.style.background = "linear-gradient(90deg, #10b981, #059669)";
+                        percentPill.textContent = "100% ✓";
+                        percentPill.classList.add("done");
+                        const elapsedTotal = Math.max(0.1, (Date.now() - startTime) / 1000);
+                        const avgSpeed = (file.size / (1024 * 1024) / elapsedTotal).toFixed(1);
+                        speedPill.innerHTML = `⚡ ${avgSpeed} MB/s`;
+                        bytesTxt.textContent = `${formattedSize} / ${formattedSize}`;
+                        statusTxt.innerHTML = `✓ ជោគជ័យ (${elapsedTotal.toFixed(1)}s) [${driveLabel}]`;
+                        etaTxt.textContent = "";
+                    } else {
+                        fill.style.background = "#ef4444";
+                        percentPill.textContent = "Error";
+                        statusTxt.textContent = "✕ បរាជ័យ: " + (result.error || `HTTP ${xhr.status}`);
+                        statusTxt.style.color = "#f43f5e";
+                    }
+                } catch (err) {
+                    fill.style.background = "#ef4444";
+                    percentPill.textContent = "Error";
+                    statusTxt.textContent = "✕ Parsing Error";
+                    statusTxt.style.color = "#f43f5e";
+                }
+                resolve();
+            };
+
+            xhr.onerror = () => {
+                isFinished = true;
+                if (pollTimer) clearInterval(pollTimer);
+                pendingCount = Math.max(0, pendingCount - 1);
+                updateTitleCount();
+                fill.style.background = "#ef4444";
+                percentPill.textContent = "Error";
+                statusTxt.textContent = "✕ Network Error";
+                statusTxt.style.color = "#f43f5e";
+                resolve();
+            };
+
+            xhr.open("POST", "/api/upload", true);
+            xhr.send(formData);
+        });
+    }
+
+    // Process files with concurrency pool
+    let activeWorkers = 0;
+    let queueIdx = 0;
+
+    await new Promise((allDone) => {
+        function launchNext() {
+            if (queueIdx >= uploadQueue.length && activeWorkers === 0) {
+                allDone();
+                return;
+            }
+            while (activeWorkers < MAX_CONCURRENT && queueIdx < uploadQueue.length) {
+                const nextFile = uploadQueue[queueIdx++];
+                activeWorkers++;
+                uploadSingleFile(nextFile).finally(() => {
+                    activeWorkers--;
+                    launchNext();
+                });
+            }
+        }
+        launchNext();
+    });
 
     // If uploading to different drive, switch to it
     if (currentCategory !== driveToUse) {
@@ -2326,12 +2487,12 @@ function updateCurrentDriveHeader() {
 
     if (currentCategory === "vuochlin") {
         if (titleEl) titleEl.textContent = "NEANG VUOCHLIN";
-        if (dropHint) dropHint.textContent = currentLang === "km" 
+        if (dropHint) dropHint.textContent = currentLang === "km"
             ? "ទម្លាក់ឯកសារនៅទីនេះដើម្បីផ្ទុកចូល Drive [NEANG VUOCHLIN]"
             : "Drop files here to upload to Drive [NEANG VUOCHLIN]";
     } else if (currentCategory === "mercy") {
         if (titleEl) titleEl.textContent = "Mercy Dental Care";
-        if (dropHint) dropHint.textContent = currentLang === "km" 
+        if (dropHint) dropHint.textContent = currentLang === "km"
             ? "ទម្លាក់ឯកសារនៅទីនេះដើម្បីផ្ទុកចូល Drive [Mercy Dental Care]"
             : "Drop files here to upload to Drive [Mercy Dental Care]";
     } else if (currentCategory === "trash") {
@@ -2604,15 +2765,6 @@ function initContextMenuListeners() {
         });
     }
 
-    // Context menu: Paste in Background / Current Folder
-    const bgcmenuPaste = document.getElementById("bgcmenuPaste");
-    if (bgcmenuPaste) {
-        bgcmenuPaste.addEventListener("click", () => {
-            hideAllContextMenus();
-            executePaste(currentFolderId, currentCategory);
-        });
-    }
-
     // Folder Context Menu: Open
     const fcmenuOpen = document.getElementById("fcmenuOpen");
     if (fcmenuOpen) {
@@ -2620,56 +2772,6 @@ function initContextMenuListeners() {
             hideAllContextMenus();
             if (activeContextItem && activeContextItem.type === "folder") {
                 openFolder(activeContextItem.id, activeContextItem.name);
-            }
-        });
-    }
-
-    // Folder Context Menu: Cut
-    const fcmenuCut = document.getElementById("fcmenuCut");
-    if (fcmenuCut) {
-        fcmenuCut.addEventListener("click", () => {
-            hideAllContextMenus();
-            if (activeContextItem && activeContextItem.type === "folder") {
-                const targetFid = activeContextItem.id;
-                const fids = selectedFolderIds.has(targetFid) ? Array.from(selectedFolderIds) : [targetFid];
-                const fileIds = selectedFolderIds.has(targetFid) ? Array.from(selectedFileIds) : [];
-                setClipboard("cut", fileIds, fids);
-            }
-        });
-    }
-
-    // Folder Context Menu: Copy
-    const fcmenuCopy = document.getElementById("fcmenuCopy");
-    if (fcmenuCopy) {
-        fcmenuCopy.addEventListener("click", () => {
-            hideAllContextMenus();
-            if (activeContextItem && activeContextItem.type === "folder") {
-                const targetFid = activeContextItem.id;
-                const fids = selectedFolderIds.has(targetFid) ? Array.from(selectedFolderIds) : [targetFid];
-                const fileIds = selectedFolderIds.has(targetFid) ? Array.from(selectedFileIds) : [];
-                setClipboard("copy", fileIds, fids);
-            }
-        });
-    }
-
-    // Folder Context Menu: Paste into this folder
-    const fcmenuPasteInto = document.getElementById("fcmenuPasteInto");
-    if (fcmenuPasteInto) {
-        fcmenuPasteInto.addEventListener("click", () => {
-            hideAllContextMenus();
-            if (activeContextItem && activeContextItem.type === "folder") {
-                executePaste(activeContextItem.id, currentCategory);
-            }
-        });
-    }
-
-    // Folder Context Menu: New Folder Inside
-    const fcmenuNewFolderInside = document.getElementById("fcmenuNewFolderInside");
-    if (fcmenuNewFolderInside) {
-        fcmenuNewFolderInside.addEventListener("click", () => {
-            hideAllContextMenus();
-            if (activeContextItem && activeContextItem.type === "folder") {
-                promptNewFolder(activeContextItem.id);
             }
         });
     }
@@ -2704,7 +2806,7 @@ function initContextMenuListeners() {
         fcmenuDelete.addEventListener("click", async () => {
             hideAllContextMenus();
             if (activeContextItem && activeContextItem.type === "folder") {
-                const confirmMsg = currentLang === "km" 
+                const confirmMsg = currentLang === "km"
                     ? `តើអ្នកពិតជាចង់លុបថត "${activeContextItem.name}" និងឯកសារទាំងអស់ក្នុងនោះមែនទេ?`
                     : `Are you sure you want to delete folder "${activeContextItem.name}" and all its contents?`;
                 if (confirm(confirmMsg)) {
@@ -2737,34 +2839,6 @@ function initContextMenuListeners() {
             hideAllContextMenus();
             if (activeContextItem && activeContextItem.type === "file") {
                 downloadFile(activeContextItem.id);
-            }
-        });
-    }
-
-    // File Context Menu: Cut
-    const filecmenuCut = document.getElementById("filecmenuCut");
-    if (filecmenuCut) {
-        filecmenuCut.addEventListener("click", () => {
-            hideAllContextMenus();
-            if (activeContextItem && activeContextItem.type === "file") {
-                const targetFid = activeContextItem.id;
-                const fileIds = selectedFileIds.has(targetFid) ? Array.from(selectedFileIds) : [targetFid];
-                const folderIds = selectedFileIds.has(targetFid) ? Array.from(selectedFolderIds) : [];
-                setClipboard("cut", fileIds, folderIds);
-            }
-        });
-    }
-
-    // File Context Menu: Copy
-    const filecmenuCopy = document.getElementById("filecmenuCopy");
-    if (filecmenuCopy) {
-        filecmenuCopy.addEventListener("click", () => {
-            hideAllContextMenus();
-            if (activeContextItem && activeContextItem.type === "file") {
-                const targetFid = activeContextItem.id;
-                const fileIds = selectedFileIds.has(targetFid) ? Array.from(selectedFileIds) : [targetFid];
-                const folderIds = selectedFileIds.has(targetFid) ? Array.from(selectedFolderIds) : [];
-                setClipboard("copy", fileIds, folderIds);
             }
         });
     }
@@ -2804,54 +2878,6 @@ function initContextMenuListeners() {
         });
     }
 
-    // Selection Floating Bar Cut & Copy Buttons
-    const btnSelectionCut = document.getElementById("btnSelectionCut");
-    if (btnSelectionCut) {
-        btnSelectionCut.addEventListener("click", () => {
-            if (selectedFileIds.size > 0 || selectedFolderIds.size > 0) {
-                setClipboard("cut", Array.from(selectedFileIds), Array.from(selectedFolderIds));
-            }
-        });
-    }
-
-    const btnSelectionCopy = document.getElementById("btnSelectionCopy");
-    if (btnSelectionCopy) {
-        btnSelectionCopy.addEventListener("click", () => {
-            if (selectedFileIds.size > 0 || selectedFolderIds.size > 0) {
-                setClipboard("copy", Array.from(selectedFileIds), Array.from(selectedFolderIds));
-            }
-        });
-    }
-
-    // Global Keyboard Shortcuts: Ctrl+X, Ctrl+C, Ctrl+V
-    window.addEventListener("keydown", (e) => {
-        if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.isContentEditable) {
-            return;
-        }
-
-        // Ctrl + X: Cut
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "x") {
-            if (selectedFileIds.size > 0 || selectedFolderIds.size > 0) {
-                e.preventDefault();
-                setClipboard("cut", Array.from(selectedFileIds), Array.from(selectedFolderIds));
-            }
-        }
-        // Ctrl + C: Copy
-        else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c") {
-            if (selectedFileIds.size > 0 || selectedFolderIds.size > 0) {
-                e.preventDefault();
-                setClipboard("copy", Array.from(selectedFileIds), Array.from(selectedFolderIds));
-            }
-        }
-        // Ctrl + V: Paste
-        else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v") {
-            if (appClipboard.operation && (appClipboard.file_ids.length > 0 || appClipboard.folder_ids.length > 0)) {
-                e.preventDefault();
-                executePaste(currentFolderId, currentCategory);
-            }
-        }
-    });
-
     // Dismiss context menus on click outside
     window.addEventListener("click", (e) => {
         if (!e.target.closest(".win-context-menu")) {
@@ -2866,129 +2892,6 @@ function initContextMenuListeners() {
         }
     });
     window.addEventListener("scroll", hideAllContextMenus, true);
-}
-
-// Clipboard global state
-let appClipboard = {
-    operation: null, // 'cut' | 'copy'
-    file_ids: [],
-    folder_ids: [],
-    source_drive: null
-};
-
-function showClipboardToast(msg, isSuccess = true) {
-    const existing = document.querySelector(".clipboard-toast");
-    if (existing) existing.remove();
-
-    const toast = document.createElement("div");
-    toast.className = "clipboard-toast";
-    toast.style.cssText = `
-        position: fixed;
-        bottom: 30px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: ${isSuccess ? 'rgba(15, 23, 42, 0.96)' : 'rgba(239, 68, 68, 0.95)'};
-        border: 1px solid rgba(255, 255, 255, 0.16);
-        color: #ffffff;
-        padding: 10px 24px;
-        border-radius: 30px;
-        font-size: 13.5px;
-        font-weight: 500;
-        box-shadow: 0 14px 36px rgba(0,0,0,0.55);
-        z-index: 100000;
-        animation: winContextMenuIn 0.2s cubic-bezier(0, 0, 0.2, 1);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    `;
-    toast.innerHTML = `<span>${isSuccess ? '📋' : '⚠️'}</span> <span>${msg}</span>`;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = "0";
-        toast.style.transition = "opacity 0.3s ease";
-        setTimeout(() => toast.remove(), 300);
-    }, 2800);
-}
-
-function setClipboard(operation, fileIds = [], folderIds = []) {
-    document.querySelectorAll(".cut-item-active").forEach(el => el.classList.remove("cut-item-active"));
-
-    appClipboard = {
-        operation: operation,
-        file_ids: fileIds.map(id => parseInt(id)).filter(id => !isNaN(id)),
-        folder_ids: folderIds.map(id => parseInt(id)).filter(id => !isNaN(id)),
-        source_drive: currentCategory
-    };
-
-    const count = appClipboard.file_ids.length + appClipboard.folder_ids.length;
-    if (count === 0) return;
-
-    if (operation === "cut") {
-        appClipboard.file_ids.forEach(fid => {
-            const row = document.querySelector(`tr[data-file-id="${fid}"]`);
-            const card = document.querySelector(`.win-item-card[data-file-id="${fid}"]`);
-            if (row) row.classList.add("cut-item-active");
-            if (card) card.classList.add("cut-item-active");
-        });
-        appClipboard.folder_ids.forEach(fid => {
-            const row = document.querySelector(`tr[data-folder-id="${fid}"]`);
-            const card = document.querySelector(`.win-item-card[data-folder-id="${fid}"]`);
-            if (row) row.classList.add("cut-item-active");
-            if (card) card.classList.add("cut-item-active");
-        });
-
-        const msg = currentLang === "km" 
-            ? `✂️ បានកាត់ ${count} ឯកសារ/ថត (សូមជ្រើសទីតាំង រួច Right-Click យក Paste ឬចុច Ctrl+V)` 
-            : `✂️ Cut ${count} item(s) to clipboard. Paste with Right-Click or Ctrl+V`;
-        showClipboardToast(msg);
-    } else {
-        const msg = currentLang === "km" 
-            ? `📋 បានចម្លង ${count} ឯកសារ/ថត (សូមជ្រើសទីតាំង រួច Right-Click យក Paste ឬចុច Ctrl+V)` 
-            : `📋 Copied ${count} item(s) to clipboard. Paste with Right-Click or Ctrl+V`;
-        showClipboardToast(msg);
-    }
-}
-
-async function executePaste(targetFolderId = null, targetDrive = null) {
-    if (!appClipboard.operation || (appClipboard.file_ids.length === 0 && appClipboard.folder_ids.length === 0)) {
-        return;
-    }
-
-    const destDrive = targetDrive || currentCategory || "buntha";
-    const destFolder = (targetFolderId !== undefined && targetFolderId !== null) ? targetFolderId : currentFolderId;
-
-    try {
-        const res = await fetch("/api/clipboard/paste", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                operation: appClipboard.operation,
-                file_ids: appClipboard.file_ids,
-                folder_ids: appClipboard.folder_ids,
-                target_folder_id: destFolder,
-                target_drive: destDrive
-            })
-        });
-        const data = await res.json();
-        if (data.success) {
-            const totalCount = (data.files_count || 0) + (data.folders_count || 0);
-            const actLabel = appClipboard.operation === "cut" 
-                ? (currentLang === "km" ? "ផ្លាស់ទី" : "moved")
-                : (currentLang === "km" ? "ចម្លង" : "copied");
-            showClipboardToast(`✓ បាន${actLabel} ${totalCount} ឯកសារ/ថត បានសម្រេច!`);
-
-            if (appClipboard.operation === "cut") {
-                appClipboard = { operation: null, file_ids: [], folder_ids: [], source_drive: null };
-                document.querySelectorAll(".cut-item-active").forEach(el => el.classList.remove("cut-item-active"));
-            }
-            fetchStats();
-            loadFiles();
-        } else {
-            alert("❌ " + (data.error || "Paste failed"));
-        }
-    } catch (e) {
-        alert("❌ Error: " + e.message);
-    }
 }
 
 function hideAllContextMenus() {
@@ -3023,11 +2926,6 @@ function positionMenu(menu, x, y) {
 function showBgContextMenu(x, y) {
     hideAllContextMenus();
     const menu = document.getElementById("bgContextMenu");
-    const pasteItem = document.getElementById("bgcmenuPaste");
-    if (pasteItem) {
-        const hasClipboard = appClipboard.operation && (appClipboard.file_ids.length > 0 || appClipboard.folder_ids.length > 0);
-        pasteItem.style.display = hasClipboard ? "flex" : "none";
-    }
     if (menu) positionMenu(menu, x, y);
 }
 
@@ -3035,11 +2933,6 @@ function showFolderContextMenu(x, y, folder) {
     hideAllContextMenus();
     activeContextItem = { type: 'folder', id: folder.id, name: folder.folder_name };
     const menu = document.getElementById("folderContextMenu");
-    const pasteItem = document.getElementById("fcmenuPasteInto");
-    if (pasteItem) {
-        const hasClipboard = appClipboard.operation && (appClipboard.file_ids.length > 0 || appClipboard.folder_ids.length > 0);
-        pasteItem.style.display = hasClipboard ? "flex" : "none";
-    }
     if (menu) positionMenu(menu, x, y);
 }
 
@@ -3050,29 +2943,26 @@ function showFileContextMenu(x, y, file) {
     if (menu) positionMenu(menu, x, y);
 }
 
-function promptNewFolder(targetParentId = null) {
+function promptNewFolder() {
     hideAllContextMenus();
-    const parentId = targetParentId !== null ? targetParentId : currentFolderId;
     showPromptModal(
         currentLang === "km" ? "បង្កើតថតថ្មី (New Folder)" : "Create New Folder",
         currentLang === "km" ? "ឈ្មោះថតឯកសារ៖" : "Folder Name:",
         "New folder",
         async (folderName) => {
-            const drive = (currentCategory === "vuochlin" || currentCategory === "mercy") ? currentCategory : "buntha";
+            const drive = currentCategory === "vuochlin" ? "vuochlin" : "buntha";
             const res = await fetch("/api/folders/create", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ 
-                    name: folderName, 
+                body: JSON.stringify({
+                    name: folderName,
                     drive: drive,
-                    parent_id: parentId
+                    parent_id: currentFolderId
                 })
             });
             const data = await res.json();
             if (data.success) {
                 loadFiles();
-            } else {
-                alert(data.error || "Failed to create folder");
             }
         }
     );
@@ -3116,7 +3006,7 @@ function promptRenameFile(fileId, currentName) {
 
 async function confirmDeleteFolder(folderId, folderName) {
     hideAllContextMenus();
-    const confirmMsg = currentLang === "km" 
+    const confirmMsg = currentLang === "km"
         ? `តើអ្នកពិតជាចង់លុបថត "${folderName}" និងឯកសារទាំងអស់ក្នុងនោះមែនទេ?`
         : `Are you sure you want to delete folder "${folderName}" and all its contents?`;
     if (confirm(confirmMsg)) {
@@ -3131,7 +3021,7 @@ async function confirmDeleteFolder(folderId, folderName) {
 
 async function emptyTrash() {
     hideAllContextMenus();
-    const confirmMsg = currentLang === "km" 
+    const confirmMsg = currentLang === "km"
         ? "តើអ្នកពិតជាចង់សម្អាតធុងសំរាមមែនទេ? (Empty trash permanently?)"
         : "Are you sure you want to empty the recycle bin permanently?";
     if (confirm(confirmMsg)) {
