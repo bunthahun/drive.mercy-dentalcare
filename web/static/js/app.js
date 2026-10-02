@@ -2265,14 +2265,13 @@ async function handleFilesUpload(files, targetDrive) {
     updateTitleCount();
 
     function uploadSingleFile(file) {
-        return new Promise((resolve) => {
+        return new Promise(async (resolve) => {
             const item = document.createElement("div");
             item.className = "transfer-item";
             const formattedSize = formatSize(file.size);
             const isVideo = file.type.startsWith("video/") || file.name.match(/\.(mp4|mkv|avi|mov|wmv|webm)$/i);
             const isImg = file.type.startsWith("image/");
             const fileIcon = isVideo ? "🎬" : (isImg ? "🖼️" : "📄");
-            const uploadId = "up_" + Date.now() + "_" + Math.random().toString(36).substring(2, 8);
 
             item.innerHTML = `
                 <div class="transfer-info">
@@ -2303,96 +2302,259 @@ async function handleFilesUpload(files, targetDrive) {
             const bytesTxt = item.querySelector(".transfer-bytes-txt");
             const statusTxt = item.querySelector(".transfer-status-txt");
             const etaTxt = item.querySelector(".transfer-eta-txt");
-
-            const formData = new FormData();
-            formData.append("file", file);
-            formData.append("drive", driveToUse);
-            formData.append("upload_id", uploadId);
-            if (currentFolderId) {
-                formData.append("folder_id", currentFolderId);
-            }
-
-            const xhr = new XMLHttpRequest();
             const startTime = Date.now();
-            let lastLoaded = 0;
-            let lastTime = startTime;
-            let isFinished = false;
-            let pollTimer = null;
 
-            xhr.upload.onprogress = (e) => {
-                if (e.lengthComputable && e.total > 0) {
-                    const now = Date.now();
-                    const rawPct = Math.round((e.loaded / e.total) * 100);
-                    // Map browser transfer phase to 0% - 50%
-                    const displayPct = Math.min(50, Math.round((e.loaded / e.total) * 50));
-                    fill.style.width = `${displayPct}%`;
-                    percentPill.textContent = `${displayPct}%`;
+            const CHUNK_SIZE = 15 * 1024 * 1024; // 15MB Chunks to bypass Cloudflare 100MB body limit
 
-                    // Calculate speed
-                    const timeDelta = (now - lastTime) / 1000;
-                    let speedBytesPerSec = 0;
-                    if (timeDelta > 0.3) {
-                        speedBytesPerSec = (e.loaded - lastLoaded) / timeDelta;
-                        lastLoaded = e.loaded;
-                        lastTime = now;
-                    } else {
-                        const totalElapsed = (now - startTime) / 1000 || 0.1;
-                        speedBytesPerSec = e.loaded / totalElapsed;
+            if (file.size > CHUNK_SIZE) {
+                // --- CHUNKED UPLOAD PIPELINE FOR LARGE FILES ---
+                try {
+                    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+                    statusTxt.textContent = `⚡ កំពុងរៀបចំ Turbo Chunking (15MB x ${totalChunks})...`;
+
+                    const initRes = await fetch("/api/upload/chunk/init", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            file_name: file.name,
+                            file_size: file.size,
+                            total_chunks: totalChunks,
+                            drive: driveToUse,
+                            folder_id: currentFolderId
+                        })
+                    });
+                    const initData = await initRes.json();
+                    if (!initRes.ok || !initData.success) {
+                        throw new Error(initData.error || `Init failed (${initRes.status})`);
                     }
-                    const speedMB = (speedBytesPerSec / (1024 * 1024)).toFixed(1);
-                    speedPill.innerHTML = `⚡ ${speedMB} MB/s`;
-                    bytesTxt.textContent = `${formatSize(e.loaded)} / ${formattedSize}`;
+                    const uploadId = initData.upload_id;
 
-                    const remBytes = Math.max(0, e.total - e.loaded);
-                    const remSec = speedBytesPerSec > 0 ? Math.ceil(remBytes / speedBytesPerSec) : 0;
-                    etaTxt.textContent = remSec > 0 ? `នៅសល់ ~${remSec}s` : "";
-                    statusTxt.textContent = `📤 កំពុងបញ្ជូន (${rawPct}%)...`;
-                }
-            };
+                    const chunkLoaded = new Array(totalChunks).fill(0);
+                    let completedChunks = 0;
 
-            xhr.upload.onload = () => {
-                fill.style.width = "52%";
-                percentPill.textContent = "52%";
-                fill.style.background = "linear-gradient(90deg, #3b82f6, #8b5cf6)";
-                statusTxt.textContent = "⚡ កំពុងអ៊ិនគ្រីប AES-256 & ផ្ទុកចូល Cloud (Turbo Parallel)...";
+                    function updateChunkProgress() {
+                        const totalLoaded = chunkLoaded.reduce((a, b) => a + b, 0);
+                        const pct = Math.min(99, Math.round((totalLoaded / file.size) * 100));
+                        fill.style.width = `${pct}%`;
+                        percentPill.textContent = `${pct}%`;
 
-                // Poll cloud progress every 350ms
-                pollTimer = setInterval(async () => {
-                    if (isFinished) {
-                        clearInterval(pollTimer);
-                        return;
+                        const now = Date.now();
+                        const elapsed = (now - startTime) / 1000 || 0.1;
+                        const speedBytes = totalLoaded / elapsed;
+                        const speedMB = (speedBytes / (1024 * 1024)).toFixed(1);
+                        speedPill.innerHTML = `⚡ ${speedMB} MB/s`;
+                        bytesTxt.textContent = `${formatSize(totalLoaded)} / ${formattedSize}`;
+
+                        const remBytes = Math.max(0, file.size - totalLoaded);
+                        const remSec = speedBytes > 0 ? Math.ceil(remBytes / speedBytes) : 0;
+                        etaTxt.textContent = remSec > 0 ? `នៅសល់ ~${remSec}s` : "";
+                        statusTxt.textContent = `⚡ កំពុងផ្ទុកឡើង Turbo (${completedChunks}/${totalChunks} Chunks - ${pct}%)...`;
                     }
-                    try {
-                        const res = await fetch(`/api/upload/progress/${uploadId}`);
-                        const pData = await res.json();
-                        if (pData && pData.active) {
-                            // Map cloud upload progress from 50% to 98%
-                            const mapped = Math.max(50, Math.min(98, Math.round(50 + (pData.percent || 0) * 0.48)));
-                            fill.style.width = `${mapped}%`;
-                            percentPill.textContent = `${mapped}%`;
-                            if (pData.speed_mb > 0) {
-                                speedPill.innerHTML = `⚡ ${pData.speed_mb} MB/s`;
+
+                    function uploadOneChunk(partIdx) {
+                        return new Promise((partResolve, partReject) => {
+                            const start = partIdx * CHUNK_SIZE;
+                            const end = Math.min(file.size, start + CHUNK_SIZE);
+                            const chunkBlob = file.slice(start, end);
+                            const cForm = new FormData();
+                            cForm.append("upload_id", uploadId);
+                            cForm.append("part_index", partIdx);
+                            cForm.append("chunk_file", chunkBlob, file.name);
+
+                            const cXhr = new XMLHttpRequest();
+                            cXhr.upload.onprogress = (e) => {
+                                if (e.lengthComputable && e.total > 0) {
+                                    chunkLoaded[partIdx] = e.loaded;
+                                    updateChunkProgress();
+                                }
+                            };
+
+                            cXhr.onload = () => {
+                                if (cXhr.status >= 200 && cXhr.status < 300) {
+                                    try {
+                                        const cRes = JSON.parse(cXhr.responseText || "{}");
+                                        if (cRes.success) {
+                                            chunkLoaded[partIdx] = chunkBlob.size;
+                                            completedChunks++;
+                                            updateChunkProgress();
+                                            partResolve();
+                                        } else {
+                                            partReject(new Error(cRes.error || `Part ${partIdx + 1} failed`));
+                                        }
+                                    } catch (pe) {
+                                        partReject(new Error(`Server response error (${cXhr.status})`));
+                                    }
+                                } else {
+                                    let msg = `HTTP ${cXhr.status}`;
+                                    if (cXhr.status === 413) msg = "Chunk too large (413)";
+                                    if (cXhr.status === 524) msg = "Cloudflare Timeout (524)";
+                                    partReject(new Error(msg));
+                                }
+                            };
+
+                            cXhr.onerror = () => {
+                                partReject(new Error("Network connection lost"));
+                            };
+
+                            cXhr.open("POST", "/api/upload/chunk", true);
+                            cXhr.send(cForm);
+                        });
+                    }
+
+                    // Concurrent chunk pipeline (2 parallel chunks)
+                    let nextPartIdx = 0;
+                    let activeChunks = 0;
+                    let chunkErr = null;
+
+                    await new Promise((pipeDone, pipeReject) => {
+                        function pump() {
+                            if (chunkErr) return;
+                            if (completedChunks >= totalChunks) {
+                                pipeDone();
+                                return;
                             }
-                            if (pData.status) {
-                                statusTxt.textContent = pData.status;
-                            }
-                            if (pData.bytes_done && pData.total_bytes) {
-                                bytesTxt.textContent = `${formatSize(pData.bytes_done)} / ${formatSize(pData.total_bytes)}`;
+                            while (activeChunks < 2 && nextPartIdx < totalChunks) {
+                                const p = nextPartIdx++;
+                                activeChunks++;
+                                uploadOneChunk(p).then(() => {
+                                    activeChunks--;
+                                    pump();
+                                }).catch((err) => {
+                                    chunkErr = err;
+                                    pipeReject(err);
+                                });
                             }
                         }
-                    } catch (err) {}
-                }, 350);
-            };
+                        pump();
+                    });
 
-            xhr.onload = () => {
-                isFinished = true;
-                if (pollTimer) clearInterval(pollTimer);
+                    // Finalize upload in database
+                    statusTxt.textContent = "⚡ កំពុងផ្ទៀងផ្ទាត់ & រក្សាទុកក្នុង Cloud...";
+                    fill.style.width = "99%";
+                    percentPill.textContent = "99%";
+                    fill.style.background = "linear-gradient(90deg, #3b82f6, #8b5cf6)";
+
+                    const compRes = await fetch("/api/upload/chunk/complete", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ upload_id: uploadId })
+                    });
+                    const compData = await compRes.json();
+                    if (!compRes.ok || !compData.success) {
+                        throw new Error(compData.error || "Failed to finalize chunked upload");
+                    }
+
+                    fill.style.width = "100%";
+                    fill.style.background = "linear-gradient(90deg, #10b981, #059669)";
+                    percentPill.textContent = "100% ✓";
+                    percentPill.classList.add("done");
+                    const elapsedTotal = Math.max(0.1, (Date.now() - startTime) / 1000);
+                    const avgSpeed = (file.size / (1024 * 1024) / elapsedTotal).toFixed(1);
+                    speedPill.innerHTML = `⚡ ${avgSpeed} MB/s`;
+                    bytesTxt.textContent = `${formattedSize} / ${formattedSize}`;
+                    statusTxt.innerHTML = `✓ ជោគជ័យ (${elapsedTotal.toFixed(1)}s) [${driveLabel}]`;
+                    etaTxt.textContent = "";
+                } catch (err) {
+                    fill.style.background = "#ef4444";
+                    percentPill.textContent = "Error";
+                    statusTxt.textContent = "✕ បរាជ័យ: " + (err.message || "Upload Failed");
+                    statusTxt.style.color = "#f43f5e";
+                }
                 pendingCount = Math.max(0, pendingCount - 1);
                 updateTitleCount();
+                resolve();
+            } else {
+                // --- DIRECT UPLOAD PIPELINE FOR FILES <= 15MB ---
+                const uploadId = "up_" + Date.now() + "_" + Math.random().toString(36).substring(2, 8);
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("drive", driveToUse);
+                formData.append("upload_id", uploadId);
+                if (currentFolderId) {
+                    formData.append("folder_id", currentFolderId);
+                }
 
-                try {
-                    const result = JSON.parse(xhr.responseText || "{}");
-                    if (xhr.status >= 200 && xhr.status < 300 && result.success) {
+                const xhr = new XMLHttpRequest();
+                let lastLoaded = 0;
+                let lastTime = startTime;
+                let isFinished = false;
+                let pollTimer = null;
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable && e.total > 0) {
+                        const now = Date.now();
+                        const rawPct = Math.round((e.loaded / e.total) * 100);
+                        const displayPct = Math.min(50, Math.round((e.loaded / e.total) * 50));
+                        fill.style.width = `${displayPct}%`;
+                        percentPill.textContent = `${displayPct}%`;
+
+                        const timeDelta = (now - lastTime) / 1000;
+                        let speedBytesPerSec = 0;
+                        if (timeDelta > 0.3) {
+                            speedBytesPerSec = (e.loaded - lastLoaded) / timeDelta;
+                            lastLoaded = e.loaded;
+                            lastTime = now;
+                        } else {
+                            const totalElapsed = (now - startTime) / 1000 || 0.1;
+                            speedBytesPerSec = e.loaded / totalElapsed;
+                        }
+                        const speedMB = (speedBytesPerSec / (1024 * 1024)).toFixed(1);
+                        speedPill.innerHTML = `⚡ ${speedMB} MB/s`;
+                        bytesTxt.textContent = `${formatSize(e.loaded)} / ${formattedSize}`;
+
+                        const remBytes = Math.max(0, e.total - e.loaded);
+                        const remSec = speedBytesPerSec > 0 ? Math.ceil(remBytes / speedBytesPerSec) : 0;
+                        etaTxt.textContent = remSec > 0 ? `នៅសល់ ~${remSec}s` : "";
+                        statusTxt.textContent = `📤 កំពុងបញ្ជូន (${rawPct}%)...`;
+                    }
+                };
+
+                xhr.upload.onload = () => {
+                    fill.style.width = "52%";
+                    percentPill.textContent = "52%";
+                    fill.style.background = "linear-gradient(90deg, #3b82f6, #8b5cf6)";
+                    statusTxt.textContent = "⚡ កំពុងអ៊ិនគ្រីប AES-256 & ផ្ទុកចូល Cloud (Turbo Parallel)...";
+
+                    pollTimer = setInterval(async () => {
+                        if (isFinished) {
+                            clearInterval(pollTimer);
+                            return;
+                        }
+                        try {
+                            const res = await fetch(`/api/upload/progress/${uploadId}`);
+                            const pData = await res.json();
+                            if (pData && pData.active) {
+                                const mapped = Math.max(50, Math.min(98, Math.round(50 + (pData.percent || 0) * 0.48)));
+                                fill.style.width = `${mapped}%`;
+                                percentPill.textContent = `${mapped}%`;
+                                if (pData.speed_mb > 0) {
+                                    speedPill.innerHTML = `⚡ ${pData.speed_mb} MB/s`;
+                                }
+                                if (pData.status) {
+                                    statusTxt.textContent = pData.status;
+                                }
+                                if (pData.bytes_done && pData.total_bytes) {
+                                    bytesTxt.textContent = `${formatSize(pData.bytes_done)} / ${formatSize(pData.total_bytes)}`;
+                                }
+                            }
+                        } catch (err) {}
+                    }, 350);
+                };
+
+                xhr.onload = () => {
+                    isFinished = true;
+                    if (pollTimer) clearInterval(pollTimer);
+                    pendingCount = Math.max(0, pendingCount - 1);
+                    updateTitleCount();
+
+                    let result = null;
+                    try {
+                        result = JSON.parse(xhr.responseText || "{}");
+                    } catch (e) {
+                        result = null;
+                    }
+
+                    if (xhr.status >= 200 && xhr.status < 300 && result && result.success) {
                         fill.style.width = "100%";
                         fill.style.background = "linear-gradient(90deg, #10b981, #059669)";
                         percentPill.textContent = "100% ✓";
@@ -2406,32 +2568,37 @@ async function handleFilesUpload(files, targetDrive) {
                     } else {
                         fill.style.background = "#ef4444";
                         percentPill.textContent = "Error";
-                        statusTxt.textContent = "✕ បរាជ័យ: " + (result.error || `HTTP ${xhr.status}`);
+                        let errText = "បរាជ័យ";
+                        if (result && result.error) {
+                            errText = result.error;
+                        } else if (xhr.status === 413) {
+                            errText = "ឯកសារធំពេក (413)";
+                        } else if (xhr.status === 524) {
+                            errText = "Timeout (524)";
+                        } else if (xhr.status > 0) {
+                            errText = `HTTP ${xhr.status}`;
+                        }
+                        statusTxt.textContent = "✕ " + errText;
                         statusTxt.style.color = "#f43f5e";
                     }
-                } catch (err) {
+                    resolve();
+                };
+
+                xhr.onerror = () => {
+                    isFinished = true;
+                    if (pollTimer) clearInterval(pollTimer);
+                    pendingCount = Math.max(0, pendingCount - 1);
+                    updateTitleCount();
                     fill.style.background = "#ef4444";
                     percentPill.textContent = "Error";
-                    statusTxt.textContent = "✕ Parsing Error";
+                    statusTxt.textContent = "✕ Network Error";
                     statusTxt.style.color = "#f43f5e";
-                }
-                resolve();
-            };
+                    resolve();
+                };
 
-            xhr.onerror = () => {
-                isFinished = true;
-                if (pollTimer) clearInterval(pollTimer);
-                pendingCount = Math.max(0, pendingCount - 1);
-                updateTitleCount();
-                fill.style.background = "#ef4444";
-                percentPill.textContent = "Error";
-                statusTxt.textContent = "✕ Network Error";
-                statusTxt.style.color = "#f43f5e";
-                resolve();
-            };
-
-            xhr.open("POST", "/api/upload", true);
-            xhr.send(formData);
+                xhr.open("POST", "/api/upload", true);
+                xhr.send(formData);
+            }
         });
     }
 
