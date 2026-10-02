@@ -41,22 +41,51 @@ DEFAULT_SETTINGS = {
 }
 
 def load_settings() -> dict:
+    merged = DEFAULT_SETTINGS.copy()
     if CONFIG_FILE.exists():
         try:
             with open(CONFIG_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                merged = DEFAULT_SETTINGS.copy()
                 merged.update(data)
-                return merged
         except Exception:
-            return DEFAULT_SETTINGS.copy()
-    return DEFAULT_SETTINGS.copy()
+            pass
+    try:
+        import sqlite3
+        if DB_PATH.exists():
+            conn = sqlite3.connect(str(DB_PATH))
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='app_settings'")
+            if cursor.fetchone():
+                cursor.execute("SELECT key, value FROM app_settings")
+                for r in cursor.fetchall():
+                    try:
+                        merged[r["key"]] = json.loads(r["value"])
+                    except Exception:
+                        merged[r["key"]] = r["value"]
+            conn.close()
+    except Exception:
+        pass
+    return merged
 
 def save_settings(settings: dict) -> bool:
+    ok = True
     try:
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(settings, f, indent=4, ensure_ascii=False)
-        return True
     except Exception as e:
-        print(f"Error saving settings: {e}")
-        return False
+        print(f"Error saving settings file: {e}")
+        ok = False
+    try:
+        import sqlite3
+        if DB_PATH.exists():
+            conn = sqlite3.connect(str(DB_PATH))
+            cursor = conn.cursor()
+            cursor.execute("CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT)")
+            for k, v in settings.items():
+                cursor.execute("INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)", (k, json.dumps(v, ensure_ascii=False)))
+            conn.commit()
+            conn.close()
+    except Exception as e:
+        print(f"Error saving settings to db: {e}")
+    return ok
