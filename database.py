@@ -194,26 +194,13 @@ def rename_file(file_id: int, new_name: str) -> bool:
     conn.close()
     return True
 
-def update_folder_contents_drive(cursor, folder_id: int, new_drive: str):
-    cursor.execute("UPDATE files SET drive_owner = ? WHERE folder_id = ?", (new_drive, folder_id))
-    cursor.execute("SELECT id FROM folders WHERE parent_id = ?", (folder_id,))
-    child_ids = [r["id"] for r in cursor.fetchall()]
-    if child_ids:
-        placeholders = ",".join("?" for _ in child_ids)
-        cursor.execute(f"UPDATE folders SET drive_owner = ? WHERE id IN ({placeholders})", [new_drive] + child_ids)
-        for cid in child_ids:
-            update_folder_contents_drive(cursor, cid, new_drive)
-
-def move_files_to_folder(file_ids: List[int], target_folder_id: Optional[int], target_drive: Optional[str] = None) -> bool:
+def move_files_to_folder(file_ids: List[int], target_folder_id: Optional[int]) -> bool:
     if not file_ids:
         return False
     conn = get_connection()
     cursor = conn.cursor()
     placeholders = ",".join("?" for _ in file_ids)
-    if target_drive:
-        cursor.execute(f"UPDATE files SET folder_id = ?, drive_owner = ? WHERE id IN ({placeholders})", [target_folder_id, target_drive] + list(file_ids))
-    else:
-        cursor.execute(f"UPDATE files SET folder_id = ? WHERE id IN ({placeholders})", [target_folder_id] + list(file_ids))
+    cursor.execute(f"UPDATE files SET folder_id = ? WHERE id IN ({placeholders})", [target_folder_id] + list(file_ids))
     conn.commit()
     conn.close()
     return True
@@ -232,7 +219,7 @@ def is_descendant_folder(cursor, folder_id: int, potential_ancestor_id: int) -> 
         curr = row["parent_id"]
     return False
 
-def move_folders_to_folder(folder_ids: List[int], target_parent_id: Optional[int], target_drive: Optional[str] = None) -> bool:
+def move_folders_to_folder(folder_ids: List[int], target_parent_id: Optional[int]) -> bool:
     if not folder_ids:
         return False
     conn = get_connection()
@@ -252,93 +239,10 @@ def move_folders_to_folder(folder_ids: List[int], target_parent_id: Optional[int
         return False
 
     placeholders = ",".join("?" for _ in valid_ids)
-    if target_drive:
-        cursor.execute(f"UPDATE folders SET parent_id = ?, drive_owner = ? WHERE id IN ({placeholders})", [target_parent_id, target_drive] + list(valid_ids))
-        for vid in valid_ids:
-            update_folder_contents_drive(cursor, vid, target_drive)
-    else:
-        cursor.execute(f"UPDATE folders SET parent_id = ? WHERE id IN ({placeholders})", [target_parent_id] + list(valid_ids))
+    cursor.execute(f"UPDATE folders SET parent_id = ? WHERE id IN ({placeholders})", [target_parent_id] + list(valid_ids))
     conn.commit()
     conn.close()
     return True
-
-def copy_file(file_id: int, target_folder_id: Optional[int] = None, target_drive: Optional[str] = None) -> Optional[int]:
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM files WHERE id = ?", (file_id,))
-    f = cursor.fetchone()
-    if not f:
-        conn.close()
-        return None
-
-    orig_name = f["file_name"]
-    dest_drive = target_drive if target_drive else f["drive_owner"]
-    dest_folder = target_folder_id if target_folder_id is not None else f["folder_id"]
-
-    new_name = orig_name
-    if dest_drive == f["drive_owner"] and dest_folder == f["folder_id"]:
-        if "." in orig_name:
-            parts = orig_name.rsplit(".", 1)
-            new_name = f"{parts[0]} - Copy.{parts[1]}"
-        else:
-            new_name = f"{orig_name} - Copy"
-
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    cursor.execute("""
-        INSERT INTO files (
-            file_name, file_size, mime_type, category, sha256,
-            is_encrypted, is_favorite, is_trash, cloud_backend,
-            chunk_count, chunks_data, drive_owner, folder_id,
-            created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        new_name, f["file_size"], f["mime_type"], f["category"], f["sha256"],
-        f["is_encrypted"], f["cloud_backend"], f["chunk_count"], f["chunks_data"],
-        dest_drive, dest_folder, now, now
-    ))
-    new_id = cursor.lastrowid
-    conn.commit()
-    conn.close()
-    return new_id
-
-def copy_folder(folder_id: int, target_parent_id: Optional[int] = None, target_drive: Optional[str] = None) -> Optional[int]:
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM folders WHERE id = ?", (folder_id,))
-    folder = cursor.fetchone()
-    if not folder:
-        conn.close()
-        return None
-
-    dest_drive = target_drive if target_drive else folder["drive_owner"]
-    dest_parent = target_parent_id if target_parent_id is not None else folder["parent_id"]
-
-    orig_name = folder["folder_name"]
-    new_name = orig_name
-    if dest_drive == folder["drive_owner"] and dest_parent == folder["parent_id"]:
-        new_name = f"{orig_name} - Copy"
-
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    cursor.execute("""
-        INSERT INTO folders (folder_name, parent_id, drive_owner, is_trash, created_at, updated_at)
-        VALUES (?, ?, ?, 0, ?, ?)
-    """, (new_name, dest_parent, dest_drive, now, now))
-    new_folder_id = cursor.lastrowid
-
-    cursor.execute("SELECT id FROM files WHERE folder_id = ? AND is_trash = 0", (folder_id,))
-    child_file_ids = [r["id"] for r in cursor.fetchall()]
-    cursor.execute("SELECT id FROM folders WHERE parent_id = ? AND is_trash = 0", (folder_id,))
-    child_folder_ids = [r["id"] for r in cursor.fetchall()]
-    conn.commit()
-    conn.close()
-
-    for cfid in child_file_ids:
-        copy_file(cfid, target_folder_id=new_folder_id, target_drive=dest_drive)
-
-    for cfold_id in child_folder_ids:
-        copy_folder(cfold_id, target_parent_id=new_folder_id, target_drive=dest_drive)
-
-    return new_folder_id
 
 def get_files(
     category: Optional[str] = None,
