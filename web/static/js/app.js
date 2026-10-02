@@ -2239,6 +2239,7 @@ async function deleteSelectedFiles() {
         loadFiles();
     } catch (e) {
         console.error(e);
+    }
 }
 
 // Upload Handling
