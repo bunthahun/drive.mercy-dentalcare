@@ -2604,6 +2604,15 @@ function initContextMenuListeners() {
         });
     }
 
+    // Context menu: Paste in Background / Current Folder
+    const bgcmenuPaste = document.getElementById("bgcmenuPaste");
+    if (bgcmenuPaste) {
+        bgcmenuPaste.addEventListener("click", () => {
+            hideAllContextMenus();
+            executePaste(currentFolderId, currentCategory);
+        });
+    }
+
     // Folder Context Menu: Open
     const fcmenuOpen = document.getElementById("fcmenuOpen");
     if (fcmenuOpen) {
@@ -2611,6 +2620,56 @@ function initContextMenuListeners() {
             hideAllContextMenus();
             if (activeContextItem && activeContextItem.type === "folder") {
                 openFolder(activeContextItem.id, activeContextItem.name);
+            }
+        });
+    }
+
+    // Folder Context Menu: Cut
+    const fcmenuCut = document.getElementById("fcmenuCut");
+    if (fcmenuCut) {
+        fcmenuCut.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "folder") {
+                const targetFid = activeContextItem.id;
+                const fids = selectedFolderIds.has(targetFid) ? Array.from(selectedFolderIds) : [targetFid];
+                const fileIds = selectedFolderIds.has(targetFid) ? Array.from(selectedFileIds) : [];
+                setClipboard("cut", fileIds, fids);
+            }
+        });
+    }
+
+    // Folder Context Menu: Copy
+    const fcmenuCopy = document.getElementById("fcmenuCopy");
+    if (fcmenuCopy) {
+        fcmenuCopy.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "folder") {
+                const targetFid = activeContextItem.id;
+                const fids = selectedFolderIds.has(targetFid) ? Array.from(selectedFolderIds) : [targetFid];
+                const fileIds = selectedFolderIds.has(targetFid) ? Array.from(selectedFileIds) : [];
+                setClipboard("copy", fileIds, fids);
+            }
+        });
+    }
+
+    // Folder Context Menu: Paste into this folder
+    const fcmenuPasteInto = document.getElementById("fcmenuPasteInto");
+    if (fcmenuPasteInto) {
+        fcmenuPasteInto.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "folder") {
+                executePaste(activeContextItem.id, currentCategory);
+            }
+        });
+    }
+
+    // Folder Context Menu: New Folder Inside
+    const fcmenuNewFolderInside = document.getElementById("fcmenuNewFolderInside");
+    if (fcmenuNewFolderInside) {
+        fcmenuNewFolderInside.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "folder") {
+                promptNewFolder(activeContextItem.id);
             }
         });
     }
@@ -2682,6 +2741,34 @@ function initContextMenuListeners() {
         });
     }
 
+    // File Context Menu: Cut
+    const filecmenuCut = document.getElementById("filecmenuCut");
+    if (filecmenuCut) {
+        filecmenuCut.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "file") {
+                const targetFid = activeContextItem.id;
+                const fileIds = selectedFileIds.has(targetFid) ? Array.from(selectedFileIds) : [targetFid];
+                const folderIds = selectedFileIds.has(targetFid) ? Array.from(selectedFolderIds) : [];
+                setClipboard("cut", fileIds, folderIds);
+            }
+        });
+    }
+
+    // File Context Menu: Copy
+    const filecmenuCopy = document.getElementById("filecmenuCopy");
+    if (filecmenuCopy) {
+        filecmenuCopy.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "file") {
+                const targetFid = activeContextItem.id;
+                const fileIds = selectedFileIds.has(targetFid) ? Array.from(selectedFileIds) : [targetFid];
+                const folderIds = selectedFileIds.has(targetFid) ? Array.from(selectedFolderIds) : [];
+                setClipboard("copy", fileIds, folderIds);
+            }
+        });
+    }
+
     // File Context Menu: Rename
     const filecmenuRename = document.getElementById("filecmenuRename");
     if (filecmenuRename) {
@@ -2717,6 +2804,54 @@ function initContextMenuListeners() {
         });
     }
 
+    // Selection Floating Bar Cut & Copy Buttons
+    const btnSelectionCut = document.getElementById("btnSelectionCut");
+    if (btnSelectionCut) {
+        btnSelectionCut.addEventListener("click", () => {
+            if (selectedFileIds.size > 0 || selectedFolderIds.size > 0) {
+                setClipboard("cut", Array.from(selectedFileIds), Array.from(selectedFolderIds));
+            }
+        });
+    }
+
+    const btnSelectionCopy = document.getElementById("btnSelectionCopy");
+    if (btnSelectionCopy) {
+        btnSelectionCopy.addEventListener("click", () => {
+            if (selectedFileIds.size > 0 || selectedFolderIds.size > 0) {
+                setClipboard("copy", Array.from(selectedFileIds), Array.from(selectedFolderIds));
+            }
+        });
+    }
+
+    // Global Keyboard Shortcuts: Ctrl+X, Ctrl+C, Ctrl+V
+    window.addEventListener("keydown", (e) => {
+        if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.isContentEditable) {
+            return;
+        }
+
+        // Ctrl + X: Cut
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "x") {
+            if (selectedFileIds.size > 0 || selectedFolderIds.size > 0) {
+                e.preventDefault();
+                setClipboard("cut", Array.from(selectedFileIds), Array.from(selectedFolderIds));
+            }
+        }
+        // Ctrl + C: Copy
+        else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c") {
+            if (selectedFileIds.size > 0 || selectedFolderIds.size > 0) {
+                e.preventDefault();
+                setClipboard("copy", Array.from(selectedFileIds), Array.from(selectedFolderIds));
+            }
+        }
+        // Ctrl + V: Paste
+        else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v") {
+            if (appClipboard.operation && (appClipboard.file_ids.length > 0 || appClipboard.folder_ids.length > 0)) {
+                e.preventDefault();
+                executePaste(currentFolderId, currentCategory);
+            }
+        }
+    });
+
     // Dismiss context menus on click outside
     window.addEventListener("click", (e) => {
         if (!e.target.closest(".win-context-menu")) {
@@ -2731,6 +2866,129 @@ function initContextMenuListeners() {
         }
     });
     window.addEventListener("scroll", hideAllContextMenus, true);
+}
+
+// Clipboard global state
+let appClipboard = {
+    operation: null, // 'cut' | 'copy'
+    file_ids: [],
+    folder_ids: [],
+    source_drive: null
+};
+
+function showClipboardToast(msg, isSuccess = true) {
+    const existing = document.querySelector(".clipboard-toast");
+    if (existing) existing.remove();
+
+    const toast = document.createElement("div");
+    toast.className = "clipboard-toast";
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: ${isSuccess ? 'rgba(15, 23, 42, 0.96)' : 'rgba(239, 68, 68, 0.95)'};
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        color: #ffffff;
+        padding: 10px 24px;
+        border-radius: 30px;
+        font-size: 13.5px;
+        font-weight: 500;
+        box-shadow: 0 14px 36px rgba(0,0,0,0.55);
+        z-index: 100000;
+        animation: winContextMenuIn 0.2s cubic-bezier(0, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    `;
+    toast.innerHTML = `<span>${isSuccess ? '📋' : '⚠️'}</span> <span>${msg}</span>`;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transition = "opacity 0.3s ease";
+        setTimeout(() => toast.remove(), 300);
+    }, 2800);
+}
+
+function setClipboard(operation, fileIds = [], folderIds = []) {
+    document.querySelectorAll(".cut-item-active").forEach(el => el.classList.remove("cut-item-active"));
+
+    appClipboard = {
+        operation: operation,
+        file_ids: fileIds.map(id => parseInt(id)).filter(id => !isNaN(id)),
+        folder_ids: folderIds.map(id => parseInt(id)).filter(id => !isNaN(id)),
+        source_drive: currentCategory
+    };
+
+    const count = appClipboard.file_ids.length + appClipboard.folder_ids.length;
+    if (count === 0) return;
+
+    if (operation === "cut") {
+        appClipboard.file_ids.forEach(fid => {
+            const row = document.querySelector(`tr[data-file-id="${fid}"]`);
+            const card = document.querySelector(`.win-item-card[data-file-id="${fid}"]`);
+            if (row) row.classList.add("cut-item-active");
+            if (card) card.classList.add("cut-item-active");
+        });
+        appClipboard.folder_ids.forEach(fid => {
+            const row = document.querySelector(`tr[data-folder-id="${fid}"]`);
+            const card = document.querySelector(`.win-item-card[data-folder-id="${fid}"]`);
+            if (row) row.classList.add("cut-item-active");
+            if (card) card.classList.add("cut-item-active");
+        });
+
+        const msg = currentLang === "km" 
+            ? `✂️ បានកាត់ ${count} ឯកសារ/ថត (សូមជ្រើសទីតាំង រួច Right-Click យក Paste ឬចុច Ctrl+V)` 
+            : `✂️ Cut ${count} item(s) to clipboard. Paste with Right-Click or Ctrl+V`;
+        showClipboardToast(msg);
+    } else {
+        const msg = currentLang === "km" 
+            ? `📋 បានចម្លង ${count} ឯកសារ/ថត (សូមជ្រើសទីតាំង រួច Right-Click យក Paste ឬចុច Ctrl+V)` 
+            : `📋 Copied ${count} item(s) to clipboard. Paste with Right-Click or Ctrl+V`;
+        showClipboardToast(msg);
+    }
+}
+
+async function executePaste(targetFolderId = null, targetDrive = null) {
+    if (!appClipboard.operation || (appClipboard.file_ids.length === 0 && appClipboard.folder_ids.length === 0)) {
+        return;
+    }
+
+    const destDrive = targetDrive || currentCategory || "buntha";
+    const destFolder = (targetFolderId !== undefined && targetFolderId !== null) ? targetFolderId : currentFolderId;
+
+    try {
+        const res = await fetch("/api/clipboard/paste", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                operation: appClipboard.operation,
+                file_ids: appClipboard.file_ids,
+                folder_ids: appClipboard.folder_ids,
+                target_folder_id: destFolder,
+                target_drive: destDrive
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            const totalCount = (data.files_count || 0) + (data.folders_count || 0);
+            const actLabel = appClipboard.operation === "cut" 
+                ? (currentLang === "km" ? "ផ្លាស់ទី" : "moved")
+                : (currentLang === "km" ? "ចម្លង" : "copied");
+            showClipboardToast(`✓ បាន${actLabel} ${totalCount} ឯកសារ/ថត បានសម្រេច!`);
+
+            if (appClipboard.operation === "cut") {
+                appClipboard = { operation: null, file_ids: [], folder_ids: [], source_drive: null };
+                document.querySelectorAll(".cut-item-active").forEach(el => el.classList.remove("cut-item-active"));
+            }
+            fetchStats();
+            loadFiles();
+        } else {
+            alert("❌ " + (data.error || "Paste failed"));
+        }
+    } catch (e) {
+        alert("❌ Error: " + e.message);
+    }
 }
 
 function hideAllContextMenus() {
@@ -2765,6 +3023,11 @@ function positionMenu(menu, x, y) {
 function showBgContextMenu(x, y) {
     hideAllContextMenus();
     const menu = document.getElementById("bgContextMenu");
+    const pasteItem = document.getElementById("bgcmenuPaste");
+    if (pasteItem) {
+        const hasClipboard = appClipboard.operation && (appClipboard.file_ids.length > 0 || appClipboard.folder_ids.length > 0);
+        pasteItem.style.display = hasClipboard ? "flex" : "none";
+    }
     if (menu) positionMenu(menu, x, y);
 }
 
@@ -2772,6 +3035,11 @@ function showFolderContextMenu(x, y, folder) {
     hideAllContextMenus();
     activeContextItem = { type: 'folder', id: folder.id, name: folder.folder_name };
     const menu = document.getElementById("folderContextMenu");
+    const pasteItem = document.getElementById("fcmenuPasteInto");
+    if (pasteItem) {
+        const hasClipboard = appClipboard.operation && (appClipboard.file_ids.length > 0 || appClipboard.folder_ids.length > 0);
+        pasteItem.style.display = hasClipboard ? "flex" : "none";
+    }
     if (menu) positionMenu(menu, x, y);
 }
 
@@ -2782,26 +3050,29 @@ function showFileContextMenu(x, y, file) {
     if (menu) positionMenu(menu, x, y);
 }
 
-function promptNewFolder() {
+function promptNewFolder(targetParentId = null) {
     hideAllContextMenus();
+    const parentId = targetParentId !== null ? targetParentId : currentFolderId;
     showPromptModal(
         currentLang === "km" ? "បង្កើតថតថ្មី (New Folder)" : "Create New Folder",
         currentLang === "km" ? "ឈ្មោះថតឯកសារ៖" : "Folder Name:",
         "New folder",
         async (folderName) => {
-            const drive = currentCategory === "vuochlin" ? "vuochlin" : "buntha";
+            const drive = (currentCategory === "vuochlin" || currentCategory === "mercy") ? currentCategory : "buntha";
             const res = await fetch("/api/folders/create", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name: folderName,
+                body: JSON.stringify({ 
+                    name: folderName, 
                     drive: drive,
-                    parent_id: currentFolderId
+                    parent_id: parentId
                 })
             });
             const data = await res.json();
             if (data.success) {
                 loadFiles();
+            } else {
+                alert(data.error || "Failed to create folder");
             }
         }
     );
