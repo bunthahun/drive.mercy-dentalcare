@@ -1019,6 +1019,7 @@ MIME_MAP = {
 PREPARE_TASKS = dict()
 
 def _run_prepare_task(file_id):
+    import shutil
     file_info = database.get_file_by_id(file_id)
     if not file_info:
         PREPARE_TASKS[file_id] = {"ready": False, "error": "File not found"}
@@ -1086,8 +1087,7 @@ def _run_prepare_task(file_id):
                     try: pf.unlink()
                     except Exception: pass
 
-        import shutil as _sh
-        _sh.move(temp_target, str(target_path))
+        shutil.move(temp_target, str(target_path))
         try:
             temp_dir.rmdir()
         except Exception:
