@@ -712,13 +712,20 @@ function initEventListeners() {
 
     // Upload button & input
     const fileInput = document.getElementById("fileInput");
-    document.getElementById("btnUploadFile").addEventListener("click", () => fileInput.click());
-    fileInput.addEventListener("change", (e) => {
-        if (e.target.files.length > 0) {
-            handleFilesUpload(Array.from(e.target.files));
+    const btnUploadFile = document.getElementById("btnUploadFile");
+    if (btnUploadFile && fileInput) {
+        btnUploadFile.addEventListener("click", () => {
             fileInput.value = "";
-        }
-    });
+            fileInput.click();
+        });
+    }
+    if (fileInput) {
+        fileInput.addEventListener("change", (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                handleFilesUpload(Array.from(e.target.files));
+            }
+        });
+    }
 
     // Drag and Drop with Dual/Triple Drive Targets
     const dropZone = document.getElementById("dropZone");
@@ -2270,15 +2277,22 @@ async function handleFilesUpload(files, targetDrive) {
             const item = document.createElement("div");
             item.className = "transfer-item";
             const formattedSize = formatSize(file.size);
-            const isVideo = file.type.startsWith("video/") || file.name.match(/\.(mp4|mkv|avi|mov|wmv|webm)$/i);
-            const isImg = file.type.startsWith("image/");
+            
+            // Safe filename extraction for mobile devices (iOS/Android photo picker)
+            let safeFileName = (file && file.name && typeof file.name === "string" && file.name.trim()) ? file.name.trim() : "";
+            const isVideo = (file.type && file.type.startsWith("video/")) || (safeFileName && safeFileName.match(/\.(mp4|mkv|avi|mov|wmv|webm|m4v)$/i));
+            const isImg = (file.type && file.type.startsWith("image/")) || (safeFileName && safeFileName.match(/\.(jpg|jpeg|png|gif|webp|heic|heif|dng|raw)$/i));
+            if (!safeFileName) {
+                const ext = isVideo ? ".mp4" : (isImg ? ".jpg" : ".bin");
+                safeFileName = (isVideo ? "video_" : (isImg ? "photo_" : "file_")) + Date.now() + ext;
+            }
             const fileIcon = isVideo ? "🎬" : (isImg ? "🖼️" : "📄");
 
             item.innerHTML = `
                 <div class="transfer-info">
                     <div class="transfer-file-title">
                         <span style="font-size: 16px;">${fileIcon}</span>
-                        <span class="transfer-file-name" title="${file.name}">${file.name}</span>
+                        <span class="transfer-file-name" title="${safeFileName}">${safeFileName}</span>
                         <span class="transfer-file-size">${formattedSize}</span>
                     </div>
                     <div class="transfer-badges">
@@ -2317,7 +2331,7 @@ async function handleFilesUpload(files, targetDrive) {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                            file_name: file.name,
+                            file_name: safeFileName,
                             file_size: file.size,
                             total_chunks: totalChunks,
                             drive: driveToUse,
@@ -2360,7 +2374,8 @@ async function handleFilesUpload(files, targetDrive) {
                             const cForm = new FormData();
                             cForm.append("upload_id", uploadId);
                             cForm.append("part_index", partIdx);
-                            cForm.append("chunk_file", chunkBlob, file.name);
+                            cForm.append("file_name", safeFileName);
+                            cForm.append("chunk_file", chunkBlob, safeFileName);
 
                             const cXhr = new XMLHttpRequest();
                             cXhr.upload.onprogress = (e) => {
@@ -2478,7 +2493,8 @@ async function handleFilesUpload(files, targetDrive) {
                 // --- DIRECT UPLOAD PIPELINE FOR FILES <= 15MB ---
                 const uploadId = "up_" + Date.now() + "_" + Math.random().toString(36).substring(2, 8);
                 const formData = new FormData();
-                formData.append("file", file);
+                formData.append("file", file, safeFileName);
+                formData.append("file_name", safeFileName);
                 formData.append("drive", driveToUse);
                 formData.append("upload_id", uploadId);
                 if (currentFolderId) {
@@ -2944,7 +2960,10 @@ function initContextMenuListeners() {
         cmenuUpload.addEventListener("click", () => {
             hideAllContextMenus();
             const fileInput = document.getElementById("fileInput");
-            if (fileInput) fileInput.click();
+            if (fileInput) {
+                fileInput.value = "";
+                fileInput.click();
+            }
         });
     }
 
@@ -3562,14 +3581,16 @@ function initMobileApp() {
     if (btnOptCamera) {
         btnOptCamera.addEventListener("click", () => {
             closeUploadSheet();
-            if (mobileCameraInput) mobileCameraInput.click();
+            if (mobileCameraInput) {
+                mobileCameraInput.value = "";
+                mobileCameraInput.click();
+            }
         });
     }
     if (mobileCameraInput) {
         mobileCameraInput.addEventListener("change", (e) => {
             if (e.target.files && e.target.files.length > 0) {
-                handleFilesUpload(e.target.files, currentCategory);
-                mobileCameraInput.value = "";
+                handleFilesUpload(Array.from(e.target.files), currentCategory);
             }
         });
     }
@@ -3578,14 +3599,16 @@ function initMobileApp() {
     if (btnOptGallery) {
         btnOptGallery.addEventListener("click", () => {
             closeUploadSheet();
-            if (mobileGalleryInput) mobileGalleryInput.click();
+            if (mobileGalleryInput) {
+                mobileGalleryInput.value = "";
+                mobileGalleryInput.click();
+            }
         });
     }
     if (mobileGalleryInput) {
         mobileGalleryInput.addEventListener("change", (e) => {
             if (e.target.files && e.target.files.length > 0) {
-                handleFilesUpload(e.target.files, currentCategory);
-                mobileGalleryInput.value = "";
+                handleFilesUpload(Array.from(e.target.files), currentCategory);
             }
         });
     }
@@ -3594,14 +3617,16 @@ function initMobileApp() {
     if (btnOptFiles) {
         btnOptFiles.addEventListener("click", () => {
             closeUploadSheet();
-            if (mobileFileInput) mobileFileInput.click();
+            if (mobileFileInput) {
+                mobileFileInput.value = "";
+                mobileFileInput.click();
+            }
         });
     }
     if (mobileFileInput) {
         mobileFileInput.addEventListener("change", (e) => {
             if (e.target.files && e.target.files.length > 0) {
-                handleFilesUpload(e.target.files, currentCategory);
-                mobileFileInput.value = "";
+                handleFilesUpload(Array.from(e.target.files), currentCategory);
             }
         });
     }
