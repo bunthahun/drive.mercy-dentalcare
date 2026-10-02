@@ -230,7 +230,7 @@ def get_files(
             query += " AND drive_owner = ?"
             params.append(drive_owner)
 
-    if category and category not in ["all", "buntha", "vuochlin", "trash", "favorites"] and not is_trash:
+    if category and category not in ["all", "buntha", "vuochlin", "mercy", "trash", "favorites"] and not is_trash:
         query += " AND category = ?"
         params.append(category)
         
@@ -369,9 +369,12 @@ def get_storage_stats() -> Dict[str, Any]:
         buntha_bytes = cursor.fetchone()["bytes"]
         cursor.execute("SELECT COALESCE(SUM(file_size), 0) AS bytes FROM files WHERE is_trash = 0 AND drive_owner = 'vuochlin'")
         vuochlin_bytes = cursor.fetchone()["bytes"]
+        cursor.execute("SELECT COALESCE(SUM(file_size), 0) AS bytes FROM files WHERE is_trash = 0 AND drive_owner = 'mercy'")
+        mercy_bytes = cursor.fetchone()["bytes"]
     except Exception:
         buntha_bytes = total_bytes
         vuochlin_bytes = 0
+        mercy_bytes = 0
 
     conn.close()
     return {
@@ -380,7 +383,8 @@ def get_storage_stats() -> Dict[str, Any]:
         "trash_bytes": trash_bytes,
         "trash_count": trash_count,
         "buntha_bytes": buntha_bytes,
-        "vuochlin_bytes": vuochlin_bytes
+        "vuochlin_bytes": vuochlin_bytes,
+        "mercy_bytes": mercy_bytes
     }
 
 def rename_file(file_id: int, new_name: str):
