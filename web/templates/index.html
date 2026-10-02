@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="km">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Storage 1000TB Free - កម្មវិធីផ្ទុកទិន្នន័យ 1000TB ឥតគិតថ្លៃ</title>
+    <meta name="description"
+        content="កម្មវិធីផ្ទុកទិន្នន័យលើ Cloud ទំហំ 1000TB (1 Petabyte) ឥតគិតថ្លៃជារៀងរហូត ការពារដោយ AES-256 Encryption">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <meta name="theme-color" content="#0284c7">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Cloud 1000TB">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/static/drive_icon.png">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <span class="brand-icon">☁️</span>
+                    <span class="brand-name">Cloud 1000TB</span>
+                </div>
+            </div>
+
+            <!-- 1000TB Quota Card -->
+            <div class="quota-card">
+                <div class="quota-header">
+                    <span class="quota-title" id="tQuotaTitle">⚡ ទំហំផ្ទុកទិន្នន័យ Cloud</span>
+                </div>
+                <div class="quota-value" id="quotaValue">0.00 GB / 1,024,000 GB</div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="quotaFill" style="width: 1%;"></div>
+                </div>
+                <div class="quota-sub" id="quotaSub">នៅសល់ 1000.00 TB (100%)</div>
+                <div class="status-pill connected" id="cloudStatusBtn" style="cursor: default; user-select: none;">
+                    <span class="status-dot"></span>
+                    <span id="cloudStatusText">Mercy Dental Care</span>
+                </div>
+            </div>
+
+            <!-- Categories Menu -->
+            <nav class="nav-menu">
+                <button class="nav-item active drive-item" data-cat="buntha" id="btnNavBuntha">
+                    <div class="drive-icon-container">
+                        <img src="/static/drive_icon.png" alt="Drive" class="drive-img-icon">
+                    </div>
+                    <div class="drive-details">
+                        <div class="drive-label">HUN BUNTHA</div>
+                        <div class="drive-bar-wrapper">
+                            <div class="drive-bar-fill" id="driveNavFillBuntha" style="width: 1%;"></div>
+                        </div>
+                        <div class="drive-subtext" id="driveNavSubBuntha">1000 TB free of 1000 TB</div>
+                    </div>
+                </button>
+
+                <button class="nav-item drive-item" data-cat="vuochlin" id="btnNavVuochlin">
+                    <div class="drive-icon-container">
+                        <img src="/static/drive_icon.png" alt="Drive" class="drive-img-icon">
+                    </div>
+                    <div class="drive-details">
+                        <div class="drive-label">NEANG VUOCHLIN</div>
+                        <div class="drive-bar-wrapper">
+                            <div class="drive-bar-fill" id="driveNavFillVuochlin" style="width: 1%;"></div>
+                        </div>
+                        <div class="drive-subtext" id="driveNavSubVuochlin">1000 TB free of 1000 TB</div>
+                    </div>
+                </button>
+
+                <button class="nav-item drive-item" data-cat="mercy" id="btnNavMercy">
+                    <div class="drive-icon-container">
+                        <img src="/static/drive_icon.png" alt="Drive" class="drive-img-icon">
+                    </div>
+                    <div class="drive-details">
+                        <div class="drive-label">Mercy Dental Care</div>
+                        <div class="drive-bar-wrapper">
+                            <div class="drive-bar-fill" id="driveNavFillMercy" style="width: 1%;"></div>
+                        </div>
+                        <div class="drive-subtext" id="driveNavSubMercy">1000 TB free of 1000 TB</div>
+                    </div>
+                </button>
+
+                <button class="nav-item" data-cat="trash">
+                    <span class="nav-icon">🗑️</span>
+                    <span class="nav-label" id="tTrash">ធុងសំរាម</span>
+                </button>
+            </nav>
+
+            <!-- Bottom Actions: Language & Settings -->
+            <div class="sidebar-footer">
+                <button class="btn-lang" id="btnLangToggle">🇰🇭 ភាសាខ្មែរ</button>
+                <button class="btn-settings" id="btnSettingsOpen" title="Settings (Admin Only)"
+                    style="display: none;">⚙️</button>
+                <button class="btn-logout" id="btnLogoutSite" title="Lock / Logout (ចាកចេញ)">🔒</button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area: Windows 11 File Explorer -->
+        <main class="main-content win11-explorer">
+            <!-- Mobile Top Header Bar (Phone View) -->
+            <div class="mobile-top-bar" id="mobileTopBar">
+                <div class="mobile-brand">
+                    <span class="mobile-brand-icon">☁️</span>
+                    <span class="mobile-brand-title">Cloud 1000TB</span>
+                </div>
+                <div class="mobile-drive-pill" id="btnMobileDriveSelect" role="button" tabindex="0">
+                    <span class="mobile-drive-dot"></span>
+                    <span id="mobileDriveLabel">HUN BUNTHA</span>
+                    <span class="mobile-caret">▾</span>
+                </div>
+                <div class="mobile-header-actions">
+                    <button class="mobile-icon-btn" id="btnMobileSearchToggle" title="Search (ស្វែងរក)">🔍</button>
+                    <button class="mobile-icon-btn" id="btnMobileQrPhone" title="Phone Connect">📱</button>
+                </div>
+            </div>
+
+            <!-- Windows 11 Tab Header Bar -->
+            <div class="win-tabs-bar">
+                <div class="win-tab active" id="tabBuntha" data-cat="buntha">
+                    <span class="win-tab-icon">💾</span>
+                    <span class="win-tab-title" id="tabTitleBuntha">HUN BUNTHA</span>
+                    <button class="win-tab-close" title="Close tab">✕</button>
+                </div>
+                <div class="win-tab" id="tabVuochlin" data-cat="vuochlin">
+                    <span class="win-tab-icon">💾</span>
+                    <span class="win-tab-title" id="tabTitleVuochlin">NEANG VUOCHLIN</span>
+                    <button class="win-tab-close" title="Close tab">✕</button>
+                </div>
+                <div class="win-tab" id="tabMercy" data-cat="mercy">
+                    <span class="win-tab-icon">💾</span>
+                    <span class="win-tab-title" id="tabTitleMercy">Mercy Dental Care</span>
+                    <button class="win-tab-close" title="Close tab">✕</button>
+                </div>
+                <button class="win-tab-new" id="btnTabNew" title="New tab / Switch Drive">➕</button>
+                <div class="win-tab-badge" id="currentDriveBadge" style="display:none;">
+                    <span class="drive-badge-name" id="currentDriveTitle">HUN BUNTHA</span>
+                </div>
+            </div>
+
+            <!-- Windows 11 Navigation Toolbar & Address Bar -->
+            <div class="win-nav-bar">
+                <div class="win-nav-controls">
+                    <button class="win-nav-btn" id="btnNavBack" title="Back (ថយក្រោយ)" disabled>
+                        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z" />
+                        </svg>
+                    </button>
+                    <button class="win-nav-btn" id="btnNavForward" title="Forward (ទៅមុខ)" disabled>
+                        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                        </svg>
+                    </button>
+                    <button class="win-nav-btn" id="btnNavUp" title="Up to parent folder (ឡើងមួយកម្រិត)">
+                        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M7.646 4.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 5.707l-5.646 5.647a.5.5 0 0 1-.708-.708l6-6z" />
+                        </svg>
+                    </button>
+                    <button class="win-nav-btn" id="btnRefresh" title="Refresh (ផ្ទុកឡើងវិញ)">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" />
+                            <path
+                                d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Windows 11 Breadcrumbs Address Bar -->
+                <div class="win-address-bar" id="winAddressBar">
+                    <span class="win-address-icon">🖥️</span>
+                    <span class="win-crumb-sep">›</span>
+                    <span class="win-crumb-static">This PC</span>
+                    <span class="win-crumb-sep">›</span>
+                    <div class="win-breadcrumbs-trail" id="breadcrumbsTrail">
+                        <button class="breadcrumb-item root" id="crumbRoot" title="Root Drive">
+                            <span class="crumb-icon">💾</span>
+                            <span id="crumbRootName">HUN BUNTHA</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Windows 11 Search Box -->
+                <div class="win-search-box">
+                    <span class="win-search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="ស្វែងរកក្នុង Drive...">
+                    <button class="win-search-clear" id="searchClear">✕</button>
+                </div>
+            </div>
+
+            <!-- Windows 11 Command Ribbon Bar (matching user's pictures) -->
+            <div class="win-command-bar">
+                <!-- New Dropdown -->
+                <div class="win-cmd-group">
+                    <button class="win-cmd-btn win-btn-dropdown" id="btnWinNew" title="New (បង្កើតថ្មី)">
+                        <span class="win-cmd-icon">⊕</span>
+                        <span>New</span>
+                        <span class="win-cmd-caret">˅</span>
+                    </button>
+                    <div class="win-dropdown-menu" id="menuWinNew" style="display: none;">
+                        <button class="win-dropdown-item" id="btnMenuNewFolder">
+                            <span class="win-dd-icon">📁</span>
+                            <span>Folder (បង្កើតថត)</span>
+                        </button>
+                        <button class="win-dropdown-item" id="btnMenuUploadFile">
+                            <span class="win-dd-icon">📤</span>
+                            <span>Upload files (ផ្ទុកឯកសារឡើង)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="win-cmd-divider"></div>
+
+                <!-- Action icons (Cut, Copy, Rename, Delete) -->
+                <div class="win-cmd-group win-cmd-actions">
+                    <button class="win-cmd-btn win-cmd-icon-only" id="btnRibbonCut" title="Cut / Move (ផ្លាស់ទី)">
+                        <span class="win-cmd-icon">✂️</span>
+                    </button>
+                    <button class="win-cmd-btn win-cmd-icon-only" id="btnRibbonCopy" title="Copy (ចម្លង)">
+                        <span class="win-cmd-icon">📄</span>
+                    </button>
+                    <button class="win-cmd-btn win-cmd-icon-only" id="btnRibbonRename" title="Rename (ប្តូរឈ្មោះ)">
+                        <span class="win-cmd-icon">✏️</span>
+                    </button>
+                    <button class="win-cmd-btn win-cmd-icon-only" id="btnRibbonDelete" title="Delete (លុប)">
+                        <span class="win-cmd-icon">🗑️</span>
+                    </button>
+                </div>
+
+                <div class="win-cmd-divider"></div>
+
+                <!-- Sort Dropdown -->
+                <div class="win-cmd-group">
+                    <button class="win-cmd-btn win-btn-dropdown" id="btnWinSort" title="Sort (រៀបលំដាប់)">
+                        <span class="win-cmd-icon">⇅</span>
+                        <span>Sort</span>
+                        <span class="win-cmd-caret">˅</span>
+                    </button>
+                    <div class="win-dropdown-menu" id="menuWinSort" style="display: none;">
+                        <button class="win-dropdown-item" data-sort="name">
+                            <span class="win-dd-check" id="chkSortName">✓</span>
+                            <span>Name (ឈ្មោះ)</span>
+                        </button>
+                        <button class="win-dropdown-item" data-sort="date">
+                            <span class="win-dd-check" id="chkSortDate"></span>
+                            <span>Date modified (កាលបរិច្ឆេទ)</span>
+                        </button>
+                        <button class="win-dropdown-item" data-sort="type">
+                            <span class="win-dd-check" id="chkSortType"></span>
+                            <span>Type (ប្រភេទ)</span>
+                        </button>
+                        <button class="win-dropdown-item" data-sort="size">
+                            <span class="win-dd-check" id="chkSortSize"></span>
+                            <span>Size (ទំហំ)</span>
+                        </button>
+                        <div class="win-dd-divider"></div>
+                        <button class="win-dropdown-item" data-order="asc">
+                            <span class="win-dd-check" id="chkOrderAsc">✓</span>
+                            <span>Ascending (ពីតូចទៅធំ)</span>
+                        </button>
+                        <button class="win-dropdown-item" data-order="desc">
+                            <span class="win-dd-check" id="chkOrderDesc"></span>
+                            <span>Descending (ពីធំទៅតូច)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- View Dropdown (EXACT MATCH TO PICTURE 1) -->
+                <div class="win-cmd-group">
+                    <button class="win-cmd-btn win-btn-dropdown active" id="btnWinView" title="View (ទិដ្ឋភាព)">
+                        <span class="win-cmd-icon">≡</span>
+                        <span>View</span>
+                        <span class="win-cmd-caret">˅</span>
+                    </button>
+                    <div class="win-dropdown-menu win-view-dropdown" id="menuWinView" style="display: none;">
+                        <button class="win-dropdown-item" data-view="extra-large">
+                            <span class="win-dd-check" id="chkViewExtraLarge"></span>
+                            <span class="win-dd-icon">🔲</span>
+                            <span>Extra large icons</span>
+                        </button>
+                        <button class="win-dropdown-item" data-view="large">
+                            <span class="win-dd-check" id="chkViewLarge"></span>
+                            <span class="win-dd-icon">🔲</span>
+                            <span>Large icons</span>
+                        </button>
+                        <button class="win-dropdown-item" data-view="medium">
+                            <span class="win-dd-check" id="chkViewMedium"></span>
+                            <span class="win-dd-icon">▣</span>
+                            <span>Medium-sized icons</span>
+                        </button>
+                        <button class="win-dropdown-item" data-view="small">
+                            <span class="win-dd-check" id="chkViewSmall"></span>
+                            <span class="win-dd-icon">⸬</span>
+                            <span>Small icons</span>
+                        </button>
+                        <button class="win-dropdown-item" data-view="list">
+                            <span class="win-dd-check" id="chkViewList"></span>
+                            <span class="win-dd-icon">☰</span>
+                            <span>List</span>
+                        </button>
+                        <button class="win-dropdown-item active" data-view="details">
+                            <span class="win-dd-check" id="chkViewDetails">✓</span>
+                            <span class="win-dd-icon">🗂️</span>
+                            <span>Details</span>
+                        </button>
+                        <button class="win-dropdown-item" data-view="tiles">
+                            <span class="win-dd-check" id="chkViewTiles"></span>
+                            <span class="win-dd-icon">🪟</span>
+                            <span>Tiles</span>
+                        </button>
+                        <button class="win-dropdown-item" data-view="content">
+                            <span class="win-dd-check" id="chkViewContent"></span>
+                            <span class="win-dd-icon">📋</span>
+                            <span>Content</span>
+                        </button>
+                        <div class="win-dd-divider"></div>
+                        <button class="win-dropdown-item" id="btnToggleDetailsPane">
+                            <span class="win-dd-check" id="chkDetailsPane"></span>
+                            <span class="win-dd-icon">📑</span>
+                            <span>Details pane</span>
+                        </button>
+                        <button class="win-dropdown-item" id="btnTogglePreviewPane">
+                            <span class="win-dd-check" id="chkPreviewPane"></span>
+                            <span class="win-dd-icon">👁️</span>
+                            <span>Preview pane</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- More Options (...) -->
+                <div class="win-cmd-group">
+                    <button class="win-cmd-btn win-cmd-icon-only" id="btnWinMore" title="More options">
+                        <span class="win-cmd-icon">•••</span>
+                    </button>
+                    <div class="win-dropdown-menu" id="menuWinMore" style="display: none;">
+                        <button class="win-dropdown-item" id="btnMenuSelectAll">
+                            <span class="win-dd-icon">☑️</span>
+                            <span>Select all (ជ្រើសទាំងអស់)</span>
+                        </button>
+                        <button class="win-dropdown-item" id="btnMenuClearSelection">
+                            <span class="win-dd-icon">⬜</span>
+                            <span>Clear selection (លុបការជ្រើសរើស)</span>
+                        </button>
+                        <div class="win-dd-divider"></div>
+                        <button class="win-dropdown-item win-danger" id="btnMenuEmptyTrash" style="display: none;">
+                            <span class="win-dd-icon">🗑️</span>
+                            <span id="tEmptyTrash">Empty trash (សម្អាតធុងសំរាម)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="win-cmd-divider"></div>
+
+                <!-- Phone Connect Button -->
+                <div class="win-cmd-group">
+                    <button class="win-cmd-btn win-phone-btn" id="btnRibbonPhone" title="Open on Phone (ស្កេនប្រើលើទូរសព្ទ)">
+                        <span class="win-cmd-icon">📱</span>
+                        <span>Phone App</span>
+                    </button>
+                </div>
+
+                <!-- Hidden inputs/compatibility buttons -->
+                <input type="file" id="fileInput" multiple style="display: none;">
+                <button id="btnUploadFile" style="display: none;"></button>
+                <button id="btnEmptyTrash" style="display: none;"></button>
+                <div class="view-toggles" style="display: none;">
+                    <button id="btnGridView"></button>
+                    <button id="btnListView"></button>
+                </div>
+                <button id="btnToggleSelectAll" style="display: none;"></button>
+                <button id="btnNewFolderTop" style="display: none;"></button>
+            </div>
+
+            <!-- Content Viewport / File List Area -->
+            <div class="content-viewport" id="dropZone">
+                <!-- Drop Overlay with Dual Target Drives -->
+                <div class="drop-overlay" id="dropOverlay">
+                    <div class="drop-modal-card">
+                        <div class="drop-header">
+                            <span class="drop-header-icon">📂</span>
+                            <h2 class="drop-title">ទាញទម្លាក់ឯកសារចូល Drive (Drag & Drop)</h2>
+                            <p class="drop-subtitle">សូមទម្លាក់ចំ Drive ខាងក្រោមដើម្បីផ្ទុកឯកសារចូលដោយឡែកពីគ្នា
+                                មិនច្របូកច្របល់៖</p>
+                        </div>
+                        <div class="drop-targets-container">
+                            <div class="drop-target-box" id="dropTargetBuntha" data-drive="buntha">
+                                <div class="drop-target-icon-wrap">
+                                    <img src="/static/drive_icon.png" class="drop-target-drive-img"
+                                        alt="HUN BUNTHA Drive">
+                                    <span class="drive-led green"></span>
+                                </div>
+                                <div class="drop-target-name">HUN BUNTHA</div>
+                                <div class="drop-target-desc">ទម្លាក់នៅទីនេះដើម្បីផ្ទុកចូល Drive <b>HUN BUNTHA</b></div>
+                                <div class="drop-badge">💾 ផ្ទុកចូលទីនេះ</div>
+                            </div>
+
+                            <div class="drop-target-box" id="dropTargetVuochlin" data-drive="vuochlin">
+                                <div class="drop-target-icon-wrap">
+                                    <img src="/static/drive_icon.png" class="drop-target-drive-img"
+                                        alt="NEANG VUOCHLIN Drive">
+                                    <span class="drive-led green"></span>
+                                </div>
+                                <div class="drop-target-name">NEANG VUOCHLIN</div>
+                                <div class="drop-target-desc">ទម្លាក់នៅទីនេះដើម្បីផ្ទុកចូល Drive <b>NEANG VUOCHLIN</b>
+                                </div>
+                                <div class="drop-badge">💾 ផ្ទុកចូលទីនេះ</div>
+                            </div>
+
+                            <div class="drop-target-box" id="dropTargetMercy" data-drive="mercy">
+                                <div class="drop-target-icon-wrap">
+                                    <img src="/static/drive_icon.png" class="drop-target-drive-img"
+                                        alt="Mercy Dental Care Drive">
+                                    <span class="drive-led green"></span>
+                                </div>
+                                <div class="drop-target-name">Mercy Dental Care</div>
+                                <div class="drop-target-desc">ទម្លាក់នៅទីនេះដើម្បីផ្ទុកចូល Drive <b>Mercy Dental
+                                        Care</b></div>
+                                <div class="drop-badge">💾 ផ្ទុកចូលទីនេះ</div>
+                            </div>
+                        </div>
+                        <div class="drop-footer-hint">
+                            <span>💡 ឬលែងដៃនៅកន្លែងណាក៏បាន ឯកសារនឹងចូលទៅក្នុង Drive ដែលកំពុងបើកស្រាប់ (<b
+                                    id="dropActiveDriveHint">HUN BUNTHA</b>)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <div class="empty-icon">📁</div>
+                    <h3 id="tNoFiles">ថតនេះទទេ (This folder is empty)</h3>
+                    <p class="empty-hint">ចុចកណ្ដុរស្ដាំ (Right-Click) ឬចុច "New" ខាងលើដើម្បីបង្កើតថត
+                        ឬទាញទម្លាក់ឯកសារមកទីនេះ</p>
+                </div>
+
+                <!-- Windows 11 Details View Table (EXACT MATCH TO PICTURE 2) -->
+                <div class="win-details-container" id="winDetailsContainer">
+                    <table class="win-details-table">
+                        <thead>
+                            <tr>
+                                <th class="col-check">
+                                    <input type="checkbox" id="thMasterCheckbox" class="win-checkbox"
+                                        title="Select all">
+                                </th>
+                                <th class="col-name sortable active-sort" data-sort="name" id="thColName">
+                                    <div class="th-content">
+                                        <span id="thName">Name</span>
+                                        <span class="sort-arrow" id="sortArrowName">▲</span>
+                                    </div>
+                                </th>
+                                <th class="col-date sortable" data-sort="date" id="thColDate">
+                                    <div class="th-content">
+                                        <span id="thDate">Date modified</span>
+                                        <span class="sort-arrow" id="sortArrowDate"></span>
+                                    </div>
+                                </th>
+                                <th class="col-type sortable" data-sort="type" id="thColType">
+                                    <div class="th-content">
+                                        <span id="thType">Type</span>
+                                        <span class="sort-arrow" id="sortArrowType"></span>
+                                    </div>
+                                </th>
+                                <th class="col-size sortable" data-sort="size" id="thColSize">
+                                    <div class="th-content">
+                                        <span id="thSize">Size</span>
+                                        <span class="sort-arrow" id="sortArrowSize"></span>
+                                    </div>
+                                </th>
+                                <th class="col-actions"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="winDetailsTbody">
+                            <!-- Folders & Files combined rendered here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Windows 11 Icon Views (Extra Large, Large, Medium, Small, Tiles, List, Content) -->
+                <div class="win-items-view" id="winItemsView" style="display: none;">
+                    <!-- Rendered dynamically -->
+                </div>
+
+                <!-- Hidden legacy containers for JS fallback -->
+                <div class="folder-grid" id="folderGrid" style="display: none;"></div>
+                <div class="file-grid" id="fileGrid" style="display: none;"></div>
+                <div class="file-table-container" id="fileTableContainer" style="display: none;">
+                    <tbody id="fileTableBody"></tbody>
+                </div>
+            </div>
+
+            <!-- Transfer Floating / Bottom Panel -->
+            <div class="transfer-panel" id="transferPanel" style="display: none;">
+                <div class="transfer-header">
+                    <span class="transfer-title" id="transferTitle">⚡ ការផ្ទេរទិន្នន័យ (0)</span>
+                    <button class="btn-clear-transfer" id="btnClearCompleted">ជម្រះ</button>
+                </div>
+                <div class="transfer-list" id="transferList"></div>
+            </div>
+        </main>
+        <!-- File Preview Modal -->
+        <div class="modal-backdrop" id="previewModal" style="display: none;">
+            <div class="modal-card preview-modal-card">
+                <div class="modal-header">
+                    <div class="preview-header-left">
+                        <span id="previewFileIcon" style="font-size: 22px;">📄</span>
+                        <span class="modal-title" id="previewFileName"
+                            style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 450px;">File
+                            Preview</span>
+                    </div>
+                    <div class="preview-header-actions">
+                        <a href="#" target="_blank" class="btn-secondary" id="btnPreviewNewTab"
+                            style="text-decoration: none; padding: 6px 12px; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">🌐
+                            បើកក្នុង Tab ថ្មី</a>
+                        <button class="btn-primary" id="btnPreviewDownload"
+                            style="padding: 6px 14px; font-size: 13px;">📥 ទាញយក</button>
+                        <button class="btn-close-modal" id="btnClosePreview">✕</button>
+                    </div>
+                </div>
+                <div class="preview-modal-body" id="previewModalBody">
+                    <!-- Injected Preview Content -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <!-- Settings Modal: Password Security Only (Admin Access) -->
+        <div class="modal-backdrop" id="settingsModal" style="display: none;">
+            <div class="modal-card" style="max-width: 480px;">
+                <div class="modal-header">
+                    <h3 id="tSettingsTitle">🔐 ការកំណត់លេខកូដសម្ងាត់ (Password Security)</h3>
+                    <button class="btn-close-modal" id="btnCloseSettings">✕</button>
+                </div>
+                <div class="modal-body" style="padding-top: 15px;">
+                    <div class="pwd-settings-box"
+                        style="margin-top: 0; border: none; padding: 0; background: transparent;">
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label
+                                style="font-size: 13.5px; font-weight: 500; color: #cbd5e1; margin-bottom: 6px; display: block;">លេខកូដសម្ងាត់ចូល
+                                Website (Website Password):</label>
+                            <input type="text" id="cfgSitePassword" placeholder="បញ្ចូលលេខសម្ងាត់ Website..."
+                                style="width: 100%; height: 42px; padding: 0 14px; background: rgba(15,23,42,0.85); border: 1px solid var(--card-border); border-radius: 8px; color: #f8fafc; font-size: 15px;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label
+                                style="font-size: 13.5px; font-weight: 500; color: #cbd5e1; margin-bottom: 6px; display: block;">លេខកូដសម្ងាត់
+                                Drive HUN BUNTHA:</label>
+                            <input type="text" id="cfgPwdBuntha" placeholder="បញ្ចូលលេខសម្ងាត់ Drive..."
+                                style="width: 100%; height: 42px; padding: 0 14px; background: rgba(15,23,42,0.85); border: 1px solid var(--card-border); border-radius: 8px; color: #f8fafc; font-size: 15px;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label
+                                style="font-size: 13.5px; font-weight: 500; color: #cbd5e1; margin-bottom: 6px; display: block;">លេខកូដសម្ងាត់
+                                Drive NEANG VUOCHLIN:</label>
+                            <input type="text" id="cfgPwdVuochlin" placeholder="បញ្ចូលលេខសម្ងាត់ Drive..."
+                                style="width: 100%; height: 42px; padding: 0 14px; background: rgba(15,23,42,0.85); border: 1px solid var(--card-border); border-radius: 8px; color: #f8fafc; font-size: 15px;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label
+                                style="font-size: 13.5px; font-weight: 500; color: #cbd5e1; margin-bottom: 6px; display: block;">លេខកូដសម្ងាត់
+                                Drive Mercy Dental Care:</label>
+                            <input type="text" id="cfgPwdMercy" placeholder="បញ្ចូលលេខសម្ងាត់ Drive..."
+                                style="width: 100%; height: 42px; padding: 0 14px; background: rgba(15,23,42,0.85); border: 1px solid var(--card-border); border-radius: 8px; color: #f8fafc; font-size: 15px;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="margin-top: 10px;">
+                    <button class="btn-secondary" id="btnCancelSettings">បោះបង់</button>
+                    <button class="btn-primary" id="btnSaveSettings">រក្សាទុកការកំណត់</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Windows 11 Context Menu: Background / Empty Area -->
+        <div class="win-context-menu" id="bgContextMenu" style="display: none;">
+            <div class="win-menu-item has-submenu" id="cmenuNewGroup">
+                <div class="win-item-left">
+                    <span class="win-item-icon win-icon-plus">⊕</span>
+                    <span class="win-item-label">New</span>
+                </div>
+                <span class="win-item-arrow">›</span>
+                <!-- Submenu matching Windows 11 screenshot -->
+                <div class="win-submenu">
+                    <div class="win-menu-item" id="cmenuNewFolder">
+                        <div class="win-item-left">
+                            <span class="win-item-icon">📁</span>
+                            <span class="win-item-label">Folder</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="win-menu-divider"></div>
+            <div class="win-menu-item" id="cmenuUpload">
+                <div class="win-item-left">
+                    <span class="win-item-icon">📤</span>
+                    <span class="win-item-label">Upload Files (ផ្ទុកឯកសារ)</span>
+                </div>
+            </div>
+            <div class="win-menu-item" id="cmenuRefresh">
+                <div class="win-item-left">
+                    <span class="win-item-icon">🔄</span>
+                    <span class="win-item-label">Refresh (ផ្ទុកឡើងវិញ)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Windows 11 Context Menu: Folder Item -->
+        <div class="win-context-menu" id="folderContextMenu" style="display: none;">
+            <div class="win-menu-item" id="fcmenuOpen">
+                <div class="win-item-left">
+                    <span class="win-item-icon">📂</span>
+                    <span class="win-item-label">Open (បើក)</span>
+                </div>
+            </div>
+            <div class="win-menu-item" id="fcmenuRename">
+                <div class="win-item-left">
+                    <span class="win-item-icon">✏️</span>
+                    <span class="win-item-label">Rename (ប្តូរឈ្មោះ)</span>
+                </div>
+            </div>
+            <div class="win-menu-divider"></div>
+            <div class="win-menu-item win-danger" id="fcmenuDelete">
+                <div class="win-item-left">
+                    <span class="win-item-icon">🗑️</span>
+                    <span class="win-item-label">Delete (លុបថត)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Windows 11 Context Menu: File Item -->
+        <div class="win-context-menu" id="fileContextMenu" style="display: none;">
+            <div class="win-menu-item" id="filecmenuView">
+                <div class="win-item-left">
+                    <span class="win-item-icon">👁️</span>
+                    <span class="win-item-label">View (បើកមើល)</span>
+                </div>
+            </div>
+            <div class="win-menu-item" id="filecmenuDownload">
+                <div class="win-item-left">
+                    <span class="win-item-icon">📥</span>
+                    <span class="win-item-label">Download (ទាញយក)</span>
+                </div>
+            </div>
+            <div class="win-menu-item" id="filecmenuRename">
+                <div class="win-item-left">
+                    <span class="win-item-icon">✏️</span>
+                    <span class="win-item-label">Rename (ប្តូរឈ្មោះ)</span>
+                </div>
+            </div>
+            <div class="win-menu-item" id="filecmenuMove">
+                <div class="win-item-left">
+                    <span class="win-item-icon">📁</span>
+                    <span class="win-item-label">Move to Folder (ផ្លាស់ទីចូលថត)</span>
+                </div>
+            </div>
+            <div class="win-menu-divider"></div>
+            <div class="win-menu-item win-danger" id="filecmenuDelete">
+                <div class="win-item-left">
+                    <span class="win-item-icon">🗑️</span>
+                    <span class="win-item-label">Delete (លុបឯកសារ)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for Folder Name / Rename -->
+        <div class="modal-backdrop" id="promptModal" style="display: none;">
+            <div class="modal-card" style="max-width: 440px;">
+                <div class="modal-header">
+                    <h3 id="promptModalTitle">បង្កើតថតថ្មី (New Folder)</h3>
+                    <button class="btn-close-modal" id="btnClosePrompt">✕</button>
+                </div>
+                <div class="modal-body" style="padding-top: 15px;">
+                    <label id="promptModalLabel"
+                        style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px; display: block;">ឈ្មោះថត៖</label>
+                    <input type="text" id="promptModalInput"
+                        style="width: 100%; padding: 10px 14px; background: rgba(15,23,42,0.8); border: 1px solid var(--card-border); border-radius: 8px; color: #f8fafc; font-size: 14px; outline: none;">
+                </div>
+                <div class="modal-footer" style="margin-top: 15px;">
+                    <button class="btn-secondary" id="btnCancelPrompt">បោះបង់</button>
+                    <button class="btn-primary" id="btnConfirmPrompt">យល់ព្រម</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Move to Folder Modal -->
+        <div class="modal-backdrop" id="moveModal" style="display: none;">
+            <div class="modal-card" style="max-width: 480px;">
+                <div class="modal-header">
+                    <h3 id="moveModalTitle">📁 ផ្លាស់ទីចូលក្នុងថត (Move to Folder)</h3>
+                    <button class="btn-close-modal" id="btnCloseMoveModal">✕</button>
+                </div>
+                <div class="modal-body" style="padding-top: 15px;">
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">សូមជ្រើសរើស Folder
+                        ដែលអ្នកចង់ផ្លាស់ទីឯកសារចូល ឬផ្លាស់ទីមកក្រៅ (Root Drive)៖</p>
+                    <div class="folder-destination-list" id="moveFolderList"
+                        style="max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+                <div class="modal-footer" style="margin-top: 15px;">
+                    <button class="btn-secondary" id="btnCancelMove">បោះបង់</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Multi-Selection Action Bar -->
+        <div class="selection-floating-bar" id="selectionFloatingBar" style="display: none;">
+            <div class="selection-bar-left">
+                <span class="selection-badge-icon">✓</span>
+                <span class="selection-count-text" id="selectionCountText">1 ឯកសារបានជ្រើស</span>
+            </div>
+            <div class="selection-bar-actions">
+                <button class="btn-selection-act" id="btnSelectionMove" title="Move to Folder">
+                    <span>📁</span>
+                    <span>ផ្លាស់ទីចូលថត (Move)</span>
+                </button>
+                <button class="btn-selection-act btn-danger" id="btnSelectionDelete" title="Delete Selected">
+                    <span>🗑️</span>
+                    <span>លុប (Delete)</span>
+                </button>
+                <button class="btn-selection-act btn-close" id="btnSelectionClear" title="Clear Selection">
+                    ✕ ជម្រះ
+                </button>
+            </div>
+        </div>
+
+        <!-- Windows 11 Drive Password / PIN Security Prompt Modal -->
+        <div class="modal-backdrop" id="drivePasswordModal" style="display: none; z-index: 99999;">
+            <div class="modal-card" style="max-width: 450px; text-align: center;">
+                <div class="modal-header"
+                    style="justify-content: flex-start; position: relative; padding: 16px 48px 14px 20px;">
+                    <h3 id="drivePwdTitle"
+                        style="display: flex; align-items: center; gap: 8px; font-size: 15.5px; font-weight: 600; margin: 0;">
+                        🔒 សោសុវត្ថិភាព Drive</h3>
+                    <button class="btn-close-modal" id="btnCloseDrivePwd"
+                        style="position: absolute; right: 14px; top: 14px;">✕</button>
+                </div>
+                <div class="modal-body" style="padding-top: 15px;">
+                    <p id="drivePwdPrompt"
+                        style="font-size: 13.5px; color: var(--text-secondary); margin-bottom: 16px;">
+                        សូមបញ្ចូលលេខកូដសម្ងាត់ (Password) ដើម្បីបើកមើល Drive នេះ៖
+                    </p>
+                    <div class="form-group" style="position: relative; display: flex; align-items: center;">
+                        <input type="password" id="inputDrivePwd" placeholder="បញ្ចូលលេខកូដសម្ងាត់ Drive..."
+                            style="width: 100%; height: 42px; padding: 0 46px 0 14px; background: rgba(15,23,42,0.85); border: 1px solid var(--card-border); border-radius: 8px; color: #f8fafc; font-size: 15px; outline: none; text-align: center; letter-spacing: 2px;">
+                        <button type="button" id="btnToggleDrivePwd" class="drive-toggle-pwd"
+                            title="បង្ហាញ/លាក់លេខសម្ងាត់"
+                            style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text-secondary); padding: 4px;">👁️</button>
+                    </div>
+                    <div id="drivePwdError"
+                        style="color: #f43f5e; font-size: 12.5px; margin-top: 8px; min-height: 18px;"></div>
+                </div>
+                <div class="modal-footer" style="justify-content: center; gap: 12px; margin-top: 10px;">
+                    <button class="btn-secondary" id="btnCancelDrivePwd">បោះបង់ (Cancel)</button>
+                    <button class="btn-primary" id="btnConfirmDrivePwd" style="padding: 8px 24px;">បើកមើល
+                        (Unlock)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Windows 11 Master Website Lock Screen -->
+        <div class="site-lock-screen" id="siteLockScreen" style="display: flex;">
+            <div class="lock-card" id="lockCardBox">
+                <div class="lock-avatar">☁️</div>
+                <div class="lock-user-title">Mercy Dental Care</div>
+                <div class="lock-user-sub">Cloud Storage 1000TB • Secure Portal</div>
+
+                <div class="lock-input-group">
+                    <input type="password" class="lock-input" id="siteLockInput" placeholder="Password (កូដសម្ងាត់)..."
+                        autocomplete="current-password">
+                    <button type="button" class="lock-toggle-pwd" id="btnToggleSitePwd"
+                        title="បង្ហាញ/លាក់លេខសម្ងាត់">👁️</button>
+                    <button class="lock-submit-btn" id="btnSiteUnlock" title="Sign In">➔</button>
+                </div>
+
+                <div class="lock-error-msg" id="siteLockError"></div>
+                <div class="lock-hint">
+                    🔒 សូមបញ្ចូលលេខសម្ងាត់ដើម្បីចូលប្រើប្រាស់ Website
+                </div>
+            </div>
+        </div>
+
+        <!-- Native Mobile Upload Inputs -->
+        <input type="file" id="mobileCameraInput" accept="image/*,video/*" capture="environment" style="display: none;">
+        <input type="file" id="mobileGalleryInput" accept="image/*,video/*" multiple style="display: none;">
+        <input type="file" id="mobileFileInput" multiple style="display: none;">
+
+        <!-- Mobile Floating Upload Action Button (FAB) -->
+        <button class="mobile-fab-upload" id="btnMobileFab" title="Upload to Cloud (ផ្ទុកឯកសារឡើង)">
+            <span class="fab-pulse-ring"></span>
+            <span class="fab-icon">➕</span>
+        </button>
+
+        <!-- Mobile Bottom Navigation Bar -->
+        <nav class="mobile-bottom-nav" id="mobileBottomNav">
+            <button class="mobile-nav-tab active" id="tabMobileDrives" data-tab="drives">
+                <span class="nav-tab-icon">☁️</span>
+                <span class="nav-tab-text">Drives</span>
+            </button>
+            <button class="mobile-nav-tab" id="tabMobileFiles" data-tab="files">
+                <span class="nav-tab-icon">📁</span>
+                <span class="nav-tab-text">Files</span>
+            </button>
+            <div class="mobile-nav-center-slot"></div>
+            <button class="mobile-nav-tab" id="tabMobileSearch" data-tab="search">
+                <span class="nav-tab-icon">🔍</span>
+                <span class="nav-tab-text">Search</span>
+            </button>
+            <button class="mobile-nav-tab" id="tabMobileMenu" data-tab="menu">
+                <span class="nav-tab-icon">⚙️</span>
+                <span class="nav-tab-text">Settings</span>
+            </button>
+        </nav>
+
+        <!-- Mobile Upload Action Sheet (Drawer) -->
+        <div class="mobile-sheet-backdrop" id="mobileUploadSheet" style="display: none;">
+            <div class="mobile-sheet-container">
+                <div class="mobile-sheet-handle"></div>
+                <div class="mobile-sheet-header">
+                    <div class="mobile-sheet-title">
+                        <span>⚡ ផ្ទុកទិន្នន័យពីទូរសព្ទ (Upload)</span>
+                        <small id="mobileSheetTargetLabel">ចូល Drive: HUN BUNTHA</small>
+                    </div>
+                    <button class="btn-sheet-close" id="btnCloseUploadSheet">✕</button>
+                </div>
+                <div class="mobile-upload-options">
+                    <button class="mobile-opt-card" id="btnMobileOptCamera">
+                        <div class="opt-icon-bubble camera-bubble">📸</div>
+                        <div class="opt-texts">
+                            <div class="opt-title">ថតរូប ឬវីដេអូផ្ទាល់ (Camera)</div>
+                            <div class="opt-desc">បើកកាមេរ៉ាទូរសព្ទថត រួច Upload ចូលភ្លាមៗ</div>
+                        </div>
+                        <span class="opt-arrow">➔</span>
+                    </button>
+
+                    <button class="mobile-opt-card" id="btnMobileOptGallery">
+                        <div class="opt-icon-bubble gallery-bubble">🖼️</div>
+                        <div class="opt-texts">
+                            <div class="opt-title">រូបភាព & វីដេអូពី Gallery</div>
+                            <div class="opt-desc">ជ្រើសរើសរូបថត និងវីដេអូ MP4 ច្រើនព្រមគ្នាពីទូរសព្ទ</div>
+                        </div>
+                        <span class="opt-arrow">➔</span>
+                    </button>
+
+                    <button class="mobile-opt-card" id="btnMobileOptFiles">
+                        <div class="opt-icon-bubble files-bubble">📁</div>
+                        <div class="opt-texts">
+                            <div class="opt-title">ឯកសារគ្រប់ប្រភេទ (All Files)</div>
+                            <div class="opt-desc">PDF, Word, Excel, ZIP ឬឯកសារធំៗ</div>
+                        </div>
+                        <span class="opt-arrow">➔</span>
+                    </button>
+
+                    <button class="mobile-opt-card" id="btnMobileOptFolder">
+                        <div class="opt-icon-bubble folder-bubble">📂</div>
+                        <div class="opt-texts">
+                            <div class="opt-title">បង្កើតថតថ្មី (New Folder)</div>
+                            <div class="opt-desc">បង្កើតថតដើម្បីរៀបចំឯកសារឱ្យមានរបៀប</div>
+                        </div>
+                        <span class="opt-arrow">➔</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Drive Selector Sheet -->
+        <div class="mobile-sheet-backdrop" id="mobileDriveSheet" style="display: none;">
+            <div class="mobile-sheet-container">
+                <div class="mobile-sheet-handle"></div>
+                <div class="mobile-sheet-header">
+                    <div class="mobile-sheet-title">
+                        <span>💾 ជ្រើសរើស Drive ផ្ទុកទិន្នន័យ</span>
+                        <small>ទំហំផ្ទុក 1,000 TB ក្នុងមួយ Drive</small>
+                    </div>
+                    <button class="btn-sheet-close" id="btnCloseDriveSheet">✕</button>
+                </div>
+                <div class="mobile-drive-list">
+                    <button class="mobile-drive-card active" data-drive="buntha" id="mCardBuntha">
+                        <div class="m-drive-icon-wrap">
+                            <img src="/static/drive_icon.png" class="m-drive-img" alt="Drive">
+                        </div>
+                        <div class="m-drive-info">
+                            <div class="m-drive-name">HUN BUNTHA</div>
+                            <div class="m-drive-stat" id="mStatBuntha">1000 TB Cloud Storage</div>
+                        </div>
+                        <span class="m-drive-check">✓</span>
+                    </button>
+
+                    <button class="mobile-drive-card" data-drive="vuochlin" id="mCardVuochlin">
+                        <div class="m-drive-icon-wrap">
+                            <img src="/static/drive_icon.png" class="m-drive-img" alt="Drive">
+                        </div>
+                        <div class="m-drive-info">
+                            <div class="m-drive-name">NEANG VUOCHLIN</div>
+                            <div class="m-drive-stat" id="mStatVuochlin">1000 TB Cloud Storage</div>
+                        </div>
+                        <span class="m-drive-check">✓</span>
+                    </button>
+
+                    <button class="mobile-drive-card" data-drive="mercy" id="mCardMercy">
+                        <div class="m-drive-icon-wrap">
+                            <img src="/static/drive_icon.png" class="m-drive-img" alt="Drive">
+                        </div>
+                        <div class="m-drive-info">
+                            <div class="m-drive-name">Mercy Dental Care</div>
+                            <div class="m-drive-stat" id="mStatMercy">1000 TB Cloud Storage</div>
+                        </div>
+                        <span class="m-drive-check">✓</span>
+                    </button>
+
+                    <button class="mobile-drive-card trash-card" data-drive="trash" id="mCardTrash">
+                        <div class="m-drive-icon-wrap" style="font-size: 26px;">🗑️</div>
+                        <div class="m-drive-info">
+                            <div class="m-drive-name">ធុងសំរាម (Trash)</div>
+                            <div class="m-drive-stat">ឯកសារដែលបានលុប</div>
+                        </div>
+                        <span class="m-drive-check">✓</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Desktop Phone Connect / Scan QR Modal -->
+        <div class="modal-backdrop" id="phoneConnectModal" style="display: none; z-index: 99999;">
+            <div class="modal-card phone-modal-card">
+                <div class="modal-header">
+                    <h3 style="display: flex; align-items: center; gap: 8px; font-size: 16px; margin: 0;">📱 ភ្ជាប់ប្រើប្រាស់លើទូរសព្ទដៃ (Mobile App)</h3>
+                    <button class="btn-close-modal" id="btnClosePhoneModal">✕</button>
+                </div>
+                <div class="modal-body phone-modal-body">
+                    <div class="qr-preview-box">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https%3A%2F%2Fdrive.mercy-dentalcare.com&color=38bdf8&bgcolor=0f172a&margin=10"
+                            alt="Scan QR code with phone" class="qr-code-img">
+                        <div class="qr-scan-badge">📷 ស្កេនជាមួយកាមេរ៉ាទូរសព្ទ</div>
+                    </div>
+                    <div class="phone-instructions">
+                        <h4>📲 របៀប Upload ពីទូរសព្ទយ៉ាងងាយស្រួលបំផុត៖</h4>
+                        <ol>
+                            <li>បើក <b>កាមេរ៉ា (Camera)</b> លើទូរសព្ទ iPhone ឬ Android របស់អ្នក។</li>
+                            <li><b>ស្កេនលើ QR Code</b> ខាងឆ្វេងនេះ ដើម្បីបើក Cloud Storage លើទូរសព្ទ។</li>
+                            <li>ចុច <b>"Add to Home Screen"</b> (បន្ថែមទៅអេក្រង់ដើម) នោះវានឹងក្លាយជា App លើទូរសព្ទ។</li>
+                            <li>ចុចប៊ូតុង <b>"➕"</b> ធំខាងក្រោមដើម្បី <b>ថតរូប ឬជ្រើសវីដេអូពី Gallery</b> Upload ចូលភ្លាមៗ!</li>
+                        </ol>
+                        <div class="phone-link-box">
+                            <span class="phone-url">https://drive.mercy-dentalcare.com</span>
+                            <button class="btn-copy-url" id="btnCopyPhoneUrl">📋 ចម្លង Link</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PWA Install Banner (Mobile Only) -->
+        <div class="pwa-install-banner" id="pwaInstallBanner" style="display: none;">
+            <div class="pwa-banner-left">
+                <span class="pwa-app-icon">☁️</span>
+                <div class="pwa-banner-text">
+                    <strong>ដំឡើង App លើទូរសព្ទ</strong>
+                    <small>បន្ថែមទៅ Home Screen ដើម្បី Upload ងាយស្រួល</small>
+                </div>
+            </div>
+            <div class="pwa-banner-actions">
+                <button class="btn-pwa-install" id="btnPwaInstall">📲 ដំឡើង</button>
+                <button class="btn-pwa-dismiss" id="btnPwaDismiss">✕</button>
+            </div>
+        </div>
+
+        <script src="/static/js/app.js"></script>
+</body>
+
+</html>
