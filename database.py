@@ -171,8 +171,17 @@ def rename_folder(folder_id: int, new_name: str) -> bool:
 def delete_folder(folder_id: int) -> bool:
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM folders WHERE id = ?", (folder_id,))
-    cursor.execute("DELETE FROM files WHERE folder_id = ?", (folder_id,))
+    to_delete = [folder_id]
+    idx = 0
+    while idx < len(to_delete):
+        curr_id = to_delete[idx]
+        cursor.execute("SELECT id FROM folders WHERE parent_id = ?", (curr_id,))
+        for row in cursor.fetchall():
+            to_delete.append(row["id"])
+        idx += 1
+    placeholders = ",".join("?" for _ in to_delete)
+    cursor.execute(f"DELETE FROM folders WHERE id IN ({placeholders})", to_delete)
+    cursor.execute(f"DELETE FROM files WHERE folder_id IN ({placeholders})", to_delete)
     conn.commit()
     conn.close()
     return True
@@ -196,13 +205,41 @@ def move_files_to_folder(file_ids: List[int], target_folder_id: Optional[int]) -
     conn.close()
     return True
 
+def is_descendant_folder(cursor, folder_id: int, potential_ancestor_id: int) -> bool:
+    curr = folder_id
+    visited = set()
+    while curr and curr not in visited:
+        visited.add(curr)
+        if curr == potential_ancestor_id:
+            return True
+        cursor.execute("SELECT parent_id FROM folders WHERE id = ?", (curr,))
+        row = cursor.fetchone()
+        if not row or not row["parent_id"]:
+            break
+        curr = row["parent_id"]
+    return False
+
 def move_folders_to_folder(folder_ids: List[int], target_parent_id: Optional[int]) -> bool:
     if not folder_ids:
         return False
     conn = get_connection()
     cursor = conn.cursor()
-    placeholders = ",".join("?" for _ in folder_ids)
-    cursor.execute(f"UPDATE folders SET parent_id = ? WHERE id IN ({placeholders})", [target_parent_id] + list(folder_ids))
+    
+    valid_ids = []
+    for fid in folder_ids:
+        if target_parent_id is not None:
+            if fid == target_parent_id:
+                continue
+            if is_descendant_folder(cursor, target_parent_id, fid):
+                continue
+        valid_ids.append(fid)
+
+    if not valid_ids:
+        conn.close()
+        return False
+
+    placeholders = ",".join("?" for _ in valid_ids)
+    cursor.execute(f"UPDATE folders SET parent_id = ? WHERE id IN ({placeholders})", [target_parent_id] + list(valid_ids))
     conn.commit()
     conn.close()
     return True
