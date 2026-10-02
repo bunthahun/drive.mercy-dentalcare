@@ -76,6 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initEventListeners();
     initContextMenuListeners();
     initMarqueeSelection();
+    initMobileApp();
     updateCurrentDriveHeader();
     updateAdminVisibility();
     fetchStats();
@@ -2651,25 +2652,40 @@ function updateCurrentDriveHeader() {
 
     const titleEl = document.getElementById("currentDriveTitle");
     const dropHint = document.getElementById("tDropHint");
+    const mobileLabel = document.getElementById("mobileDriveLabel");
+    const mobileSheetLabel = document.getElementById("mobileSheetTargetLabel");
+    const mobileFab = document.getElementById("btnMobileFab");
 
+    if (mobileFab) {
+        mobileFab.style.display = isTrash ? "none" : "";
+    }
+
+    let driveName = "HUN BUNTHA";
     if (currentCategory === "vuochlin") {
-        if (titleEl) titleEl.textContent = "NEANG VUOCHLIN";
+        driveName = "NEANG VUOCHLIN";
+        if (titleEl) titleEl.textContent = driveName;
         if (dropHint) dropHint.textContent = currentLang === "km"
             ? "ទម្លាក់ឯកសារនៅទីនេះដើម្បីផ្ទុកចូល Drive [NEANG VUOCHLIN]"
             : "Drop files here to upload to Drive [NEANG VUOCHLIN]";
     } else if (currentCategory === "mercy") {
-        if (titleEl) titleEl.textContent = "Mercy Dental Care";
+        driveName = "Mercy Dental Care";
+        if (titleEl) titleEl.textContent = driveName;
         if (dropHint) dropHint.textContent = currentLang === "km"
             ? "ទម្លាក់ឯកសារនៅទីនេះដើម្បីផ្ទុកចូល Drive [Mercy Dental Care]"
             : "Drop files here to upload to Drive [Mercy Dental Care]";
     } else if (currentCategory === "trash") {
-        if (titleEl) titleEl.textContent = currentLang === "km" ? "ធុងសំរាម (Trash)" : "Recycle Bin";
+        driveName = currentLang === "km" ? "ធុងសំរាម (Trash)" : "Recycle Bin";
+        if (titleEl) titleEl.textContent = driveName;
     } else {
-        if (titleEl) titleEl.textContent = "HUN BUNTHA";
+        driveName = "HUN BUNTHA";
+        if (titleEl) titleEl.textContent = driveName;
         if (dropHint) dropHint.textContent = currentLang === "km"
             ? "ទម្លាក់ឯកសារនៅទីនេះដើម្បីផ្ទុកចូល Drive [HUN BUNTHA]"
             : "Drop files here to upload to Drive [HUN BUNTHA]";
     }
+
+    if (mobileLabel) mobileLabel.textContent = driveName;
+    if (mobileSheetLabel) mobileSheetLabel.textContent = `ចូល Drive: ${driveName}`;
 }
 
 function previewFile(id) {
@@ -3414,6 +3430,266 @@ function initMarqueeSelection() {
             updateSelectionUI();
         }
     });
+}
+
+/* ==========================================================================
+   Mobile App & Phone Upload Integration (PWA, Camera, Gallery, QR Connect)
+   ========================================================================== */
+function initMobileApp() {
+    // 1. Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+
+    // 2. PWA BeforeInstallPrompt Banner
+    let deferredPrompt = null;
+    const pwaBanner = document.getElementById("pwaInstallBanner");
+    const btnPwaInstall = document.getElementById("btnPwaInstall");
+    const btnPwaDismiss = document.getElementById("btnPwaDismiss");
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (pwaBanner && !sessionStorage.getItem("pwa_dismissed")) {
+            pwaBanner.style.display = "flex";
+        }
+    });
+
+    if (btnPwaInstall) {
+        btnPwaInstall.addEventListener("click", async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const choice = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                if (pwaBanner) pwaBanner.style.display = "none";
+            } else {
+                alert("ដើម្បីដំឡើង App លើ iPhone / iPad៖\n1. ចុចប៊ូតុង Share (📤) នៅខាងក្រោម Safari\n2. រួចជ្រើសរើស 'Add to Home Screen' (បន្ថែមទៅអេក្រង់ដើម)");
+            }
+        });
+    }
+
+    if (btnPwaDismiss) {
+        btnPwaDismiss.addEventListener("click", () => {
+            if (pwaBanner) pwaBanner.style.display = "none";
+            sessionStorage.setItem("pwa_dismissed", "true");
+        });
+    }
+
+    // 3. Desktop Phone Connect / QR Modal
+    const phoneModal = document.getElementById("phoneConnectModal");
+    const btnRibbonPhone = document.getElementById("btnRibbonPhone");
+    const btnMobileQrPhone = document.getElementById("btnMobileQrPhone");
+    const btnClosePhoneModal = document.getElementById("btnClosePhoneModal");
+    const btnCopyPhoneUrl = document.getElementById("btnCopyPhoneUrl");
+
+    const openPhoneModal = () => {
+        if (phoneModal) phoneModal.style.display = "flex";
+    };
+    if (btnRibbonPhone) btnRibbonPhone.addEventListener("click", openPhoneModal);
+    if (btnMobileQrPhone) btnMobileQrPhone.addEventListener("click", openPhoneModal);
+    if (btnClosePhoneModal) {
+        btnClosePhoneModal.addEventListener("click", () => {
+            if (phoneModal) phoneModal.style.display = "none";
+        });
+    }
+    if (phoneModal) {
+        phoneModal.addEventListener("click", (e) => {
+            if (e.target === phoneModal) phoneModal.style.display = "none";
+        });
+    }
+    if (btnCopyPhoneUrl) {
+        btnCopyPhoneUrl.addEventListener("click", () => {
+            navigator.clipboard.writeText("https://drive.mercy-dentalcare.com").then(() => {
+                btnCopyPhoneUrl.textContent = "✓ បានចម្លង!";
+                setTimeout(() => {
+                    btnCopyPhoneUrl.textContent = "📋 ចម្លង Link";
+                }, 2000);
+            });
+        });
+    }
+
+    // 4. Mobile Upload Action Sheet & Floating Button (FAB)
+    const btnMobileFab = document.getElementById("btnMobileFab");
+    const uploadSheet = document.getElementById("mobileUploadSheet");
+    const btnCloseUploadSheet = document.getElementById("btnCloseUploadSheet");
+    const targetLabel = document.getElementById("mobileSheetTargetLabel");
+
+    const mobileCameraInput = document.getElementById("mobileCameraInput");
+    const mobileGalleryInput = document.getElementById("mobileGalleryInput");
+    const mobileFileInput = document.getElementById("mobileFileInput");
+
+    const btnOptCamera = document.getElementById("btnMobileOptCamera");
+    const btnOptGallery = document.getElementById("btnMobileOptGallery");
+    const btnOptFiles = document.getElementById("btnMobileOptFiles");
+    const btnOptFolder = document.getElementById("btnMobileOptFolder");
+
+    function getDriveDisplayName(key) {
+        if (key === "vuochlin") return "NEANG VUOCHLIN";
+        if (key === "mercy") return "Mercy Dental Care";
+        return "HUN BUNTHA";
+    }
+
+    function openUploadSheet() {
+        if (targetLabel) {
+            targetLabel.textContent = `ចូល Drive: ${getDriveDisplayName(currentCategory)}`;
+        }
+        if (uploadSheet) uploadSheet.style.display = "flex";
+    }
+
+    function closeUploadSheet() {
+        if (uploadSheet) uploadSheet.style.display = "none";
+    }
+
+    if (btnMobileFab) btnMobileFab.addEventListener("click", openUploadSheet);
+    if (btnCloseUploadSheet) btnCloseUploadSheet.addEventListener("click", closeUploadSheet);
+    if (uploadSheet) {
+        uploadSheet.addEventListener("click", (e) => {
+            if (e.target === uploadSheet) closeUploadSheet();
+        });
+    }
+
+    // Option 1: Camera
+    if (btnOptCamera) {
+        btnOptCamera.addEventListener("click", () => {
+            closeUploadSheet();
+            if (mobileCameraInput) mobileCameraInput.click();
+        });
+    }
+    if (mobileCameraInput) {
+        mobileCameraInput.addEventListener("change", (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                handleFilesUpload(e.target.files, currentCategory);
+                mobileCameraInput.value = "";
+            }
+        });
+    }
+
+    // Option 2: Gallery
+    if (btnOptGallery) {
+        btnOptGallery.addEventListener("click", () => {
+            closeUploadSheet();
+            if (mobileGalleryInput) mobileGalleryInput.click();
+        });
+    }
+    if (mobileGalleryInput) {
+        mobileGalleryInput.addEventListener("change", (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                handleFilesUpload(e.target.files, currentCategory);
+                mobileGalleryInput.value = "";
+            }
+        });
+    }
+
+    // Option 3: Files
+    if (btnOptFiles) {
+        btnOptFiles.addEventListener("click", () => {
+            closeUploadSheet();
+            if (mobileFileInput) mobileFileInput.click();
+        });
+    }
+    if (mobileFileInput) {
+        mobileFileInput.addEventListener("change", (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                handleFilesUpload(e.target.files, currentCategory);
+                mobileFileInput.value = "";
+            }
+        });
+    }
+
+    // Option 4: New Folder
+    if (btnOptFolder) {
+        btnOptFolder.addEventListener("click", () => {
+            closeUploadSheet();
+            showPromptModal("📁 បង្កើតថតថ្មី (New Folder)", "ឈ្មោះថត៖", "New Folder", (folderName) => {
+                createFolder(folderName);
+            });
+        });
+    }
+
+    // 5. Mobile Drive Selector Sheet
+    const driveSheet = document.getElementById("mobileDriveSheet");
+    const btnMobileDriveSelect = document.getElementById("btnMobileDriveSelect");
+    const btnCloseDriveSheet = document.getElementById("btnCloseDriveSheet");
+
+    function openDriveSheet() {
+        if (!driveSheet) return;
+        document.querySelectorAll(".mobile-drive-card").forEach(c => {
+            c.classList.toggle("active", c.dataset.drive === currentCategory);
+        });
+        driveSheet.style.display = "flex";
+    }
+
+    function closeDriveSheet() {
+        if (driveSheet) driveSheet.style.display = "none";
+    }
+
+    if (btnMobileDriveSelect) btnMobileDriveSelect.addEventListener("click", openDriveSheet);
+    if (btnCloseDriveSheet) btnCloseDriveSheet.addEventListener("click", closeDriveSheet);
+    if (driveSheet) {
+        driveSheet.addEventListener("click", (e) => {
+            if (e.target === driveSheet) closeDriveSheet();
+        });
+    }
+
+    document.querySelectorAll(".mobile-drive-card").forEach(card => {
+        card.addEventListener("click", () => {
+            const driveKey = card.dataset.drive;
+            closeDriveSheet();
+            if (driveKey) {
+                switchCategory(driveKey);
+            }
+        });
+    });
+
+    // 6. Mobile Search Toggle
+    const btnMobileSearch = document.getElementById("btnMobileSearchToggle");
+    const winSearchBox = document.querySelector(".win-search-box");
+    const searchInput = document.getElementById("searchInput");
+
+    if (btnMobileSearch && winSearchBox) {
+        btnMobileSearch.addEventListener("click", () => {
+            winSearchBox.classList.toggle("mobile-search-visible");
+            if (winSearchBox.classList.contains("mobile-search-visible") && searchInput) {
+                searchInput.focus();
+            }
+        });
+    }
+
+    // 7. Mobile Bottom Navigation Tabs
+    const tabMobileDrives = document.getElementById("tabMobileDrives");
+    const tabMobileFiles = document.getElementById("tabMobileFiles");
+    const tabMobileSearch = document.getElementById("tabMobileSearch");
+    const tabMobileMenu = document.getElementById("tabMobileMenu");
+
+    if (tabMobileDrives) {
+        tabMobileDrives.addEventListener("click", () => {
+            openDriveSheet();
+        });
+    }
+
+    if (tabMobileFiles) {
+        tabMobileFiles.addEventListener("click", () => {
+            currentFolderId = null;
+            folderStack = [];
+            loadFiles();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    if (tabMobileSearch) {
+        tabMobileSearch.addEventListener("click", () => {
+            if (winSearchBox) {
+                winSearchBox.classList.add("mobile-search-visible");
+                if (searchInput) searchInput.focus();
+            }
+        });
+    }
+
+    if (tabMobileMenu) {
+        tabMobileMenu.addEventListener("click", () => {
+            openPhoneModal();
+        });
+    }
 }
 
 
