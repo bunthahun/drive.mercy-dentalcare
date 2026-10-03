@@ -2375,7 +2375,7 @@ async function handleFilesUpload(files, targetDrive) {
                             cForm.append("upload_id", uploadId);
                             cForm.append("part_index", partIdx);
                             cForm.append("file_name", safeFileName);
-                            cForm.append("chunk_file", chunkBlob, safeFileName);
+                            cForm.append("chunk_file", chunkBlob, `part_${partIdx}.bin`);
 
                             const cXhr = new XMLHttpRequest();
                             cXhr.upload.onprogress = (e) => {
@@ -3660,58 +3660,22 @@ function initMobileApp() {
         });
     }
 
-    // Option 1: Camera
-    if (btnOptCamera) {
-        btnOptCamera.addEventListener("click", () => {
+    function handleMobileSelection(input) {
+        if (input && input.files && input.files.length > 0) {
             closeUploadSheet();
-            if (mobileCameraInput) {
-                mobileCameraInput.value = "";
-                mobileCameraInput.click();
-            }
-        });
-    }
-    if (mobileCameraInput) {
-        mobileCameraInput.addEventListener("change", (e) => {
-            if (e.target.files && e.target.files.length > 0) {
-                handleFilesUpload(Array.from(e.target.files), currentCategory);
-            }
-        });
+            const selectedFiles = Array.from(input.files);
+            handleFilesUpload(selectedFiles, currentCategory);
+        }
     }
 
-    // Option 2: Gallery
-    if (btnOptGallery) {
-        btnOptGallery.addEventListener("click", () => {
-            closeUploadSheet();
-            if (mobileGalleryInput) {
-                mobileGalleryInput.value = "";
-                mobileGalleryInput.click();
-            }
-        });
+    if (mobileCameraInput) {
+        mobileCameraInput.addEventListener("change", () => handleMobileSelection(mobileCameraInput));
     }
     if (mobileGalleryInput) {
-        mobileGalleryInput.addEventListener("change", (e) => {
-            if (e.target.files && e.target.files.length > 0) {
-                handleFilesUpload(Array.from(e.target.files), currentCategory);
-            }
-        });
-    }
-
-    // Option 3: Files
-    if (btnOptFiles) {
-        btnOptFiles.addEventListener("click", () => {
-            closeUploadSheet();
-            if (mobileFileInput) {
-                mobileFileInput.value = "";
-                mobileFileInput.click();
-            }
-        });
+        mobileGalleryInput.addEventListener("change", () => handleMobileSelection(mobileGalleryInput));
     }
     if (mobileFileInput) {
-        mobileFileInput.addEventListener("change", (e) => {
-            if (e.target.files && e.target.files.length > 0) {
-                handleFilesUpload(Array.from(e.target.files), currentCategory);
-            }
-        });
+        mobileFileInput.addEventListener("change", () => handleMobileSelection(mobileFileInput));
     }
 
     // Option 4: New Folder
