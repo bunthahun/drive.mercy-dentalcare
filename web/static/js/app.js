@@ -466,25 +466,52 @@ function initEventListeners() {
         });
     }
 
-    // Preview Modal Close
+    // Preview Modal Close & Return Navigation
     const previewModal = document.getElementById("previewModal");
     const closePreviewBtn = document.getElementById("btnClosePreview");
-    if (closePreviewBtn) {
-        closePreviewBtn.addEventListener("click", () => {
-            if (previewModal) previewModal.style.display = "none";
-            const body = document.getElementById("previewModalBody");
-            if (body) body.innerHTML = "";
+    const backPreviewBtnMobile = document.getElementById("btnPreviewBackMobile");
+    const homePreviewBtnFooter = document.getElementById("btnPreviewHomeFooter");
+
+    function closePreviewModal() {
+        if (previewModal) {
+            previewModal.style.display = "none";
+        }
+        const body = document.getElementById("previewModalBody");
+        if (body) body.innerHTML = "";
+        window.dispatchEvent(new CustomEvent("previewClosed"));
+    }
+
+    if (closePreviewBtn) closePreviewBtn.addEventListener("click", closePreviewModal);
+    if (backPreviewBtnMobile) backPreviewBtnMobile.addEventListener("click", closePreviewModal);
+    if (homePreviewBtnFooter) {
+        homePreviewBtnFooter.addEventListener("click", () => {
+            closePreviewModal();
+            currentFolderId = null;
+            folderStack = [];
+            loadFiles();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }
+
     if (previewModal) {
         previewModal.addEventListener("click", (e) => {
             if (e.target === previewModal) {
-                previewModal.style.display = "none";
-                const body = document.getElementById("previewModalBody");
-                if (body) body.innerHTML = "";
+                closePreviewModal();
             }
         });
     }
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && previewModal && previewModal.style.display !== "none") {
+            closePreviewModal();
+        }
+    });
+
+    window.addEventListener("popstate", () => {
+        if (previewModal && previewModal.style.display !== "none") {
+            closePreviewModal();
+        }
+    });
 
     // Language Toggle
     document.getElementById("btnLangToggle").addEventListener("click", () => {
@@ -2746,13 +2773,20 @@ function previewFile(id) {
     const modal = document.getElementById("previewModal");
     const body = document.getElementById("previewModalBody");
     const nameEl = document.getElementById("previewFileName");
+    const subEl = document.getElementById("previewFileSub");
     const iconEl = document.getElementById("previewFileIcon");
     const dlBtn = document.getElementById("btnPreviewDownload");
     const newTabBtn = document.getElementById("btnPreviewNewTab");
 
     if (nameEl) nameEl.textContent = file.file_name;
     if (iconEl) iconEl.textContent = getFileIcon(file.category);
+    if (subEl) subEl.textContent = `${formatSize(file.file_size)} • ${file.mime_type || 'File'}`;
     if (dlBtn) dlBtn.onclick = () => downloadFile(file.id);
+
+    // Push browser state so phone back button/swipe can close the modal
+    try {
+        window.history.pushState({ previewOpen: true }, "");
+    } catch (e) {}
 
     const ext = file.file_name.toLowerCase().split('.').pop();
     const viewUrl = `/api/view/${file.id}`;
@@ -2799,8 +2833,9 @@ function previewFile(id) {
         `;
 
         let isCancelled = false;
-        const modalCloseBtn = document.getElementById("btnClosePreview");
         const onModalClose = () => { isCancelled = true; };
+        window.addEventListener("previewClosed", onModalClose, { once: true });
+        const modalCloseBtn = document.getElementById("btnClosePreview");
         if (modalCloseBtn) modalCloseBtn.addEventListener("click", onModalClose, { once: true });
 
         function mountPlayer() {
@@ -3762,7 +3797,7 @@ function initMobileApp() {
         });
     }
 
-    // 7. Mobile Bottom Navigation Tabs
+    // 7. Mobile Bottom Navigation Tabs (Instant Return to Home)
     const tabMobileDrives = document.getElementById("tabMobileDrives");
     const tabMobileFiles = document.getElementById("tabMobileFiles");
     const tabMobileSearch = document.getElementById("tabMobileSearch");
@@ -3770,12 +3805,14 @@ function initMobileApp() {
 
     if (tabMobileDrives) {
         tabMobileDrives.addEventListener("click", () => {
+            closePreviewModal();
             openDriveSheet();
         });
     }
 
     if (tabMobileFiles) {
         tabMobileFiles.addEventListener("click", () => {
+            closePreviewModal();
             currentFolderId = null;
             folderStack = [];
             loadFiles();
@@ -3785,6 +3822,7 @@ function initMobileApp() {
 
     if (tabMobileSearch) {
         tabMobileSearch.addEventListener("click", () => {
+            closePreviewModal();
             if (winSearchBox) {
                 winSearchBox.classList.add("mobile-search-visible");
                 if (searchInput) searchInput.focus();
@@ -3794,6 +3832,7 @@ function initMobileApp() {
 
     if (tabMobileMenu) {
         tabMobileMenu.addEventListener("click", () => {
+            closePreviewModal();
             openPhoneModal();
         });
     }
