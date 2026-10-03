@@ -52,6 +52,16 @@ def init_db():
             updated_at TEXT NOT NULL
         )
     """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS telegram_chats (
+            chat_id TEXT PRIMARY KEY,
+            title TEXT,
+            username TEXT,
+            last_active TEXT,
+            current_drive TEXT DEFAULT 'buntha',
+            current_folder_id INTEGER DEFAULT NULL
+        )
+    """)
     cursor.execute("UPDATE files SET file_name = SUBSTR(file_name, 4) WHERE SUBSTR(file_name, 1, 3) = 'up_'")
     cursor.execute("UPDATE files SET file_name = 'upload_welcome_test.txt' WHERE file_name = 'oad_welcome_test.txt'")
     conn.commit()
@@ -194,13 +204,34 @@ def rename_file(file_id: int, new_name: str) -> bool:
     conn.close()
     return True
 
-def move_files_to_folder(file_ids: List[int], target_folder_id: Optional[int]) -> bool:
+def update_folder_tree_drive(cursor, folder_ids: List[int], new_drive: str):
+    tree = list(folder_ids)
+    idx = 0
+    while idx < len(tree):
+        curr_id = tree[idx]
+        cursor.execute("SELECT id FROM folders WHERE parent_id = ?", (curr_id,))
+        for row in cursor.fetchall():
+            tree.append(row["id"])
+        idx += 1
+    placeholders = ",".join("?" for _ in tree)
+    cursor.execute(f"UPDATE folders SET drive_owner = ? WHERE id IN ({placeholders})", [new_drive] + tree)
+    cursor.execute(f"UPDATE files SET drive_owner = ? WHERE folder_id IN ({placeholders})", [new_drive] + tree)
+
+def move_files_to_folder(file_ids: List[int], target_folder_id: Optional[int], target_drive: Optional[str] = None) -> bool:
     if not file_ids:
         return False
     conn = get_connection()
     cursor = conn.cursor()
+    if not target_drive and target_folder_id is not None:
+        cursor.execute("SELECT drive_owner FROM folders WHERE id = ?", (target_folder_id,))
+        row = cursor.fetchone()
+        if row and row["drive_owner"]:
+            target_drive = row["drive_owner"]
     placeholders = ",".join("?" for _ in file_ids)
-    cursor.execute(f"UPDATE files SET folder_id = ? WHERE id IN ({placeholders})", [target_folder_id] + list(file_ids))
+    if target_drive:
+        cursor.execute(f"UPDATE files SET folder_id = ?, drive_owner = ? WHERE id IN ({placeholders})", [target_folder_id, target_drive] + list(file_ids))
+    else:
+        cursor.execute(f"UPDATE files SET folder_id = ? WHERE id IN ({placeholders})", [target_folder_id] + list(file_ids))
     conn.commit()
     conn.close()
     return True
@@ -219,12 +250,18 @@ def is_descendant_folder(cursor, folder_id: int, potential_ancestor_id: int) -> 
         curr = row["parent_id"]
     return False
 
-def move_folders_to_folder(folder_ids: List[int], target_parent_id: Optional[int]) -> bool:
+def move_folders_to_folder(folder_ids: List[int], target_parent_id: Optional[int], target_drive: Optional[str] = None) -> bool:
     if not folder_ids:
         return False
     conn = get_connection()
     cursor = conn.cursor()
     
+    if not target_drive and target_parent_id is not None:
+        cursor.execute("SELECT drive_owner FROM folders WHERE id = ?", (target_parent_id,))
+        row = cursor.fetchone()
+        if row and row["drive_owner"]:
+            target_drive = row["drive_owner"]
+
     valid_ids = []
     for fid in folder_ids:
         if target_parent_id is not None:
@@ -240,9 +277,128 @@ def move_folders_to_folder(folder_ids: List[int], target_parent_id: Optional[int
 
     placeholders = ",".join("?" for _ in valid_ids)
     cursor.execute(f"UPDATE folders SET parent_id = ? WHERE id IN ({placeholders})", [target_parent_id] + list(valid_ids))
+    
+    if target_drive:
+        update_folder_tree_drive(cursor, valid_ids, target_drive)
+
     conn.commit()
     conn.close()
     return True
+
+def copy_file_record(cursor, file_id: int, target_folder_id: Optional[int] = None, target_drive: Optional[str] = None) -> Optional[int]:
+    cursor.execute("SELECT * FROM files WHERE id = ?", (file_id,))
+    row = cursor.fetchone()
+    if not row:
+        return None
+    d = dict(row)
+    orig_name = d["file_name"]
+    same_location = (d.get("folder_id") == target_folder_id) and (target_drive is None or target_drive == d.get("drive_owner"))
+    if same_location:
+        if "." in orig_name:
+            base, ext = orig_name.rsplit(".", 1)
+            new_name = f"{base} - Copy.{ext}"
+        else:
+            new_name = f"{orig_name} - Copy"
+    else:
+        new_name = orig_name
+    
+    new_drive = target_drive or d.get("drive_owner", "buntha")
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute("""
+        INSERT INTO files (
+            file_name, file_size, mime_type, category, sha256,
+            is_encrypted, is_favorite, is_trash, cloud_backend,
+            chunk_count, chunks_data, drive_owner, folder_id, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        new_name,
+        d["file_size"],
+        d["mime_type"],
+        d["category"],
+        d["sha256"],
+        d["is_encrypted"],
+        d["is_favorite"],
+        d["cloud_backend"],
+        d["chunk_count"],
+        d["chunks_data"],
+        new_drive,
+        target_folder_id,
+        now,
+        now
+    ))
+    return cursor.lastrowid
+
+def copy_folder_recursive(cursor, folder_id: int, target_parent_id: Optional[int] = None, target_drive: Optional[str] = None) -> Optional[int]:
+    cursor.execute("SELECT * FROM folders WHERE id = ?", (folder_id,))
+    row = cursor.fetchone()
+    if not row:
+        return None
+    d = dict(row)
+    orig_name = d["folder_name"]
+    same_location = (d.get("parent_id") == target_parent_id) and (target_drive is None or target_drive == d.get("drive_owner"))
+    if same_location:
+        new_folder_name = f"{orig_name} - Copy"
+    else:
+        new_folder_name = orig_name
+    new_drive = target_drive or d.get("drive_owner", "buntha")
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    cursor.execute("""
+        INSERT INTO folders (folder_name, parent_id, drive_owner, is_trash, created_at, updated_at)
+        VALUES (?, ?, ?, 0, ?, ?)
+    """, (new_folder_name, target_parent_id, new_drive, now, now))
+    new_folder_id = cursor.lastrowid
+
+    cursor.execute("SELECT id FROM files WHERE folder_id = ? AND is_trash = 0", (folder_id,))
+    file_rows = cursor.fetchall()
+    for fr in file_rows:
+        copy_file_record(cursor, fr["id"], target_folder_id=new_folder_id, target_drive=new_drive)
+
+    cursor.execute("SELECT id FROM folders WHERE parent_id = ? AND is_trash = 0", (folder_id,))
+    sub_rows = cursor.fetchall()
+    for sr in sub_rows:
+        copy_folder_recursive(cursor, sr["id"], target_parent_id=new_folder_id, target_drive=new_drive)
+
+    return new_folder_id
+
+def copy_files_to_folder(file_ids: List[int], target_folder_id: Optional[int], target_drive: Optional[str] = None) -> int:
+    if not file_ids:
+        return 0
+    conn = get_connection()
+    cursor = conn.cursor()
+    if not target_drive and target_folder_id is not None:
+        cursor.execute("SELECT drive_owner FROM folders WHERE id = ?", (target_folder_id,))
+        row = cursor.fetchone()
+        if row and row["drive_owner"]:
+            target_drive = row["drive_owner"]
+    copied = 0
+    for fid in file_ids:
+        if copy_file_record(cursor, fid, target_folder_id, target_drive):
+            copied += 1
+    conn.commit()
+    conn.close()
+    return copied
+
+def copy_folders_to_folder(folder_ids: List[int], target_parent_id: Optional[int], target_drive: Optional[str] = None) -> int:
+    if not folder_ids:
+        return 0
+    conn = get_connection()
+    cursor = conn.cursor()
+    if not target_drive and target_parent_id is not None:
+        cursor.execute("SELECT drive_owner FROM folders WHERE id = ?", (target_parent_id,))
+        row = cursor.fetchone()
+        if row and row["drive_owner"]:
+            target_drive = row["drive_owner"]
+    copied = 0
+    for fid in folder_ids:
+        if target_parent_id is not None:
+            if fid == target_parent_id or is_descendant_folder(cursor, target_parent_id, fid):
+                continue
+        if copy_folder_recursive(cursor, fid, target_parent_id, target_drive):
+            copied += 1
+    conn.commit()
+    conn.close()
+    return copied
 
 def get_files(
     category: Optional[str] = None,
@@ -459,10 +615,53 @@ def save_db_settings(settings: Dict[str, Any]) -> bool:
             cursor.execute("INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)", (k, json.dumps(v, ensure_ascii=False)))
         conn.commit()
         conn.close()
-        return True
     except Exception as e:
         print(f"Error saving settings to db: {e}")
         return False
 
+def record_telegram_chat(chat_id: str, title: str = "", username: str = ""):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute("""
+            INSERT INTO telegram_chats (chat_id, title, username, last_active)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(chat_id) DO UPDATE SET
+                title = COALESCE(NULLIF(excluded.title, ''), telegram_chats.title),
+                username = COALESCE(NULLIF(excluded.username, ''), telegram_chats.username),
+                last_active = excluded.last_active
+        """, (str(chat_id), title, username, now))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error recording telegram chat: {e}")
+
+def get_recent_telegram_chats() -> List[Dict[str, Any]]:
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM telegram_chats ORDER BY last_active DESC LIMIT 20")
+        rows = [dict(r) for r in cursor.fetchall()]
+        conn.close()
+        return rows
+    except Exception:
+        return []
+
+def update_telegram_chat_context(chat_id: str, current_drive: str, current_folder_id: Optional[int] = None):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE telegram_chats
+            SET current_drive = ?, current_folder_id = ?
+            WHERE chat_id = ?
+        """, (current_drive, current_folder_id, str(chat_id)))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error updating telegram chat context: {e}")
+
 # Initialize database immediately on module import
 init_db()
+
