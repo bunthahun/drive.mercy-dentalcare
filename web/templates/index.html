@@ -791,10 +791,10 @@
             </div>
         </div>
 
-        <!-- Native Mobile Upload Inputs -->
-        <input type="file" id="mobileCameraInput" accept="image/*,video/*" capture="environment" style="display: none;">
-        <input type="file" id="mobileGalleryInput" accept="image/*,video/*" multiple style="display: none;">
-        <input type="file" id="mobileFileInput" multiple style="display: none;">
+        <!-- Native Mobile Upload Inputs (Positioned off-screen safely for iOS Safari & Android) -->
+        <input type="file" id="mobileCameraInput" accept="image/*,video/*" capture="environment" class="native-mobile-hidden-input">
+        <input type="file" id="mobileGalleryInput" accept="image/*,video/*" multiple class="native-mobile-hidden-input">
+        <input type="file" id="mobileFileInput" multiple class="native-mobile-hidden-input">
 
         <!-- Mobile Floating Upload Action Button (FAB) -->
         <button class="mobile-fab-upload" id="btnMobileFab" title="Upload to Cloud (ផ្ទុកឯកសារឡើង)">
@@ -835,32 +835,32 @@
                     <button class="btn-sheet-close" id="btnCloseUploadSheet">✕</button>
                 </div>
                 <div class="mobile-upload-options">
-                    <button class="mobile-opt-card" id="btnMobileOptCamera">
+                    <label for="mobileCameraInput" class="mobile-opt-card" id="btnMobileOptCamera">
                         <div class="opt-icon-bubble camera-bubble">📸</div>
                         <div class="opt-texts">
                             <div class="opt-title">ថតរូប ឬវីដេអូផ្ទាល់ (Camera)</div>
                             <div class="opt-desc">បើកកាមេរ៉ាទូរសព្ទថត រួច Upload ចូលភ្លាមៗ</div>
                         </div>
                         <span class="opt-arrow">➔</span>
-                    </button>
+                    </label>
 
-                    <button class="mobile-opt-card" id="btnMobileOptGallery">
+                    <label for="mobileGalleryInput" class="mobile-opt-card" id="btnMobileOptGallery">
                         <div class="opt-icon-bubble gallery-bubble">🖼️</div>
                         <div class="opt-texts">
                             <div class="opt-title">រូបភាព & វីដេអូពី Gallery</div>
                             <div class="opt-desc">ជ្រើសរើសរូបថត និងវីដេអូ MP4 ច្រើនព្រមគ្នាពីទូរសព្ទ</div>
                         </div>
                         <span class="opt-arrow">➔</span>
-                    </button>
+                    </label>
 
-                    <button class="mobile-opt-card" id="btnMobileOptFiles">
+                    <label for="mobileFileInput" class="mobile-opt-card" id="btnMobileOptFiles">
                         <div class="opt-icon-bubble files-bubble">📁</div>
                         <div class="opt-texts">
                             <div class="opt-title">ឯកសារគ្រប់ប្រភេទ (All Files)</div>
                             <div class="opt-desc">PDF, Word, Excel, ZIP ឬឯកសារធំៗ</div>
                         </div>
                         <span class="opt-arrow">➔</span>
-                    </button>
+                    </label>
 
                     <button class="mobile-opt-card" id="btnMobileOptFolder">
                         <div class="opt-icon-bubble folder-bubble">📂</div>
