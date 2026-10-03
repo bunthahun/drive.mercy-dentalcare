@@ -2367,10 +2367,22 @@ async function handleFilesUpload(files, targetDrive) {
                     }
 
                     function uploadOneChunk(partIdx) {
-                        return new Promise((partResolve, partReject) => {
+                        return new Promise(async (partResolve, partReject) => {
                             const start = partIdx * CHUNK_SIZE;
                             const end = Math.min(file.size, start + CHUNK_SIZE);
-                            const chunkBlob = file.slice(start, end);
+                            const chunkSlice = file.slice(start, end);
+                            let chunkBlob = chunkSlice;
+                            try {
+                                if (typeof chunkSlice.arrayBuffer === "function") {
+                                    const ab = await chunkSlice.arrayBuffer();
+                                    if (ab && ab.byteLength > 0) {
+                                        chunkBlob = new Blob([ab], { type: "application/octet-stream" });
+                                    }
+                                }
+                            } catch (e) {
+                                chunkBlob = chunkSlice;
+                            }
+
                             const cForm = new FormData();
                             cForm.append("upload_id", uploadId);
                             cForm.append("part_index", partIdx);
@@ -2491,9 +2503,22 @@ async function handleFilesUpload(files, targetDrive) {
                 resolve();
             } else {
                 // --- DIRECT UPLOAD PIPELINE FOR FILES <= 15MB ---
+                let fileData = file;
+                try {
+                    if (typeof file.arrayBuffer === "function") {
+                        const ab = await file.arrayBuffer();
+                        if (ab && ab.byteLength > 0) {
+                            fileData = new Blob([ab], { type: file.type || "application/octet-stream" });
+                        }
+                    }
+                } catch (e) {
+                    fileData = file;
+                }
+
                 const uploadId = "up_" + Date.now() + "_" + Math.random().toString(36).substring(2, 8);
                 const formData = new FormData();
-                formData.append("file", file, safeFileName);
+                const asciiSafeName = safeFileName.replace(/[^\x20-\x7E]/g, "_") || ("upload_" + Date.now() + ".jpg");
+                formData.append("file", fileData, asciiSafeName);
                 formData.append("file_name", safeFileName);
                 formData.append("drive", driveToUse);
                 formData.append("upload_id", uploadId);
