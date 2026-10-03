@@ -417,11 +417,36 @@ function initEventListeners() {
     }
 
     // Floating Selection Bar Actions
+    const btnSelCut = document.getElementById("btnSelectionCut");
+    if (btnSelCut) {
+        btnSelCut.addEventListener("click", () => {
+            executeCut(Array.from(selectedFileIds), Array.from(selectedFolderIds));
+        });
+    }
+
+    const btnSelCopy = document.getElementById("btnSelectionCopy");
+    if (btnSelCopy) {
+        btnSelCopy.addEventListener("click", () => {
+            executeCopy(Array.from(selectedFileIds), Array.from(selectedFolderIds));
+        });
+    }
+
     const btnSelMove = document.getElementById("btnSelectionMove");
     if (btnSelMove) {
         btnSelMove.addEventListener("click", () => {
             if (selectedFileIds.size > 0 || selectedFolderIds.size > 0) {
                 openMoveModal(Array.from(selectedFileIds), Array.from(selectedFolderIds));
+            }
+        });
+    }
+
+    const btnSelSendTg = document.getElementById("btnSelectionSendTelegram");
+    if (btnSelSendTg) {
+        btnSelSendTg.addEventListener("click", () => {
+            if (selectedFileIds.size > 0) {
+                openSendTelegramModal(Array.from(selectedFileIds));
+            } else {
+                showToast("សូមជ្រើសរើសឯកសារយ៉ាងតិចមួយដើម្បីផ្ញើទៅ Telegram");
             }
         });
     }
@@ -437,6 +462,21 @@ function initEventListeners() {
     if (btnSelClear) {
         btnSelClear.addEventListener("click", () => {
             clearSelection();
+        });
+    }
+
+    // Floating Clipboard Bar Actions
+    const btnClipboardPaste = document.getElementById("btnClipboardPaste");
+    if (btnClipboardPaste) {
+        btnClipboardPaste.addEventListener("click", () => {
+            executePaste();
+        });
+    }
+
+    const btnClipboardCancel = document.getElementById("btnClipboardCancel");
+    if (btnClipboardCancel) {
+        btnClipboardCancel.addEventListener("click", () => {
+            clearClipboard();
         });
     }
 
@@ -463,6 +503,34 @@ function initEventListeners() {
                     : [activeContextItem.id];
                 openMoveModal(targetIds);
             }
+        });
+    }
+
+    // Context Menu: Send to Telegram
+    const filecmenuSendTg = document.getElementById("filecmenuSendTelegram");
+    if (filecmenuSendTg) {
+        filecmenuSendTg.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "file") {
+                const targetIds = selectedFileIds.has(activeContextItem.id) && selectedFileIds.size > 1
+                    ? Array.from(selectedFileIds)
+                    : [activeContextItem.id];
+                openSendTelegramModal(targetIds);
+            }
+        });
+    }
+
+    // Send Telegram Modal Close / Confirm Actions
+    const sendTgModal = document.getElementById("sendTelegramModal");
+    const btnCloseSendTg = document.getElementById("btnCloseSendTgModal");
+    const btnCancelSendTg = document.getElementById("btnCancelSendTg");
+    const btnConfirmSendTg = document.getElementById("btnConfirmSendTg");
+    if (btnCloseSendTg) btnCloseSendTg.addEventListener("click", closeSendTelegramModal);
+    if (btnCancelSendTg) btnCancelSendTg.addEventListener("click", closeSendTelegramModal);
+    if (btnConfirmSendTg) btnConfirmSendTg.addEventListener("click", executeSendTelegram);
+    if (sendTgModal) {
+        sendTgModal.addEventListener("click", (e) => {
+            if (e.target === sendTgModal) closeSendTelegramModal();
         });
     }
 
@@ -562,12 +630,12 @@ function initEventListeners() {
         });
     }
 
-    // Windows 11 Ribbon Actions: Cut, Copy, Rename, Delete
+    // Windows 11 Ribbon Actions: Cut, Copy, Paste, Rename, Delete
     const btnRibbonCut = document.getElementById("btnRibbonCut");
     if (btnRibbonCut) {
         btnRibbonCut.addEventListener("click", () => {
             if (selectedFileIds.size > 0 || selectedFolderIds.size > 0) {
-                openMoveModal(Array.from(selectedFileIds), Array.from(selectedFolderIds));
+                executeCut(Array.from(selectedFileIds), Array.from(selectedFolderIds));
             }
         });
     }
@@ -575,10 +643,16 @@ function initEventListeners() {
     const btnRibbonCopy = document.getElementById("btnRibbonCopy");
     if (btnRibbonCopy) {
         btnRibbonCopy.addEventListener("click", () => {
-            if (selectedFileIds.size > 0) {
-                const names = filesData.filter(f => selectedFileIds.has(f.id)).map(f => f.file_name).join(String.fromCharCode(10));
-                navigator.clipboard.writeText(names);
+            if (selectedFileIds.size > 0 || selectedFolderIds.size > 0) {
+                executeCopy(Array.from(selectedFileIds), Array.from(selectedFolderIds));
             }
+        });
+    }
+
+    const btnRibbonPaste = document.getElementById("btnRibbonPaste");
+    if (btnRibbonPaste) {
+        btnRibbonPaste.addEventListener("click", () => {
+            executePaste();
         });
     }
 
@@ -1964,6 +2038,7 @@ function renderFiles() {
     }
 
     updateSelectionUI();
+    applyCutStyles();
 }
 
 /* ==========================================================================
@@ -2026,11 +2101,13 @@ function updateSelectionUI() {
     // Ribbon Action Buttons Enabled/Disabled
     const btnRibbonCut = document.getElementById("btnRibbonCut");
     const btnRibbonCopy = document.getElementById("btnRibbonCopy");
+    const btnRibbonPaste = document.getElementById("btnRibbonPaste");
     const btnRibbonRename = document.getElementById("btnRibbonRename");
     const btnRibbonDelete = document.getElementById("btnRibbonDelete");
 
     if (btnRibbonCut) btnRibbonCut.disabled = totalCount === 0;
-    if (btnRibbonCopy) btnRibbonCopy.disabled = selectedFileIds.size === 0;
+    if (btnRibbonCopy) btnRibbonCopy.disabled = totalCount === 0;
+    if (btnRibbonPaste) btnRibbonPaste.disabled = !(appClipboard && appClipboard.mode && (appClipboard.fileIds.length > 0 || appClipboard.folderIds.length > 0));
     if (btnRibbonRename) btnRibbonRename.disabled = totalCount !== 1;
     if (btnRibbonDelete) btnRibbonDelete.disabled = totalCount === 0;
 
@@ -2239,6 +2316,128 @@ async function openMoveModal(fileIds = [], folderIds = []) {
 
     } catch (err) {
         list.innerHTML = `<div style="color: #f43f5e; padding: 10px;">Error: ${err.message}</div>`;
+    }
+}
+
+let pendingSendTgFileIds = [];
+
+async function openSendTelegramModal(fileIds = []) {
+    if (!fileIds || fileIds.length === 0) return;
+    pendingSendTgFileIds = fileIds;
+
+    const modal = document.getElementById("sendTelegramModal");
+    const titleEl = document.getElementById("sendTgModalTitle");
+    const nameEl = document.getElementById("sendTgFileName");
+    const sizeEl = document.getElementById("sendTgFileSize");
+    const chatSelect = document.getElementById("sendTgChatSelect");
+    const customChatInput = document.getElementById("sendTgCustomChatId");
+
+    if (!modal) return;
+    if (customChatInput) customChatInput.value = "";
+
+    if (fileIds.length === 1) {
+        const file = (typeof filesData !== "undefined" && Array.isArray(filesData))
+            ? filesData.find(f => f.id === fileIds[0])
+            : null;
+        if (file) {
+            if (nameEl) nameEl.textContent = "📄 " + file.file_name;
+            if (sizeEl) sizeEl.textContent = `ទំហំ: ${formatSize(file.file_size)} • Drive: ${file.category || 'HUN BUNTHA'}`;
+        } else {
+            if (nameEl) nameEl.textContent = `ឯកសារ #${fileIds[0]}`;
+            if (sizeEl) sizeEl.textContent = "";
+        }
+    } else {
+        if (nameEl) nameEl.textContent = `ឯកសារចំនួន ${fileIds.length} ត្រូវបានជ្រើសរើស`;
+        if (sizeEl) sizeEl.textContent = `នឹងត្រូវផ្ញើចេញម្តងមួយៗទៅ Telegram`;
+    }
+
+    if (chatSelect) {
+        chatSelect.innerHTML = `<option value="">📢 My 1000TB Cloud Channel (Default Storage)</option>`;
+        try {
+            const res = await fetch("/api/telegram/chats");
+            const data = await res.json();
+            if (data.chats && data.chats.length > 0) {
+                const optGroup = document.createElement("optgroup");
+                optGroup.label = "💬 គណនី Telegram ថ្មីៗ (Recent Users / Chats):";
+                data.chats.forEach(c => {
+                    const opt = document.createElement("option");
+                    opt.value = c.chat_id;
+                    const label = c.title || (c.username ? `@${c.username}` : `Chat ${c.chat_id}`);
+                    opt.textContent = `👤 ${label} (${c.chat_id})`;
+                    optGroup.appendChild(opt);
+                });
+                chatSelect.appendChild(optGroup);
+            }
+        } catch (e) {
+            console.warn("Could not load Telegram chats:", e);
+        }
+    }
+
+    modal.style.display = "flex";
+}
+
+function closeSendTelegramModal() {
+    const modal = document.getElementById("sendTelegramModal");
+    if (modal) modal.style.display = "none";
+    pendingSendTgFileIds = [];
+}
+
+async function executeSendTelegram() {
+    if (!pendingSendTgFileIds || pendingSendTgFileIds.length === 0) return;
+
+    const chatSelect = document.getElementById("sendTgChatSelect");
+    const customChatInput = document.getElementById("sendTgCustomChatId");
+    const btnConfirm = document.getElementById("btnConfirmSendTg");
+
+    const customId = customChatInput ? customChatInput.value.trim() : "";
+    const selectedChatId = customId || (chatSelect ? chatSelect.value : "") || null;
+    const targetFileIds = [...pendingSendTgFileIds];
+
+    if (btnConfirm) {
+        btnConfirm.disabled = true;
+        btnConfirm.textContent = "⏳ កំពុងផ្ញើទៅ Telegram...";
+    }
+
+    closeSendTelegramModal();
+    showToast(`✈️ កំពុងផ្ញើ ${targetFileIds.length} ឯកសារទៅ Telegram...`);
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const fileId of targetFileIds) {
+        try {
+            const res = await fetch("/api/telegram/send-file", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    file_id: fileId,
+                    chat_id: selectedChatId
+                })
+            });
+            const result = await res.json();
+            if (result.success) {
+                successCount++;
+            } else {
+                failCount++;
+                console.error("Telegram send error:", result.error);
+            }
+        } catch (err) {
+            failCount++;
+            console.error("Telegram send failed:", err);
+        }
+    }
+
+    if (btnConfirm) {
+        btnConfirm.disabled = false;
+        btnConfirm.textContent = "✈️ ផ្ញើចេញ (Send)";
+    }
+
+    if (successCount > 0 && failCount === 0) {
+        showToast(`✅ បានផ្ញើ ${successCount} ឯកសារទៅកាន់ Telegram ដោយជោគជ័យ!`);
+    } else if (successCount > 0 && failCount > 0) {
+        showToast(`⚠️ ផ្ញើបាន ${successCount} ឯកសារ (បរាជ័យ ${failCount})`);
+    } else {
+        showToast(`❌ មិនអាចផ្ញើទៅ Telegram បានទេ សូមពិនិត្យ Bot ឬ Chat ID`);
     }
 }
 
@@ -2783,6 +2982,13 @@ function previewFile(id) {
     if (subEl) subEl.textContent = `${formatSize(file.file_size)} • ${file.mime_type || 'File'}`;
     if (dlBtn) dlBtn.onclick = () => downloadFile(file.id);
 
+    const sendTgBtn = document.getElementById("btnPreviewSendTelegram");
+    if (sendTgBtn) {
+        sendTgBtn.onclick = () => {
+            openSendTelegramModal([file.id]);
+        };
+    }
+
     // Push browser state so phone back button/swipe can close the modal
     try {
         window.history.pushState({ previewOpen: true }, "");
@@ -3097,6 +3303,15 @@ function initContextMenuListeners() {
         });
     }
 
+    // Context menu: Paste
+    const cmenuPaste = document.getElementById("cmenuPaste");
+    if (cmenuPaste) {
+        cmenuPaste.addEventListener("click", () => {
+            hideAllContextMenus();
+            executePaste();
+        });
+    }
+
     // Context menu: Upload
     const cmenuUpload = document.getElementById("cmenuUpload");
     if (cmenuUpload) {
@@ -3127,6 +3342,43 @@ function initContextMenuListeners() {
             hideAllContextMenus();
             if (activeContextItem && activeContextItem.type === "folder") {
                 openFolder(activeContextItem.id, activeContextItem.name);
+            }
+        });
+    }
+
+    // Folder Context Menu: Cut
+    const fcmenuCut = document.getElementById("fcmenuCut");
+    if (fcmenuCut) {
+        fcmenuCut.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "folder") {
+                const targetFolderIds = selectedFolderIds.has(activeContextItem.id) ? Array.from(selectedFolderIds) : [activeContextItem.id];
+                const targetFileIds = selectedFolderIds.has(activeContextItem.id) ? Array.from(selectedFileIds) : [];
+                executeCut(targetFileIds, targetFolderIds);
+            }
+        });
+    }
+
+    // Folder Context Menu: Copy
+    const fcmenuCopy = document.getElementById("fcmenuCopy");
+    if (fcmenuCopy) {
+        fcmenuCopy.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "folder") {
+                const targetFolderIds = selectedFolderIds.has(activeContextItem.id) ? Array.from(selectedFolderIds) : [activeContextItem.id];
+                const targetFileIds = selectedFolderIds.has(activeContextItem.id) ? Array.from(selectedFileIds) : [];
+                executeCopy(targetFileIds, targetFolderIds);
+            }
+        });
+    }
+
+    // Folder Context Menu: Paste Into Folder
+    const fcmenuPaste = document.getElementById("fcmenuPaste");
+    if (fcmenuPaste) {
+        fcmenuPaste.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "folder") {
+                executePaste(activeContextItem.id);
             }
         });
     }
@@ -3198,6 +3450,32 @@ function initContextMenuListeners() {
         });
     }
 
+    // File Context Menu: Cut
+    const filecmenuCut = document.getElementById("filecmenuCut");
+    if (filecmenuCut) {
+        filecmenuCut.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "file") {
+                const targetFileIds = selectedFileIds.has(activeContextItem.id) ? Array.from(selectedFileIds) : [activeContextItem.id];
+                const targetFolderIds = selectedFileIds.has(activeContextItem.id) ? Array.from(selectedFolderIds) : [];
+                executeCut(targetFileIds, targetFolderIds);
+            }
+        });
+    }
+
+    // File Context Menu: Copy
+    const filecmenuCopy = document.getElementById("filecmenuCopy");
+    if (filecmenuCopy) {
+        filecmenuCopy.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "file") {
+                const targetFileIds = selectedFileIds.has(activeContextItem.id) ? Array.from(selectedFileIds) : [activeContextItem.id];
+                const targetFolderIds = selectedFileIds.has(activeContextItem.id) ? Array.from(selectedFolderIds) : [];
+                executeCopy(targetFileIds, targetFolderIds);
+            }
+        });
+    }
+
     // File Context Menu: Rename
     const filecmenuRename = document.getElementById("filecmenuRename");
     if (filecmenuRename) {
@@ -3240,10 +3518,32 @@ function initContextMenuListeners() {
         }
     });
 
-    // Dismiss context menus on Escape key or scroll
+    // Dismiss context menus on Escape key or handle Ctrl+C / Ctrl+X / Ctrl+V
     window.addEventListener("keydown", (e) => {
         if (e.key === "Escape") {
             hideAllContextMenus();
+        }
+        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
+        if (activeTag === "input" || activeTag === "textarea") return;
+
+        if (e.ctrlKey || e.metaKey) {
+            const k = e.key.toLowerCase();
+            if (k === "c") {
+                if (selectedFileIds.size > 0 || selectedFolderIds.size > 0) {
+                    e.preventDefault();
+                    executeCopy(Array.from(selectedFileIds), Array.from(selectedFolderIds));
+                }
+            } else if (k === "x") {
+                if (selectedFileIds.size > 0 || selectedFolderIds.size > 0) {
+                    e.preventDefault();
+                    executeCut(Array.from(selectedFileIds), Array.from(selectedFolderIds));
+                }
+            } else if (k === "v") {
+                if (appClipboard && appClipboard.mode) {
+                    e.preventDefault();
+                    executePaste();
+                }
+            }
         }
     });
     window.addEventListener("scroll", hideAllContextMenus, true);
@@ -3280,6 +3580,12 @@ function positionMenu(menu, x, y) {
 
 function showBgContextMenu(x, y) {
     hideAllContextMenus();
+    const isClipboardActive = !!(appClipboard && appClipboard.mode && (appClipboard.fileIds.length > 0 || appClipboard.folderIds.length > 0));
+    const cmenuPaste = document.getElementById("cmenuPaste");
+    if (cmenuPaste) {
+        cmenuPaste.style.opacity = isClipboardActive ? "1" : "0.4";
+        cmenuPaste.style.pointerEvents = isClipboardActive ? "auto" : "none";
+    }
     const menu = document.getElementById("bgContextMenu");
     if (menu) positionMenu(menu, x, y);
 }
@@ -3287,6 +3593,11 @@ function showBgContextMenu(x, y) {
 function showFolderContextMenu(x, y, folder) {
     hideAllContextMenus();
     activeContextItem = { type: 'folder', id: folder.id, name: folder.folder_name };
+    const isClipboardActive = !!(appClipboard && appClipboard.mode && (appClipboard.fileIds.length > 0 || appClipboard.folderIds.length > 0));
+    const fcmenuPaste = document.getElementById("fcmenuPaste");
+    if (fcmenuPaste) {
+        fcmenuPaste.style.display = isClipboardActive ? "flex" : "none";
+    }
     const menu = document.getElementById("folderContextMenu");
     if (menu) positionMenu(menu, x, y);
 }
@@ -3298,29 +3609,317 @@ function showFileContextMenu(x, y, file) {
     if (menu) positionMenu(menu, x, y);
 }
 
+async function createFolder(folderName) {
+    if (!folderName || !folderName.trim()) return;
+    const drive = (currentCategory === "vuochlin" || currentCategory === "mercy") ? currentCategory : "buntha";
+    try {
+        const res = await fetch("/api/folders/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: folderName.trim(),
+                drive: drive,
+                parent_id: currentFolderId
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            await loadFiles();
+            showActionToast(
+                currentLang === "km"
+                    ? `✓ ថត [${folderName.trim()}] ត្រូវបានបង្កើតដោយជោគជ័យ!`
+                    : `✓ Folder [${folderName.trim()}] created successfully!`,
+                "success"
+            );
+        } else {
+            alert(data.error || (currentLang === "km" ? "មិនអាចបង្កើតថតបានទេ" : "Failed to create folder"));
+        }
+    } catch (err) {
+        console.error("Create folder error:", err);
+        alert(currentLang === "km" ? "មានបញ្ហាក្នុងការបង្កើតថត" : "Error creating folder");
+    }
+}
+
 function promptNewFolder() {
     hideAllContextMenus();
     showPromptModal(
-        currentLang === "km" ? "បង្កើតថតថ្មី (New Folder)" : "Create New Folder",
+        currentLang === "km" ? "📁 បង្កើតថតថ្មី (New Folder)" : "Create New Folder",
         currentLang === "km" ? "ឈ្មោះថតឯកសារ៖" : "Folder Name:",
         "New folder",
-        async (folderName) => {
-            const drive = currentCategory === "vuochlin" ? "vuochlin" : "buntha";
-            const res = await fetch("/api/folders/create", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name: folderName,
-                    drive: drive,
-                    parent_id: currentFolderId
-                })
-            });
-            const data = await res.json();
-            if (data.success) {
-                loadFiles();
-            }
+        (folderName) => {
+            createFolder(folderName);
         }
     );
+}
+
+/* ==========================================================================
+   Cut / Copy / Paste Clipboard Management
+   ========================================================================== */
+let appClipboard = {
+    mode: null, // 'cut' | 'copy'
+    fileIds: [],
+    folderIds: [],
+    sourceDrive: null,
+    sourceFolderId: null
+};
+
+function showActionToast(message, type = "info") {
+    const toast = document.createElement("div");
+    toast.className = "action-toast";
+    const bg = type === "success" ? "rgba(16, 185, 129, 0.95)" : "rgba(14, 165, 233, 0.95)";
+    toast.style.cssText = `
+        position: fixed;
+        top: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: ${bg};
+        color: #ffffff;
+        padding: 10px 22px;
+        border-radius: 30px;
+        font-size: 14px;
+        font-weight: 600;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        z-index: 100000;
+        animation: winContextMenuIn 0.2s cubic-bezier(0, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        max-width: 90vw;
+        text-align: center;
+    `;
+    toast.innerHTML = message;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transition = "opacity 0.3s ease";
+        setTimeout(() => toast.remove(), 300);
+    }, 2800);
+}
+
+function updateClipboardUI() {
+    const isClipboardActive = !!(appClipboard && appClipboard.mode && (appClipboard.fileIds.length > 0 || appClipboard.folderIds.length > 0));
+    const clipBar = document.getElementById("clipboardFloatingBar");
+    const clipIcon = document.getElementById("clipboardModeIcon");
+    const clipText = document.getElementById("clipboardText");
+    const clipSubtext = document.getElementById("clipboardSubtext");
+    const btnRibbonPaste = document.getElementById("btnRibbonPaste");
+    const cmenuPaste = document.getElementById("cmenuPaste");
+    const fcmenuPaste = document.getElementById("fcmenuPaste");
+    const btnMobilePasteHeader = document.getElementById("btnMobilePasteHeader");
+    const btnMobileOptPaste = document.getElementById("btnMobileOptPaste");
+
+    if (btnRibbonPaste) {
+        btnRibbonPaste.disabled = !isClipboardActive;
+    }
+
+    if (cmenuPaste) {
+        cmenuPaste.style.opacity = isClipboardActive ? "1" : "0.4";
+        cmenuPaste.style.pointerEvents = isClipboardActive ? "auto" : "none";
+    }
+
+    if (fcmenuPaste) {
+        fcmenuPaste.style.display = isClipboardActive ? "flex" : "none";
+    }
+
+    if (btnMobilePasteHeader) {
+        btnMobilePasteHeader.style.display = isClipboardActive ? "flex" : "none";
+    }
+
+    if (btnMobileOptPaste) {
+        btnMobileOptPaste.style.display = isClipboardActive ? "flex" : "none";
+        const mobileDesc = document.getElementById("mobilePasteDesc");
+        if (mobileDesc && isClipboardActive) {
+            const count = appClipboard.fileIds.length + appClipboard.folderIds.length;
+            mobileDesc.textContent = appClipboard.mode === "cut"
+                ? `ផ្លាស់ទី ${count} ធាតុចូលទីនេះ (Move items here)`
+                : `ចម្លង ${count} ធាតុចូលទីនេះ (Copy items here)`;
+        }
+    }
+
+    if (clipBar) {
+        if (isClipboardActive) {
+            clipBar.style.display = "flex";
+            const count = appClipboard.fileIds.length + appClipboard.folderIds.length;
+            const isCut = appClipboard.mode === "cut";
+            if (clipIcon) clipIcon.textContent = isCut ? "✂️" : "📄";
+            if (clipText) {
+                clipText.textContent = isCut
+                    ? (currentLang === "km" ? `✂️ បានកាត់ ${count} ធាតុ (Cut ${count} items)` : `✂️ Cut ${count} item${count > 1 ? 's' : ''}`)
+                    : (currentLang === "km" ? `📄 បានចម្លង ${count} ធាតុ (Copied ${count} items)` : `📄 Copied ${count} item${count > 1 ? 's' : ''}`);
+            }
+            if (clipSubtext) {
+                clipSubtext.textContent = currentLang === "km"
+                    ? "ចូលទៅកាន់ថតដែលចង់ទុក រួចចុច 'បិទភ្ជាប់ (Paste)'"
+                    : "Navigate to destination folder and click 'Paste'";
+            }
+        } else {
+            clipBar.style.display = "none";
+        }
+    }
+}
+
+function applyCutStyles() {
+    const isCut = appClipboard && appClipboard.mode === "cut";
+    const cutFiles = isCut ? new Set(appClipboard.fileIds.map(String)) : new Set();
+    const cutFolders = isCut ? new Set(appClipboard.folderIds.map(String)) : new Set();
+
+    document.querySelectorAll("[data-file-id]").forEach(el => {
+        const id = String(el.dataset.fileId);
+        el.classList.toggle("is-cut-item", cutFiles.has(id));
+    });
+
+    document.querySelectorAll("[data-folder-id]").forEach(el => {
+        const id = String(el.dataset.folderId);
+        el.classList.toggle("is-cut-item", cutFolders.has(id));
+    });
+}
+
+function executeCut(fileIds = [], folderIds = []) {
+    const fIds = fileIds.map(Number).filter(n => !isNaN(n));
+    const dIds = folderIds.map(Number).filter(n => !isNaN(n));
+    if (fIds.length === 0 && dIds.length === 0) return;
+
+    appClipboard = {
+        mode: "cut",
+        fileIds: fIds,
+        folderIds: dIds,
+        sourceDrive: currentCategory,
+        sourceFolderId: currentFolderId
+    };
+
+    updateClipboardUI();
+    applyCutStyles();
+    clearSelection();
+
+    const count = fIds.length + dIds.length;
+    showActionToast(
+        currentLang === "km"
+            ? `✂️ បានកាត់ ${count} ឯកសារ/ថត - សូមចូលទៅកាន់ថតដែលចង់ទុក រួចចុច "បិទភ្ជាប់ (Paste)"`
+            : `✂️ Cut ${count} item(s) - Navigate to destination and click "Paste"`
+    );
+}
+
+function executeCopy(fileIds = [], folderIds = []) {
+    const fIds = fileIds.map(Number).filter(n => !isNaN(n));
+    const dIds = folderIds.map(Number).filter(n => !isNaN(n));
+    if (fIds.length === 0 && dIds.length === 0) return;
+
+    appClipboard = {
+        mode: "copy",
+        fileIds: fIds,
+        folderIds: dIds,
+        sourceDrive: currentCategory,
+        sourceFolderId: currentFolderId
+    };
+
+    updateClipboardUI();
+    applyCutStyles();
+    clearSelection();
+
+    const count = fIds.length + dIds.length;
+    showActionToast(
+        currentLang === "km"
+            ? `📄 បានចម្លង ${count} ឯកសារ/ថត - សូមចូលទៅកាន់ថតដែលចង់ទុក រួចចុច "បិទភ្ជាប់ (Paste)"`
+            : `📄 Copied ${count} item(s) - Navigate to destination and click "Paste"`
+    );
+}
+
+function clearClipboard() {
+    appClipboard = {
+        mode: null,
+        fileIds: [],
+        folderIds: [],
+        sourceDrive: null,
+        sourceFolderId: null
+    };
+    updateClipboardUI();
+    applyCutStyles();
+}
+
+async function executePaste(targetFolderId = null, targetDrive = null) {
+    if (!appClipboard || !appClipboard.mode || (appClipboard.fileIds.length === 0 && appClipboard.folderIds.length === 0)) {
+        return;
+    }
+    const destFolder = (targetFolderId !== null && targetFolderId !== undefined) ? targetFolderId : currentFolderId;
+    const destDrive = targetDrive || ((currentCategory === "vuochlin" || currentCategory === "mercy") ? currentCategory : "buntha");
+
+    const mode = appClipboard.mode;
+    const fIds = [...appClipboard.fileIds];
+    const dIds = [...appClipboard.folderIds];
+    const count = fIds.length + dIds.length;
+
+    try {
+        if (mode === "cut") {
+            if (fIds.length > 0) {
+                await fetch("/api/files/move", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        file_ids: fIds,
+                        target_folder_id: destFolder,
+                        target_drive: destDrive
+                    })
+                });
+            }
+            if (dIds.length > 0) {
+                const res = await fetch("/api/folders/move", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        folder_ids: dIds,
+                        target_folder_id: destFolder,
+                        target_drive: destDrive
+                    })
+                });
+                const resData = await res.json();
+                if (!resData.success && resData.error) {
+                    alert(resData.error);
+                }
+            }
+            clearClipboard();
+            showActionToast(
+                currentLang === "km"
+                    ? `✓ បានផ្លាស់ទី (Cut & Pasted) ${count} ឯកសារ/ថត ដោយជោគជ័យ!`
+                    : `✓ Successfully moved ${count} item(s)!`,
+                "success"
+            );
+        } else if (mode === "copy") {
+            if (fIds.length > 0) {
+                await fetch("/api/files/copy", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        file_ids: fIds,
+                        target_folder_id: destFolder,
+                        target_drive: destDrive
+                    })
+                });
+            }
+            if (dIds.length > 0) {
+                await fetch("/api/folders/copy", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        folder_ids: dIds,
+                        target_folder_id: destFolder,
+                        target_drive: destDrive
+                    })
+                });
+            }
+            showActionToast(
+                currentLang === "km"
+                    ? `✓ បានចម្លង និងបិទភ្ជាប់ (Copied & Pasted) ${count} ឯកសារ/ថត ដោយជោគជ័យ!`
+                    : `✓ Successfully copied and pasted ${count} item(s)!`,
+                "success"
+            );
+        }
+
+        await fetchStats();
+        await loadFiles();
+    } catch (err) {
+        console.error("Paste error:", err);
+        alert(currentLang === "km" ? "មានបញ្ហាក្នុងការបិទភ្ជាប់" : "Error pasting items");
+    }
 }
 
 function promptRenameFolder(folderId, currentName) {
@@ -3742,9 +4341,32 @@ function initMobileApp() {
     if (btnOptFolder) {
         btnOptFolder.addEventListener("click", () => {
             closeUploadSheet();
-            showPromptModal("📁 បង្កើតថតថ្មី (New Folder)", "ឈ្មោះថត៖", "New Folder", (folderName) => {
-                createFolder(folderName);
-            });
+            promptNewFolder();
+        });
+    }
+
+    // Mobile Upload Sheet: Paste
+    const btnOptPaste = document.getElementById("btnMobileOptPaste");
+    if (btnOptPaste) {
+        btnOptPaste.addEventListener("click", () => {
+            closeUploadSheet();
+            executePaste();
+        });
+    }
+
+    // Mobile Top Bar: New Folder Button
+    const btnMobileNewFolder = document.getElementById("btnMobileNewFolder");
+    if (btnMobileNewFolder) {
+        btnMobileNewFolder.addEventListener("click", () => {
+            promptNewFolder();
+        });
+    }
+
+    // Mobile Top Bar: Paste Button
+    const btnMobilePasteHeader = document.getElementById("btnMobilePasteHeader");
+    if (btnMobilePasteHeader) {
+        btnMobilePasteHeader.addEventListener("click", () => {
+            executePaste();
         });
     }
 
