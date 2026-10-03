@@ -119,6 +119,8 @@
                     <span class="mobile-caret">▾</span>
                 </div>
                 <div class="mobile-header-actions">
+                    <button class="mobile-icon-btn mobile-paste-btn" id="btnMobilePasteHeader" title="បិទភ្ជាប់ (Paste)" style="display: none; background: rgba(16, 185, 129, 0.25); border-color: rgba(16, 185, 129, 0.5); color: #34d399;">📋</button>
+                    <button class="mobile-icon-btn" id="btnMobileNewFolder" title="បង្កើតថតថ្មី (New Folder)">📁⁺</button>
                     <button class="mobile-icon-btn" id="btnMobileSearchToggle" title="Search (ស្វែងរក)">🔍</button>
                     <button class="mobile-icon-btn" id="btnMobileQrPhone" title="Phone Connect">📱</button>
                 </div>
@@ -223,13 +225,16 @@
 
                 <div class="win-cmd-divider"></div>
 
-                <!-- Action icons (Cut, Copy, Rename, Delete) -->
+                <!-- Action icons (Cut, Copy, Paste, Rename, Delete) -->
                 <div class="win-cmd-group win-cmd-actions">
-                    <button class="win-cmd-btn win-cmd-icon-only" id="btnRibbonCut" title="Cut / Move (ផ្លាស់ទី)">
+                    <button class="win-cmd-btn win-cmd-icon-only" id="btnRibbonCut" title="Cut / Move (កាត់ / ផ្លាស់ទី)">
                         <span class="win-cmd-icon">✂️</span>
                     </button>
                     <button class="win-cmd-btn win-cmd-icon-only" id="btnRibbonCopy" title="Copy (ចម្លង)">
                         <span class="win-cmd-icon">📄</span>
+                    </button>
+                    <button class="win-cmd-btn win-cmd-icon-only" id="btnRibbonPaste" title="Paste (បិទភ្ជាប់)" disabled>
+                        <span class="win-cmd-icon">📋</span>
                     </button>
                     <button class="win-cmd-btn win-cmd-icon-only" id="btnRibbonRename" title="Rename (ប្តូរឈ្មោះ)">
                         <span class="win-cmd-icon">✏️</span>
@@ -529,6 +534,9 @@
                         <a href="#" target="_blank" class="btn-secondary btn-preview-action-tab" id="btnPreviewNewTab"
                             style="text-decoration: none; padding: 6px 10px; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;"
                             title="បើកក្នុង Tab ថ្មី">🌐 <span class="hide-mobile-text">បើកក្នុង Tab ថ្មី</span></a>
+                        <button class="btn-secondary btn-preview-action-tg" id="btnPreviewSendTelegram"
+                            style="text-decoration: none; padding: 6px 12px; font-size: 13px; display: inline-flex; align-items: center; gap: 4px; background: rgba(2, 132, 199, 0.2); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8;"
+                            title="ផ្ញើទៅកាន់ Telegram">✈️ <span class="hide-mobile-text">ផ្ញើទៅ Telegram</span></button>
                         <button class="btn-primary btn-preview-action-dl" id="btnPreviewDownload"
                             style="padding: 6px 12px; font-size: 13px;" title="ទាញយក">📥 <span class="hide-mobile-text">ទាញយក</span></button>
                         <button class="btn-close-modal btn-preview-close" id="btnClosePreview" title="បិទ (Close)">✕</button>
@@ -613,6 +621,14 @@
                 </div>
             </div>
             <div class="win-menu-divider"></div>
+            <div class="win-menu-item" id="cmenuPaste" style="opacity: 0.4; pointer-events: none;">
+                <div class="win-item-left">
+                    <span class="win-item-icon">📋</span>
+                    <span class="win-item-label">Paste (បិទភ្ជាប់)</span>
+                </div>
+                <span class="win-menu-shortcut" style="margin-left: auto; font-size: 11px; color: var(--text-muted);">Ctrl+V</span>
+            </div>
+            <div class="win-menu-divider"></div>
             <div class="win-menu-item" id="cmenuUpload">
                 <div class="win-item-left">
                     <span class="win-item-icon">📤</span>
@@ -635,6 +651,28 @@
                     <span class="win-item-label">Open (បើក)</span>
                 </div>
             </div>
+            <div class="win-menu-divider"></div>
+            <div class="win-menu-item" id="fcmenuCut">
+                <div class="win-item-left">
+                    <span class="win-item-icon">✂️</span>
+                    <span class="win-item-label">Cut (កាត់)</span>
+                </div>
+                <span class="win-menu-shortcut" style="margin-left: auto; font-size: 11px; color: var(--text-muted);">Ctrl+X</span>
+            </div>
+            <div class="win-menu-item" id="fcmenuCopy">
+                <div class="win-item-left">
+                    <span class="win-item-icon">📄</span>
+                    <span class="win-item-label">Copy (ចម្លង)</span>
+                </div>
+                <span class="win-menu-shortcut" style="margin-left: auto; font-size: 11px; color: var(--text-muted);">Ctrl+C</span>
+            </div>
+            <div class="win-menu-item" id="fcmenuPaste" style="display: none;">
+                <div class="win-item-left">
+                    <span class="win-item-icon">📋</span>
+                    <span class="win-item-label">Paste Into Folder (បិទភ្ជាប់ចូលថត)</span>
+                </div>
+            </div>
+            <div class="win-menu-divider"></div>
             <div class="win-menu-item" id="fcmenuRename">
                 <div class="win-item-left">
                     <span class="win-item-icon">✏️</span>
@@ -664,6 +702,28 @@
                     <span class="win-item-label">Download (ទាញយក)</span>
                 </div>
             </div>
+            <div class="win-menu-item" id="filecmenuSendTelegram">
+                <div class="win-item-left">
+                    <span class="win-item-icon">✈️</span>
+                    <span class="win-item-label">Send to Telegram (ផ្ញើទៅ Telegram)</span>
+                </div>
+            </div>
+            <div class="win-menu-divider"></div>
+            <div class="win-menu-item" id="filecmenuCut">
+                <div class="win-item-left">
+                    <span class="win-item-icon">✂️</span>
+                    <span class="win-item-label">Cut (កាត់)</span>
+                </div>
+                <span class="win-menu-shortcut" style="margin-left: auto; font-size: 11px; color: var(--text-muted);">Ctrl+X</span>
+            </div>
+            <div class="win-menu-item" id="filecmenuCopy">
+                <div class="win-item-left">
+                    <span class="win-item-icon">📄</span>
+                    <span class="win-item-label">Copy (ចម្លង)</span>
+                </div>
+                <span class="win-menu-shortcut" style="margin-left: auto; font-size: 11px; color: var(--text-muted);">Ctrl+C</span>
+            </div>
+            <div class="win-menu-divider"></div>
             <div class="win-menu-item" id="filecmenuRename">
                 <div class="win-item-left">
                     <span class="win-item-icon">✏️</span>
@@ -726,6 +786,38 @@
             </div>
         </div>
 
+        <!-- Send to Telegram Modal -->
+        <div class="modal-backdrop" id="sendTelegramModal" style="display: none; z-index: 20005;">
+            <div class="modal-card" style="max-width: 440px;">
+                <div class="modal-header">
+                    <h3 id="sendTgModalTitle">✈️ ផ្ញើឯកសារទៅ Telegram</h3>
+                    <button class="btn-close-modal" id="btnCloseSendTgModal">✕</button>
+                </div>
+                <div class="modal-body" style="padding-top: 15px;">
+                    <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--card-border); border-radius: 10px; padding: 12px; margin-bottom: 14px;">
+                        <div id="sendTgFileName" style="font-weight: 600; color: #f8fafc; font-size: 14px; word-break: break-all;"></div>
+                        <div id="sendTgFileSize" style="font-size: 12px; color: var(--text-muted); margin-top: 4px;"></div>
+                    </div>
+                    <label style="font-size: 13px; color: var(--text-muted); margin-bottom: 6px; display: block;">
+                        ជ្រើសរើសគោលដៅ Telegram (Telegram Destination):
+                    </label>
+                    <select id="sendTgChatSelect" style="width: 100%; padding: 10px 14px; background: rgba(15,23,42,0.8); border: 1px solid var(--card-border); border-radius: 8px; color: #f8fafc; font-size: 13px; outline: none; margin-bottom: 10px;">
+                        <option value="">📢 My 1000TB Cloud Channel (Default)</option>
+                    </select>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <input type="text" id="sendTgCustomChatId" placeholder="ឬវាយ Chat ID ផ្សេង (ឧទាហរណ៍: 123456789)" style="flex: 1; padding: 8px 12px; background: rgba(15,23,42,0.6); border: 1px solid var(--card-border); border-radius: 6px; color: #f8fafc; font-size: 12px; outline: none;">
+                    </div>
+                    <small style="color: #64748b; font-size: 11px; display: block;">
+                        💡 ដើម្បីផ្ញើចូលគណនី Telegram ផ្ទាល់ខ្លួនរបស់អ្នក សូមចូលទៅកាន់ Bot <code>@buntha_1000tb_bot</code> រួចចុច Start នោះឈ្មោះរបស់អ្នកនឹងបង្ហាញក្នុងបញ្ជីនេះ។
+                    </small>
+                </div>
+                <div class="modal-footer" style="margin-top: 16px;">
+                    <button class="btn-secondary" id="btnCancelSendTg">បោះបង់</button>
+                    <button class="btn-primary" id="btnConfirmSendTg" style="background: linear-gradient(135deg, #0284c7, #2563eb);">✈️ ផ្ញើចេញ (Send)</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Floating Multi-Selection Action Bar -->
         <div class="selection-floating-bar" id="selectionFloatingBar" style="display: none;">
             <div class="selection-bar-left">
@@ -733,9 +825,21 @@
                 <span class="selection-count-text" id="selectionCountText">1 ឯកសារបានជ្រើស</span>
             </div>
             <div class="selection-bar-actions">
+                <button class="btn-selection-act" id="btnSelectionCut" title="Cut Selected (កាត់)">
+                    <span>✂️</span>
+                    <span>កាត់ (Cut)</span>
+                </button>
+                <button class="btn-selection-act" id="btnSelectionCopy" title="Copy Selected (ចម្លង)">
+                    <span>📄</span>
+                    <span>ចម្លង (Copy)</span>
+                </button>
                 <button class="btn-selection-act" id="btnSelectionMove" title="Move to Folder">
                     <span>📁</span>
-                    <span>ផ្លាស់ទីចូលថត (Move)</span>
+                    <span>ផ្លាស់ទី (Move)</span>
+                </button>
+                <button class="btn-selection-act" id="btnSelectionSendTelegram" title="Send to Telegram" style="background: rgba(2, 132, 199, 0.2); border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">
+                    <span>✈️</span>
+                    <span>ផ្ញើទៅ Telegram</span>
                 </button>
                 <button class="btn-selection-act btn-danger" id="btnSelectionDelete" title="Delete Selected">
                     <span>🗑️</span>
@@ -744,6 +848,24 @@
                 <button class="btn-selection-act btn-close" id="btnSelectionClear" title="Clear Selection">
                     ✕ ជម្រះ
                 </button>
+            </div>
+        </div>
+
+        <!-- Floating Clipboard Action Bar (Paste / Cancel) -->
+        <div class="clipboard-floating-bar" id="clipboardFloatingBar" style="display: none;">
+            <div class="clipboard-bar-left">
+                <span class="clipboard-icon" id="clipboardModeIcon">✂️</span>
+                <div class="clipboard-info">
+                    <span class="clipboard-text" id="clipboardText">បានកាត់ 1 ឯកសារ</span>
+                    <small class="clipboard-subtext" id="clipboardSubtext">ចូលទៅកាន់ថតដែលចង់ទុក រួចចុច "បិទភ្ជាប់"</small>
+                </div>
+            </div>
+            <div class="clipboard-bar-actions">
+                <button class="btn-clipboard-paste" id="btnClipboardPaste">
+                    <span>📋</span>
+                    <span>បិទភ្ជាប់ (Paste)</span>
+                </button>
+                <button class="btn-clipboard-cancel" id="btnClipboardCancel" title="បោះបង់ (Cancel)">✕</button>
             </div>
         </div>
 
@@ -881,6 +1003,15 @@
                             <div class="opt-desc">បង្កើតថតដើម្បីរៀបចំឯកសារឱ្យមានរបៀប</div>
                         </div>
                         <span class="opt-arrow">➔</span>
+                    </button>
+
+                    <button class="mobile-opt-card" id="btnMobileOptPaste" style="display: none;">
+                        <div class="opt-icon-bubble" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4);">📋</div>
+                        <div class="opt-texts">
+                            <div class="opt-title" style="color: #34d399;">បិទភ្ជាប់ឯកសារ (Paste Here)</div>
+                            <div class="opt-desc" id="mobilePasteDesc">បិទភ្ជាប់ឯកសារដែលបាន Cut ឬ Copy ចូលទីនេះ</div>
+                        </div>
+                        <span class="opt-arrow" style="color: #10b981;">➔</span>
                     </button>
                 </div>
             </div>
