@@ -3366,6 +3366,17 @@ body.marquee-selecting {
     gap: 10px;
 }
 
+.native-mobile-hidden-input {
+    position: fixed !important;
+    top: -5000px !important;
+    left: -5000px !important;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: -9999 !important;
+}
+
 .mobile-opt-card {
     display: flex;
     align-items: center;
@@ -3379,6 +3390,9 @@ body.marquee-selecting {
     cursor: pointer;
     transition: all 0.2s ease;
     width: 100%;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
 }
 
 .mobile-opt-card:active {
