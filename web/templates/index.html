@@ -510,26 +510,38 @@
             </div>
         </main>
         <!-- File Preview Modal -->
+        <!-- File Preview Modal -->
         <div class="modal-backdrop" id="previewModal" style="display: none;">
             <div class="modal-card preview-modal-card">
-                <div class="modal-header">
+                <div class="modal-header preview-modal-header">
                     <div class="preview-header-left">
-                        <span id="previewFileIcon" style="font-size: 22px;">📄</span>
-                        <span class="modal-title" id="previewFileName"
-                            style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 450px;">File
-                            Preview</span>
+                        <button class="btn-preview-back" id="btnPreviewBackMobile" title="ត្រឡប់មកវិញ (Back to Home)">
+                            <span class="preview-back-icon">←</span>
+                            <span class="preview-back-text">ត្រឡប់ក្រោយ</span>
+                        </button>
+                        <span id="previewFileIcon" class="preview-file-icon">📄</span>
+                        <div class="preview-title-box">
+                            <span class="modal-title" id="previewFileName">File Preview</span>
+                            <small class="preview-file-sub" id="previewFileSub"></small>
+                        </div>
                     </div>
                     <div class="preview-header-actions">
-                        <a href="#" target="_blank" class="btn-secondary" id="btnPreviewNewTab"
-                            style="text-decoration: none; padding: 6px 12px; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">🌐
-                            បើកក្នុង Tab ថ្មី</a>
-                        <button class="btn-primary" id="btnPreviewDownload"
-                            style="padding: 6px 14px; font-size: 13px;">📥 ទាញយក</button>
-                        <button class="btn-close-modal" id="btnClosePreview">✕</button>
+                        <a href="#" target="_blank" class="btn-secondary btn-preview-action-tab" id="btnPreviewNewTab"
+                            style="text-decoration: none; padding: 6px 10px; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;"
+                            title="បើកក្នុង Tab ថ្មី">🌐 <span class="hide-mobile-text">បើកក្នុង Tab ថ្មី</span></a>
+                        <button class="btn-primary btn-preview-action-dl" id="btnPreviewDownload"
+                            style="padding: 6px 12px; font-size: 13px;" title="ទាញយក">📥 <span class="hide-mobile-text">ទាញយក</span></button>
+                        <button class="btn-close-modal btn-preview-close" id="btnClosePreview" title="បិទ (Close)">✕</button>
                     </div>
                 </div>
                 <div class="preview-modal-body" id="previewModalBody">
                     <!-- Injected Preview Content -->
+                </div>
+                <div class="preview-mobile-footer" id="previewMobileFooter">
+                    <button class="btn-preview-return-home" id="btnPreviewHomeFooter">
+                        <span class="return-home-icon">🏠</span>
+                        <span class="return-home-text">ត្រឡប់មកទំព័រដើមវិញ (Back to Home)</span>
+                    </button>
                 </div>
             </div>
         </div>
