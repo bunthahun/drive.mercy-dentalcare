@@ -327,6 +327,11 @@ app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024 * 1024
 
 engine = StorageEngine()
 
+@app.route("/api/status")
+@app.route("/ping")
+def ping_status():
+    return jsonify({"status": "ok", "time": time.time(), "message": "Mercy Cloud Storage Active"}), 200
+
 @app.route("/")
 def index():
     return render_template_string(INDEX_HTML)
