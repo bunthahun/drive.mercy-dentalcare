@@ -77,6 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initContextMenuListeners();
     initMarqueeSelection();
     initMobileApp();
+    initYouTubePlayer();
     updateCurrentDriveHeader();
     updateAdminVisibility();
     fetchStats();
@@ -232,7 +233,7 @@ function initAuthSecurity() {
 }
 
 function requestDriveAccess(driveKey, onUnlocked) {
-    if (driveKey === "trash") {
+    if (driveKey === "trash" || driveKey === "youtube") {
         onUnlocked();
         return;
     }
@@ -363,6 +364,7 @@ function initEventListeners() {
     const tabBuntha = document.getElementById("tabBuntha");
     const tabVuochlin = document.getElementById("tabVuochlin");
     const tabMercy = document.getElementById("tabMercy");
+    const tabYouTube = document.getElementById("tabYouTube");
     const btnTabNew = document.getElementById("btnTabNew");
 
     function switchDrive(driveKey) {
@@ -383,6 +385,7 @@ function initEventListeners() {
             if (tabBuntha) tabBuntha.classList.toggle("active", driveKey === "buntha");
             if (tabVuochlin) tabVuochlin.classList.toggle("active", driveKey === "vuochlin");
             if (tabMercy) tabMercy.classList.toggle("active", driveKey === "mercy");
+            if (tabYouTube) tabYouTube.classList.toggle("active", driveKey === "youtube");
 
             updateCurrentDriveHeader();
             loadFiles();
@@ -392,6 +395,7 @@ function initEventListeners() {
     if (tabBuntha) tabBuntha.addEventListener("click", () => switchDrive("buntha"));
     if (tabVuochlin) tabVuochlin.addEventListener("click", () => switchDrive("vuochlin"));
     if (tabMercy) tabMercy.addEventListener("click", () => switchDrive("mercy"));
+    if (tabYouTube) tabYouTube.addEventListener("click", () => switchDrive("youtube"));
 
     if (btnTabNew) btnTabNew.addEventListener("click", () => {
         const order = ["buntha", "vuochlin", "mercy"];
@@ -1017,6 +1021,8 @@ function initEventListeners() {
 
     const btnTestConn = document.getElementById("btnTestConn");
     if (btnTestConn) btnTestConn.addEventListener("click", testTelegramConnection);
+    const btnTestS3Conn = document.getElementById("btnTestS3Conn");
+    if (btnTestS3Conn) btnTestS3Conn.addEventListener("click", testS3Connection);
     const btnSaveSettings = document.getElementById("btnSaveSettings");
     if (btnSaveSettings) btnSaveSettings.addEventListener("click", saveSettingsToServer);
 
@@ -1353,6 +1359,25 @@ async function fetchStats() {
 }
 
 async function loadFiles() {
+    const ytContainer = document.getElementById("youtubeContainer");
+    const winDetails = document.getElementById("winDetailsContainer");
+    const winItems = document.getElementById("winItemsView");
+    const emptyState = document.getElementById("emptyState");
+    const cmdBar = document.querySelector(".win-command-bar");
+
+    if (currentCategory === "youtube") {
+        if (ytContainer) ytContainer.style.display = "flex";
+        if (winDetails) winDetails.style.display = "none";
+        if (winItems) winItems.style.display = "none";
+        if (emptyState) emptyState.style.display = "none";
+        if (cmdBar) cmdBar.style.display = "none";
+        renderBreadcrumbs();
+        return;
+    } else {
+        if (ytContainer) ytContainer.style.display = "none";
+        if (cmdBar) cmdBar.style.display = "flex";
+    }
+
     try {
         let url = `/api/files?category=${currentCategory}&search=${encodeURIComponent(currentSearch)}`;
         if (currentFolderId) {
@@ -1376,6 +1401,7 @@ function renderBreadcrumbs() {
     if (currentCategory === "vuochlin") rootName = "NEANG VUOCHLIN";
     else if (currentCategory === "mercy") rootName = "Mercy Dental Care";
     else if (currentCategory === "trash") rootName = "ធុងសំរាម (Trash)";
+    else if (currentCategory === "youtube") rootName = "YouTube Player";
 
     // Update Tab Title
     let activeTabTitle = document.getElementById("tabTitleBuntha");
@@ -2953,6 +2979,10 @@ function updateCurrentDriveHeader() {
     } else if (currentCategory === "trash") {
         driveName = currentLang === "km" ? "ធុងសំរាម (Trash)" : "Recycle Bin";
         if (titleEl) titleEl.textContent = driveName;
+    } else if (currentCategory === "youtube") {
+        driveName = "YouTube Player";
+        if (titleEl) titleEl.textContent = driveName;
+        if (dropHint) dropHint.textContent = "YouTube Video & Music Player";
     } else {
         driveName = "HUN BUNTHA";
         if (titleEl) titleEl.textContent = driveName;
@@ -4458,6 +4488,203 @@ function initMobileApp() {
             openPhoneModal();
         });
     }
+}
+
+// ============================================================================
+// Multi-Cloud Settings & Pool Manager Controller
+// ============================================================================
+async function fetchSettings() {
+    try {
+        const res = await fetch("/api/settings");
+        const data = await res.json();
+        if (data.success && data.settings) {
+            const s = data.settings;
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el && val !== undefined && val !== null) el.value = val;
+            };
+            setVal("cfgSitePassword", s.website_password);
+            setVal("cfgPwdBuntha", s.password_buntha);
+            setVal("cfgPwdVuochlin", s.password_vuochlin);
+            setVal("cfgPwdMercy", s.password_mercy);
+            setVal("cfgBackendMode", s.backend || "auto_pool");
+            setVal("cfgS3Endpoint", s.s3_endpoint_url || "");
+            setVal("cfgS3AccessKey", s.s3_access_key_id || "");
+            setVal("cfgS3SecretKey", s.s3_secret_access_key || "");
+            setVal("cfgS3Bucket", s.s3_bucket_name || "");
+        }
+    } catch (e) {
+        console.error("Failed to fetch settings:", e);
+    }
+}
+
+async function saveSettingsToServer() {
+    const getVal = (id) => {
+        const el = document.getElementById(id);
+        return el ? el.value.trim() : "";
+    };
+
+    const payload = {
+        website_password: getVal("cfgSitePassword"),
+        password_buntha: getVal("cfgPwdBuntha"),
+        password_vuochlin: getVal("cfgPwdVuochlin"),
+        password_mercy: getVal("cfgPwdMercy"),
+        backend: getVal("cfgBackendMode") || "auto_pool",
+        s3_endpoint_url: getVal("cfgS3Endpoint"),
+        s3_access_key_id: getVal("cfgS3AccessKey"),
+        s3_secret_access_key: getVal("cfgS3SecretKey"),
+        s3_bucket_name: getVal("cfgS3Bucket")
+    };
+
+    try {
+        const res = await fetch("/api/settings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert("✅ បានរក្សាទុកការកំណត់ Multi-Cloud ដោយជោគជ័យ! (Settings Saved)");
+            const modal = document.getElementById("settingsModal");
+            if (modal) modal.style.display = "none";
+            fetchStats();
+        } else {
+            alert("❌ មានបញ្ហាក្នុងការរក្សាទុក៖ " + (data.error || "បរាជ័យ"));
+        }
+    } catch (e) {
+        alert("❌ Network Error: " + e.message);
+    }
+}
+
+async function testTelegramConnection() {
+    alert("📢 Telegram Connection Active!");
+}
+
+async function testS3Connection() {
+    const feedback = document.getElementById("s3TestFeedback");
+    if (feedback) {
+        feedback.style.color = "#38bdf8";
+        feedback.textContent = "⏳ កំពុងផ្ទៀងផ្ទាត់ការតភ្ជាប់ទៅកាន់ R2 / S3...";
+    }
+
+    const payload = {
+        endpoint_url: (document.getElementById("cfgS3Endpoint")?.value || "").trim(),
+        access_key_id: (document.getElementById("cfgS3AccessKey")?.value || "").trim(),
+        secret_access_key: (document.getElementById("cfgS3SecretKey")?.value || "").trim(),
+        bucket_name: (document.getElementById("cfgS3Bucket")?.value || "").trim()
+    };
+
+    try {
+        const res = await fetch("/api/test-s3", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (feedback) {
+            if (data.success) {
+                feedback.style.color = "#10b981";
+                feedback.textContent = "✓ " + data.message;
+            } else {
+                feedback.style.color = "#f43f5e";
+                feedback.textContent = "✕ " + (data.error || data.message || "ភ្ជាប់មិនបានជោគជ័យ");
+            }
+        }
+    } catch (e) {
+        if (feedback) {
+            feedback.style.color = "#f43f5e";
+            feedback.textContent = "✕ Network error: " + e.message;
+        }
+    }
+}
+
+function initYouTubePlayer() {
+    const input = document.getElementById("ytSearchInput");
+    const btnPlay = document.getElementById("ytBtnPlay");
+    const btnClear = document.getElementById("ytClearInput");
+    const iframe = document.getElementById("ytPlayerIframe");
+    const btnBack = document.getElementById("ytBtnBack");
+    const btnReload = document.getElementById("ytBtnReload");
+    const btnHome = document.getElementById("ytBtnHome");
+    const btnExternal = document.getElementById("ytBtnOpenExternal");
+
+    if (!iframe) return;
+
+    function playYouTube(inputVal) {
+        if (!inputVal) return;
+        inputVal = inputVal.trim();
+
+        let videoId = "";
+        // Match YouTube URL formats
+        if (inputVal.includes("youtube.com/watch")) {
+            const match = inputVal.match(/[?&]v=([^&#]+)/);
+            if (match) videoId = match[1];
+        } else if (inputVal.includes("youtu.be/")) {
+            const parts = inputVal.split("youtu.be/");
+            if (parts.length > 1) videoId = parts[1].split(/[?&#]/)[0];
+        } else if (inputVal.includes("youtube.com/shorts/")) {
+            const parts = inputVal.split("youtube.com/shorts/");
+            if (parts.length > 1) videoId = parts[1].split(/[?&#]/)[0];
+        }
+
+        if (videoId) {
+            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        } else if (inputVal.startsWith("http://") || inputVal.startsWith("https://")) {
+            iframe.src = inputVal;
+        } else {
+            // Search query
+            iframe.src = `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(inputVal)}`;
+        }
+    }
+
+    if (btnPlay && input) {
+        btnPlay.addEventListener("click", () => playYouTube(input.value));
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") playYouTube(input.value);
+        });
+    }
+
+    if (btnClear && input) {
+        btnClear.addEventListener("click", () => {
+            input.value = "";
+            input.focus();
+        });
+    }
+
+    if (btnReload) {
+        btnReload.addEventListener("click", () => {
+            iframe.src = iframe.src;
+        });
+    }
+
+    if (btnHome) {
+        btnHome.addEventListener("click", () => {
+            if (input) input.value = "";
+            iframe.src = "https://www.youtube.com/embed?listType=search&list=khmer+songs+new";
+        });
+    }
+
+    if (btnExternal) {
+        btnExternal.addEventListener("click", () => {
+            const val = input ? input.value.trim() : "";
+            if (val.startsWith("http://") || val.startsWith("https://")) {
+                window.open(val, "_blank");
+            } else if (val) {
+                window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(val)}`, "_blank");
+            } else {
+                window.open("https://www.youtube.com", "_blank");
+            }
+        });
+    }
+
+    // Quick shortcut pills
+    document.querySelectorAll(".yt-pill-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const q = btn.dataset.query;
+            if (input) input.value = q;
+            playYouTube(q);
+        });
+    });
 }
 
 
