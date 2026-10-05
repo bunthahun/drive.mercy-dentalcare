@@ -8,9 +8,18 @@ import time
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from typing import Dict, Any, Tuple, Optional, Callable
+from typing import Dict, Any, Tuple, Optional, Callable, List
+from storage.base import BaseStorageBackend
 
-class TelegramBackend:
+class TelegramBackend(BaseStorageBackend):
+    @property
+    def provider_name(self) -> str:
+        return "telegram"
+
+    @property
+    def display_name(self) -> str:
+        return "Telegram 1000TB Cloud"
+
     def __init__(self, bot_token: str, chat_id: str):
         self.bot_token = bot_token.strip()
         self.chat_id = str(chat_id).strip()
@@ -148,6 +157,11 @@ class TelegramBackend:
             return r.json().get("ok", False)
         except Exception:
             return False
+
+    def delete_chunk(self, file_id: str, message_id: int = 0) -> bool:
+        if message_id and message_id > 0:
+            return self.delete_message(message_id)
+        return True
 
     def send_message(
         self,
