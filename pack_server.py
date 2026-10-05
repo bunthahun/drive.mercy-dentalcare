@@ -227,8 +227,18 @@ class TelegramBackend:
             pass
         return []
 
+# --- BASE & S3 BACKENDS ---
+from storage.base import BaseStorageBackend
+from storage.s3_backend import S3CompatibleBackend
+from storage.pool_manager import StoragePoolManager
+
 # --- LOCAL BACKEND ---
-class LocalBackend:
+class LocalBackend(BaseStorageBackend):
+    @property
+    def provider_name(self) -> str: return "local"
+    @property
+    def display_name(self) -> str: return "Local Storage Node"
+
     def __init__(self):
         self.storage_dir = DATA_DIR / "local_cloud"
         self.storage_dir.mkdir(exist_ok=True)
@@ -248,30 +258,42 @@ class LocalBackend:
         if not target.exists(): raise FileNotFoundError("Local chunk not found")
         with open(target, "rb") as f: return f.read()
 
+    def delete_chunk(self, file_id: str, message_id: int = 0) -> bool:
+        try:
+            target = self.storage_dir / file_id
+            if target.exists(): target.unlink()
+            return True
+        except Exception: return False
+
 # --- STORAGE ENGINE ---
 class StorageEngine:
     def __init__(self):
+        self.settings = load_settings()
+        self.pool = StoragePoolManager(self.settings)
         self.reload_backend()
 
     def reload_backend(self):
         self.settings = load_settings()
-        b_type = self.settings.get("backend", "telegram")
-        token = self.settings.get("telegram_bot_token", "")
-        chat_id = self.settings.get("telegram_chat_id", "")
-        if b_type == "telegram" and token and chat_id:
-            self.backend = TelegramBackend(token, chat_id)
-            self.is_telegram = True
+        self.pool = StoragePoolManager(self.settings)
+        b_type = self.settings.get("backend", "auto_pool")
+        if b_type == "auto_pool":
+            _, self.backend = self.pool.select_backend_for_upload(file_size=0)
         else:
-            self.backend = LocalBackend()
-            self.is_telegram = False
+            self.backend = self.pool.get_backend(b_type)
+        self.is_telegram = (getattr(self.backend, "provider_name", "") == "telegram")
 
     def is_cloud_ready(self):
-        return self.is_telegram and self.backend.is_configured()
+        tg = self.pool.get_backend("telegram")
+        s3 = self.pool.get_backend("s3_r2")
+        return (tg and tg.is_configured()) or (s3 and s3.is_configured())
 
     def get_backend_name(self):
-        return "Telegram 1000TB Cloud" if self.is_telegram else "Local Storage Node"
+        b_type = self.settings.get("backend", "auto_pool")
+        if b_type == "auto_pool":
+            return "Multi-Cloud Aggregator Pool (Auto ⚡)"
+        return getattr(self.backend, "display_name", "Storage Node")
 
-    def upload_file(self, local_path: str, drive_owner: str = "buntha", custom_filename: str = None, folder_id: int = None, progress_callback = None):
+    def upload_file(self, local_path: str, drive_owner: str = "buntha", custom_filename: str = None, folder_id: int = None, progress_callback = None, preferred_backend = None):
         p = Path(local_path)
         file_size = p.stat().st_size
         file_name = custom_filename or p.name
@@ -303,10 +325,12 @@ class StorageEngine:
         actual_count = len(chunks_data)
         chunks_info = [None] * actual_count
 
+        provider_name, target_backend = self.pool.select_backend_for_upload(file_size, preferred_backend)
+
         def upload_single_chunk(item):
             part_idx, c_name, c_data, raw_sz = item
             caption = f"📦 {{file_name}} [Part {{part_idx + 1}}/{{actual_count}}]"
-            res = self.backend.upload_chunk(
+            res = target_backend.upload_chunk(
                 chunk_data=c_data,
                 chunk_name=c_name,
                 caption=caption
@@ -343,25 +367,27 @@ class StorageEngine:
                             f"⚡ កំពុងផ្ទុកចូល Cloud ({{completed_count}}/{{actual_count}} Chunks ស្របគ្នា)"
                         )
 
-        cloud_type = "telegram" if self.is_telegram else "local"
         file_db_id = database.add_file(
             file_name=file_name,
             file_size=file_size,
             mime_type=mime_type,
             sha256=sha256_hash,
             is_encrypted=enc_enabled,
-            cloud_backend=cloud_type,
+            cloud_backend=provider_name,
             chunks=chunks_info,
             drive_owner=drive_owner,
             folder_id=folder_id
         )
-        return {{"id": file_db_id, "file_name": file_name, "file_size": file_size, "chunks_count": len(chunks_info)}}
+        return {{"id": file_db_id, "file_name": file_name, "file_size": file_size, "chunks_count": len(chunks_info), "cloud_backend": provider_name}}
 
     def download_file(self, file_id: int, target_path: str):
         file_info = database.get_file_by_id(file_id)
         if not file_info: raise ValueError("File not found")
         chunks = file_info.get("chunks", [])
         is_encrypted = bool(file_info.get("is_encrypted", 1))
+        backend_name = file_info.get("cloud_backend", "telegram")
+        active_backend = self.pool.get_backend(backend_name)
+
         aes_key = derive_key(self.settings.get("encryption_key", "cloud-storage-1000tb-buntha")) if is_encrypted else None
 
         Path(target_path).parent.mkdir(parents=True, exist_ok=True)
@@ -369,7 +395,7 @@ class StorageEngine:
         total_chunks = len(chunks_sorted)
 
         def download_single_chunk(chunk_meta):
-            downloaded = self.backend.download_chunk(chunk_meta["file_id"])
+            downloaded = active_backend.download_chunk(chunk_meta["file_id"])
             plain = decrypt_bytes(downloaded, aes_key) if (is_encrypted and aes_key) else downloaded
             return chunk_meta.get("part", 0), plain
 
@@ -393,6 +419,21 @@ class StorageEngine:
                     f_out.write(chunk_plain)
 
         return target_path
+
+    def delete_file(self, file_id: int) -> bool:
+        file_info = database.get_file_by_id(file_id)
+        if not file_info: return False
+        backend_name = file_info.get("cloud_backend", "telegram")
+        active_backend = self.pool.get_backend(backend_name)
+        chunks = file_info.get("chunks", [])
+        for chunk in chunks:
+            chunk_file_id = chunk.get("file_id", "")
+            msg_id = chunk.get("message_id", 0)
+            if chunk_file_id:
+                try: active_backend.delete_chunk(chunk_file_id, msg_id)
+                except Exception: pass
+        return bool(database.delete_permanently(file_id))
+
 
 # --- EMBEDDED WEB TEMPLATE ---
 import base64
@@ -1342,6 +1383,19 @@ def test_tg_route():
     d = request.json or {{}}
     tb = TelegramBackend(d.get("bot_token", ""), str(d.get("chat_id", "")))
     ok, msg = tb.test_connection()
+    return jsonify({{"success": ok, "message": msg}})
+
+@app.route("/api/test-s3", methods=["POST"])
+def test_s3_route():
+    from storage.s3_backend import S3CompatibleBackend
+    d = request.json or {{}}
+    s3 = S3CompatibleBackend(
+        endpoint_url=d.get("endpoint_url", ""),
+        access_key_id=d.get("access_key_id", ""),
+        secret_access_key=d.get("secret_access_key", ""),
+        bucket_name=d.get("bucket_name", "")
+    )
+    ok, msg = s3.test_connection()
     return jsonify({{"success": ok, "message": msg}})
 
 @app.route("/api/locales/<lang>", methods=["GET"])
