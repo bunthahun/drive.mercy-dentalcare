@@ -25,9 +25,15 @@ TOTAL_STORAGE_TB = 1000
 # Default Settings
 DEFAULT_SETTINGS = {
     "language": "km",  # "km" for Khmer, "en" for English
-    "backend": "telegram",  # "telegram" or "local"
+    "backend": "auto_pool",  # "auto_pool", "telegram", "s3_r2", "local"
     "telegram_bot_token": os.environ.get("TELEGRAM_BOT_TOKEN", "8118440382:AAFaTFKfcfOibxeOT9ED-nYsQyPu0GJUkjU"),
     "telegram_chat_id": os.environ.get("TELEGRAM_CHAT_ID", "-1003986966662"),
+    "s3_endpoint_url": os.environ.get("S3_ENDPOINT_URL", ""),
+    "s3_access_key_id": os.environ.get("S3_ACCESS_KEY_ID", ""),
+    "s3_secret_access_key": os.environ.get("S3_SECRET_ACCESS_KEY", ""),
+    "s3_bucket_name": os.environ.get("S3_BUCKET_NAME", ""),
+    "s3_region": os.environ.get("S3_REGION", "auto"),
+    "s3_fast_tier_limit_mb": 50,  # Files under 50MB automatically go to fast S3/R2 tier
     "encryption_enabled": True,
     "encryption_key": os.environ.get("ENCRYPTION_KEY", "cloud-storage-1000tb-buntha"),
     "chunk_size_mb": 19,  # 19MB per chunk for Telegram Bot limits
