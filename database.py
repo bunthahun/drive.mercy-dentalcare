@@ -41,6 +41,10 @@ def init_db():
         cursor.execute("ALTER TABLE files ADD COLUMN folder_id INTEGER DEFAULT NULL")
     except sqlite3.OperationalError:
         pass
+    try:
+        cursor.execute("ALTER TABLE files ADD COLUMN uploader_email TEXT DEFAULT NULL")
+    except sqlite3.OperationalError:
+        pass
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS folders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -98,7 +102,8 @@ def add_file(
     chunks: List[Dict[str, Any]],
     category: Optional[str] = None,
     drive_owner: str = "buntha",
-    folder_id: Optional[int] = None
+    folder_id: Optional[int] = None,
+    uploader_email: Optional[str] = None
 ) -> int:
     if file_name.startswith("up_"):
         file_name = file_name[3:]
@@ -112,8 +117,8 @@ def add_file(
         INSERT INTO files (
             file_name, file_size, mime_type, category, sha256,
             is_encrypted, is_favorite, is_trash, cloud_backend,
-            chunk_count, chunks_data, drive_owner, folder_id, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?, ?, ?)
+            chunk_count, chunks_data, drive_owner, folder_id, uploader_email, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         file_name,
         file_size,
@@ -126,6 +131,7 @@ def add_file(
         json.dumps(chunks),
         drive_owner,
         folder_id,
+        uploader_email.strip().lower() if uploader_email else None,
         now,
         now
     ))
@@ -133,6 +139,37 @@ def add_file(
     file_id = cursor.lastrowid
     conn.close()
     return file_id
+
+def get_gmail_media_files(gmail: Optional[str] = None, media_type: str = "all", drive_owner: Optional[str] = None) -> List[Dict[str, Any]]:
+    conn = get_connection()
+    cursor = conn.cursor()
+    query = "SELECT * FROM files WHERE is_trash = 0"
+    params = []
+
+    if gmail and gmail.strip():
+        clean_email = gmail.strip().lower()
+        query += " AND (uploader_email = ? OR (uploader_email IS NULL AND category IN ('videos', 'images')))"
+        params.append(clean_email)
+    else:
+        query += " AND category IN ('videos', 'images')"
+
+    if media_type == "video":
+        query += " AND category = 'videos'"
+    elif media_type == "image":
+        query += " AND category = 'images'"
+    else:
+        query += " AND category IN ('videos', 'images')"
+
+    if drive_owner and drive_owner != "all":
+        query += " AND drive_owner = ?"
+        params.append(drive_owner)
+
+    query += " ORDER BY id DESC LIMIT 200"
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    results = [dict(r) for r in rows]
+    conn.close()
+    return results
 
 def create_folder(folder_name: str, drive_owner: str = "buntha", parent_id: Optional[int] = None) -> int:
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
