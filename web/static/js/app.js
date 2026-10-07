@@ -4830,6 +4830,8 @@ function initYouTubePlayer() {
                 deleteVaultFile(ytActiveSelectedFile.id, ytActiveSelectedFile.file_name);
             }
         });
+    }
+
     // YouTube Channel Video Importer / Saver
     const importInput = document.getElementById("ytImportVideoUrlInput");
     const btnImportVideo = document.getElementById("btnYtSaveImportedVideo");
