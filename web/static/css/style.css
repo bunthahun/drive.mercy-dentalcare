@@ -3033,9 +3033,42 @@ body.marquee-selecting {
 }
 
 .lock-hint {
-    margin-top: 16px;
+    margin-top: 14px;
     font-size: 12px;
     color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.lock-hint b {
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.15);
+    padding: 1px 5px;
+    border-radius: 4px;
+}
+
+.lock-direct-btn {
+    width: 100%;
+    margin-top: 14px;
+    padding: 11px 18px;
+    background: linear-gradient(135deg, #0284c7, #2563eb);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    transition: all 0.2s ease;
+}
+
+.lock-direct-btn:hover {
+    background: linear-gradient(135deg, #0369a1, #1d4ed8);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.55);
 }
 
 .shake {
