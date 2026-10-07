@@ -5137,9 +5137,14 @@ async function uploadVaultFiles(filesList, preferredCategory) {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ upload_id: uploadId })
                 });
-                const compData = await compRes.json();
-                if (!compRes.ok || !compData.success) {
-                    throw new Error(compData.error || "Failed to finalize chunk upload");
+                let compData = {};
+                try {
+                    compData = await compRes.json();
+                } catch (pe) {
+                    compData = { success: compRes.ok };
+                }
+                if (!compRes.ok && !compData.success) {
+                    throw new Error(compData.error || `Finalize error (${compRes.status})`);
                 }
 
                 if (percentText) percentText.textContent = "100%";
