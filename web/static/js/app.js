@@ -1788,8 +1788,9 @@ function renderFiles() {
             tr.dataset.fileName = file.file_name;
             tr.draggable = true;
 
-            const icon = getFileIcon(file.category);
-            const winType = getWinFileType(file.file_name, file.category);
+            const isYT = file.cloud_backend === "youtube" || file.mime_type === "video/youtube" || (file.sha256 && file.sha256.startsWith("yt_"));
+            const icon = isYT ? '🎬' : getFileIcon(file.category);
+            const winType = isYT ? 'YouTube Video' : getWinFileType(file.file_name, file.category);
             const winSize = formatWinSize(file.file_size);
 
             tr.innerHTML = `
@@ -1808,6 +1809,7 @@ function renderFiles() {
                 <td class="col-actions">
                     <div class="row-actions">
                         ${!file.is_trash ? `
+                            ${isYT ? `<button class="btn-row-act btn-yt-watch" style="color: #ef4444; font-weight: bold;" title="បើកក្នុង YouTube">▶️</button>` : ''}
                             <button class="btn-row-act btn-view" title="${currentLang === 'km' ? 'បើកមើល' : 'View'}">👁️</button>
                             <button class="btn-row-act btn-dl" title="${i18n[currentLang].download}">📥</button>
                             <button class="btn-row-act btn-del" title="${i18n[currentLang].delete}">🗑️</button>
@@ -1877,6 +1879,8 @@ function renderFiles() {
 
             // File row quick actions
             if (!file.is_trash) {
+                const btnYt = tr.querySelector(".btn-yt-watch");
+                if (btnYt) btnYt.addEventListener("click", (e) => { e.stopPropagation(); previewFile(file.id); });
                 const btnV = tr.querySelector(".btn-view");
                 if (btnV) btnV.addEventListener("click", (e) => { e.stopPropagation(); previewFile(file.id); });
                 const btnD = tr.querySelector(".btn-dl");
@@ -2025,17 +2029,37 @@ function renderFiles() {
                 card.dataset.fileName = file.file_name;
                 card.draggable = true;
 
-                const icon = getFileIcon(file.category);
-                const winType = getWinFileType(file.file_name, file.category);
+                const isYT = file.cloud_backend === "youtube" || file.mime_type === "video/youtube" || (file.sha256 && file.sha256.startsWith("yt_"));
+                let ytThumbId = "";
+                if (isYT) {
+                    if (file.sha256 && file.sha256.startsWith("yt_")) ytThumbId = file.sha256.replace("yt_", "");
+                    if (!ytThumbId && file.chunks) {
+                        try {
+                            const p = typeof file.chunks === "string" ? JSON.parse(file.chunks) : file.chunks;
+                            if (Array.isArray(p) && p[0]) ytThumbId = p[0].youtube_id || "";
+                        } catch(e) {}
+                    }
+                }
+                const icon = isYT ? '🎬' : getFileIcon(file.category);
+                const winType = isYT ? 'YouTube Video' : getWinFileType(file.file_name, file.category);
                 const winSize = formatWinSize(file.file_size);
                 const ext = file.file_name.toLowerCase().split('.').pop();
                 const isImage = file.category === "images" || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'].includes(ext);
 
+                let iconBoxHtml = `<span style="font-size: ${iconSize}px;">${icon}</span>`;
+                if (isYT && ytThumbId && (currentView === "extra-large" || currentView === "large" || currentView === "medium")) {
+                    iconBoxHtml = `
+                        <div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                            <img src="https://img.youtube.com/vi/${ytThumbId}/hqdefault.jpg" alt="${file.file_name}" class="item-thumb-img" loading="lazy" style="border-radius: 6px; object-fit: cover;" onerror="this.outerHTML='<span style=\\'font-size:${iconSize}px\\'>🎬</span>'">
+                            <span style="position: absolute; bottom: 3px; right: 3px; background: #dc2626; color: #fff; font-size: 9px; padding: 1px 4px; border-radius: 3px; font-weight: bold; box-shadow: 0 1px 4px rgba(0,0,0,0.5);">▶️ YT</span>
+                        </div>`;
+                } else if (isImage && (currentView === "extra-large" || currentView === "large" || currentView === "medium")) {
+                    iconBoxHtml = `<img src="/api/view/${file.id}" alt="${file.file_name}" class="item-thumb-img" loading="lazy" onerror="this.outerHTML='<span style=\\'font-size:${iconSize}px\\'>${icon}</span>'">`;
+                }
+
                 card.innerHTML = `
                     <div class="item-icon-box">
-                        ${isImage && (currentView === "extra-large" || currentView === "large" || currentView === "medium")
-                        ? `<img src="/api/view/${file.id}" alt="${file.file_name}" class="item-thumb-img" loading="lazy" onerror="this.outerHTML='<span style=\\'font-size:${iconSize}px\\'>${icon}</span>'">`
-                        : `<span style="font-size: ${iconSize}px;">${icon}</span>`}
+                        ${iconBoxHtml}
                     </div>
                     <div class="item-label-box">
                         <div class="item-main-title" title="${file.file_name}">${file.file_name}</div>
@@ -3056,19 +3080,122 @@ function previewFile(id) {
     const ext = file.file_name.toLowerCase().split('.').pop();
     const viewUrl = `/api/view/${file.id}`;
 
+    // Detect YouTube video
+    const isYouTube = file.cloud_backend === "youtube" || file.mime_type === "video/youtube" || (file.sha256 && file.sha256.startsWith("yt_"));
+    let ytId = "";
+    if (isYouTube) {
+        try {
+            const parsed = typeof file.chunks === "string" ? JSON.parse(file.chunks) : file.chunks;
+            if (Array.isArray(parsed) && parsed[0] && parsed[0].youtube_id) {
+                ytId = parsed[0].youtube_id;
+            }
+        } catch (e) {}
+        if (!ytId && file.sha256 && file.sha256.startsWith("yt_")) {
+            ytId = file.sha256.replace("yt_", "");
+        }
+        if (!ytId && file.chunks_data) {
+            try {
+                const parsed = typeof file.chunks_data === "string" ? JSON.parse(file.chunks_data) : file.chunks_data;
+                if (Array.isArray(parsed) && parsed[0] && parsed[0].youtube_id) {
+                    ytId = parsed[0].youtube_id;
+                }
+            } catch (e) {}
+        }
+    }
+    const ytWatchUrl = ytId ? `https://www.youtube.com/watch?v=${ytId}` : "https://www.youtube.com";
+
     if (newTabBtn) {
-        newTabBtn.href = viewUrl;
+        if (isYouTube) {
+            newTabBtn.href = ytWatchUrl;
+            newTabBtn.target = "_blank";
+            newTabBtn.title = "បើកក្នុង YouTube";
+            newTabBtn.innerHTML = `▶️ <span class="hide-mobile-text">បើកក្នុង YouTube</span>`;
+            newTabBtn.style.background = "#dc2626";
+            newTabBtn.style.color = "#ffffff";
+            newTabBtn.style.borderColor = "#ef4444";
+            newTabBtn.style.fontWeight = "600";
+        } else {
+            newTabBtn.href = viewUrl;
+            newTabBtn.target = "_blank";
+            newTabBtn.title = "បើកក្នុង Tab ថ្មី";
+            newTabBtn.innerHTML = `🌐 <span class="hide-mobile-text">បើកក្នុង Tab ថ្មី</span>`;
+            newTabBtn.style.background = "";
+            newTabBtn.style.color = "";
+            newTabBtn.style.borderColor = "";
+            newTabBtn.style.fontWeight = "";
+        }
     }
 
-    // Supported preview types
-    const imageExts = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico'];
-    const videoExts = ['mp4', 'webm', 'ogg', 'mov', 'm4v'];
-    const audioExts = ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'];
-    const isPdf = ext === 'pdf';
-    const textExts = ['txt', 'log', 'csv', 'json', 'md', 'html', 'xml', 'js', 'py', 'css', 'sql', 'sh', 'bat'];
+    if (isYouTube) {
+        if (iconEl) iconEl.textContent = "🎬";
+        if (subEl) subEl.textContent = `YouTube Video • ID: ${ytId || 'N/A'}`;
+        if (dlBtn) {
+            dlBtn.onclick = () => window.open(ytWatchUrl, "_blank");
+            dlBtn.title = "បើកមើលក្នុង YouTube";
+            dlBtn.innerHTML = `▶️ <span class="hide-mobile-text">YouTube</span>`;
+            dlBtn.style.background = "#b91c1c";
+        }
+    } else {
+        if (dlBtn) {
+            dlBtn.onclick = () => downloadFile(file.id);
+            dlBtn.title = "ទាញយក";
+            dlBtn.innerHTML = `📥 <span class="hide-mobile-text">ទាញយក</span>`;
+            dlBtn.style.background = "";
+        }
+    }
 
     body.innerHTML = `<div class="preview-loading">⏳ កំពុងទាញយកមកបើកមើល... (Loading preview...)</div>`;
     modal.style.display = "flex";
+
+    if (isYouTube) {
+        body.innerHTML = `
+            <div class="preview-media-container" style="display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 920px; margin: 0 auto; gap: 16px;">
+                <div style="position: relative; width: 100%; padding-top: 56.25%; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.1);">
+                    <iframe 
+                        src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1" 
+                        title="${file.file_name}" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        allowfullscreen 
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;">
+                    </iframe>
+                </div>
+                <div style="width: 100%; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 18px; display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 2px 10px rgba(239,68,68,0.4); flex-shrink: 0;">
+                            ▶️
+                        </div>
+                        <div style="overflow: hidden;">
+                            <div style="font-weight: 700; font-size: 15px; color: #f8fafc; line-height: 1.3; word-break: break-word;">${file.file_name}</div>
+                            <div style="font-size: 12px; color: #94a3b8; margin-top: 3px;">
+                                <span>YouTube ID: <strong style="color: #38bdf8;">${ytId || 'N/A'}</strong></span>
+                                <span style="margin: 0 6px;">•</span>
+                                <span>Cloud 1000TB Media</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06);">
+                        <a href="${ytWatchUrl}" target="_blank" rel="noopener noreferrer" 
+                           style="flex: 1; min-width: 190px; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 14px; background: linear-gradient(135deg, #ef4444, #dc2626); color: #ffffff; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(239,68,68,0.4);">
+                            <span style="font-size: 16px;">▶️</span>
+                            <span>បើកក្នុង YouTube (Open in YouTube)</span>
+                        </a>
+                        <button type="button" class="btn-secondary" onclick="navigator.clipboard.writeText('${ytWatchUrl}'); showNotification('✓ បានចម្លង YouTube Link!');" 
+                                style="padding: 10px 16px; border-radius: 8px; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                            <span>📋</span>
+                            <span>ចម្លង Link</span>
+                        </button>
+                        <a href="https://www.youtube.com/@buntha8729" target="_blank" rel="noopener noreferrer" class="btn-secondary"
+                           style="text-decoration: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #f87171;">
+                            <span>👤</span>
+                            <span>My Channel (@buntha8729)</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+        return;
+    }
 
     if (imageExts.includes(ext)) {
         body.innerHTML = `
@@ -3487,6 +3614,29 @@ function initContextMenuListeners() {
         });
     }
 
+    // File Context Menu: Open in YouTube
+    const filecmenuYouTube = document.getElementById("filecmenuYouTube");
+    if (filecmenuYouTube) {
+        filecmenuYouTube.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "file") {
+                const f = activeContextItem.file || filesData.find(item => item.id === activeContextItem.id);
+                if (f) {
+                    let ytId = "";
+                    if (f.sha256 && f.sha256.startsWith("yt_")) ytId = f.sha256.replace("yt_", "");
+                    if (!ytId && f.chunks) {
+                        try {
+                            const p = typeof f.chunks === "string" ? JSON.parse(f.chunks) : f.chunks;
+                            if (Array.isArray(p) && p[0]) ytId = p[0].youtube_id || "";
+                        } catch(e) {}
+                    }
+                    const url = ytId ? `https://www.youtube.com/watch?v=${ytId}` : "https://www.youtube.com";
+                    window.open(url, "_blank");
+                }
+            }
+        });
+    }
+
     // File Context Menu: View
     const filecmenuView = document.getElementById("filecmenuView");
     if (filecmenuView) {
@@ -3663,8 +3813,13 @@ function showFolderContextMenu(x, y, folder) {
 
 function showFileContextMenu(x, y, file) {
     hideAllContextMenus();
-    activeContextItem = { type: 'file', id: file.id, name: file.file_name, is_trash: file.is_trash };
+    activeContextItem = { type: 'file', id: file.id, name: file.file_name, is_trash: file.is_trash, file: file };
     const menu = document.getElementById("fileContextMenu");
+    const ytItem = document.getElementById("filecmenuYouTube");
+    if (ytItem) {
+        const isYT = file.cloud_backend === "youtube" || file.mime_type === "video/youtube" || (file.sha256 && file.sha256.startsWith("yt_"));
+        ytItem.style.display = isYT ? "flex" : "none";
+    }
     if (menu) positionMenu(menu, x, y);
 }
 
@@ -5461,6 +5616,15 @@ function playVaultVideo(file) {
 
     if (metaBar) metaBar.style.display = "flex";
     if (titleEl) titleEl.textContent = file.file_name;
+    const ytWatchBtn = document.getElementById("ytBtnOpenWatchOnYT");
+    if (ytWatchBtn) {
+        if (isYouTubeVideo && ytId) {
+            ytWatchBtn.style.display = "inline-flex";
+            ytWatchBtn.href = `https://www.youtube.com/watch?v=${ytId}`;
+        } else {
+            ytWatchBtn.style.display = "none";
+        }
+    }
     if (chanEl) {
         const uploader = file.uploader_email ? `Gmail: ${file.uploader_email}` : `Drive: ${(file.drive_owner || 'buntha').toUpperCase()}`;
         const szText = file.file_size > 0 ? `ទំហំ: ${formatBytes(file.file_size)} • ` : 'YouTube Video • ';
