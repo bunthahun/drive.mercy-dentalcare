@@ -1687,6 +1687,63 @@ def yt_status_route(task_id):
 def yt_tasks_route():
     return jsonify({{"success": True, "tasks": list(YOUTUBE_TASKS.values())}})
 
+@app.route("/api/youtube/media/add-link", methods=["POST"])
+def yt_media_add_link_route():
+    data = request.json or {{}}
+    url = data.get("url", "").strip()
+    gmail = data.get("gmail", "").strip().lower() or "bunthahun7@gmail.com"
+    drive_owner = data.get("drive_owner", "buntha").strip()
+    if not url:
+        return jsonify({{"success": False, "error": "URL is required"}}), 400
+
+    yt_match = re.search(r'(?:v=|\/embed\/|\/watch\?v=|youtu\.be\/|\/shorts\/)([a-zA-Z0-9_-]{{11}})', url)
+    if not yt_match:
+        return jsonify({{"success": False, "error": "Invalid YouTube URL format"}}), 400
+
+    video_id = yt_match.group(1)
+    standard_url = f"https://www.youtube.com/watch?v={{video_id}}"
+
+    title = f"YouTube Video ({{video_id}})"
+    thumb_url = f"https://i.ytimg.com/vi/{{video_id}}/hqdefault.jpg"
+    try:
+        req = requests.get(f"https://www.youtube.com/oembed?url={{standard_url}}&format=json", timeout=6)
+        if req.status_code == 200:
+            oe_data = req.json()
+            title = oe_data.get("title") or title
+            thumb_url = oe_data.get("thumbnail_url") or thumb_url
+    except Exception:
+        pass
+
+    chunks_meta = [{{
+        "part": 0,
+        "file_id": f"yt_{{video_id}}",
+        "youtube_id": video_id,
+        "url": standard_url,
+        "thumbnail": thumb_url,
+        "size": 0,
+        "raw_size": 0
+    }}]
+
+    file_id = database.add_file(
+        file_name=title,
+        file_size=0,
+        mime_type="video/youtube",
+        sha256=f"yt_{{video_id}}",
+        is_encrypted=False,
+        cloud_backend="youtube",
+        chunks=chunks_meta,
+        category="videos",
+        drive_owner=drive_owner,
+        uploader_email=gmail
+    )
+
+    file_info = database.get_file_by_id(file_id)
+    return jsonify({{
+        "success": True,
+        "file": file_info,
+        "message": f"Added '{{title}}' to YouTube Vault successfully!"
+    }})
+
 @app.route("/api/youtube/media/list", methods=["GET"])
 def yt_media_list_route():
     gmail = request.args.get("gmail", "").strip()
