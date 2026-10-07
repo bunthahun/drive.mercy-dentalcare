@@ -5239,6 +5239,29 @@ body.marquee-selecting {
     transition: all 0.2s;
 }
 
+.yt-btn-instant-add {
+    background: linear-gradient(135deg, #0284c7, #2563eb);
+    color: white;
+    height: 38px;
+    padding: 0 16px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 3px 10px rgba(37, 99, 235, 0.4);
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.yt-btn-instant-add:hover {
+    background: linear-gradient(135deg, #0369a1, #1d4ed8);
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px rgba(37, 99, 235, 0.55);
+}
+
 .yt-btn-import-save {
     background: #ef4444;
     color: white;
