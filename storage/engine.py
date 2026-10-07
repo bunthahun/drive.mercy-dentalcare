@@ -53,7 +53,8 @@ class StorageEngine:
         drive_owner: str = "buntha",
         custom_filename: Optional[str] = None,
         folder_id: Optional[int] = None,
-        preferred_backend: Optional[str] = None
+        preferred_backend: Optional[str] = None,
+        uploader_email: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Uploads a file by splitting into chunks and encrypting with high-speed parallel uploading.
@@ -155,7 +156,8 @@ class StorageEngine:
             cloud_backend=provider_name,
             chunks=chunks_info,
             drive_owner=drive_owner,
-            folder_id=folder_id
+            folder_id=folder_id,
+            uploader_email=uploader_email
         )
 
         return {
