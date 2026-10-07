@@ -1589,6 +1589,8 @@ function formatSize(bytes) {
     if (bytes < 1024 ** 3) return (bytes / (1024 ** 2)).toFixed(2) + " MB";
     return (bytes / (1024 ** 3)).toFixed(2) + " GB";
 }
+window.formatBytes = formatSize;
+function formatBytes(bytes) { return formatSize(bytes); }
 
 /* Unified Windows 11 Explorer Renderer: Folders + Files Combined */
 function renderFiles() {
@@ -4814,27 +4816,127 @@ function initYouTubePlayer() {
                 deleteVaultFile(ytActiveSelectedFile.id, ytActiveSelectedFile.file_name);
             }
         });
+    // YouTube Channel Video Importer / Saver
+    const importInput = document.getElementById("ytImportVideoUrlInput");
+    const btnImportVideo = document.getElementById("btnYtSaveImportedVideo");
+    const btnImportAudio = document.getElementById("btnYtSaveImportedAudio");
+
+    async function handleImportFromYouTube(formatType) {
+        if (!importInput) return;
+        const url = importInput.value.trim();
+        if (!url) {
+            alert("សូមបញ្ចូល ឬបិទភ្ជាប់ Link វីដេអូ YouTube (ឧ. https://www.youtube.com/watch?v=...)!");
+            importInput.focus();
+            return;
+        }
+
+        const driveSelect = document.getElementById("ytVaultTargetDrive");
+        const driveOwner = (driveSelect ? driveSelect.value : "buntha") || "buntha";
+
+        const banner = document.getElementById("ytUploadProgressBanner");
+        const statusText = document.getElementById("ytUploadProgressStatus");
+        const percentText = document.getElementById("ytUploadProgressPercent");
+        const fillBar = document.getElementById("ytUploadProgressBarFill");
+        const nameText = document.getElementById("ytUploadProgressFileName");
+        const detailText = document.getElementById("ytUploadProgressDetail");
+
+        if (banner) {
+            banner.style.display = "block";
+            if (fillBar) {
+                fillBar.style.width = "10%";
+                fillBar.style.background = "linear-gradient(90deg, #ef4444, #f59e0b)";
+            }
+        }
+        if (statusText) statusText.textContent = `⚡ កំពុងទាញយកពី YouTube (${formatType.toUpperCase()}) ចូល Cloud [${driveOwner.toUpperCase()}]...`;
+        if (nameText) nameText.textContent = url;
+        if (percentText) percentText.textContent = "10%";
+        if (detailText) detailText.textContent = "Connecting to YouTube...";
+
+        try {
+            const res = await fetch("/api/youtube/download", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    url: url,
+                    type: formatType,
+                    drive_owner: driveOwner,
+                    gmail: ytUserGmail
+                })
+            });
+            const data = await res.json();
+            if (!data.success || !data.task_id) {
+                throw new Error(data.error || "Failed to start download");
+            }
+
+            const taskId = data.task_id;
+            const pollTimer = setInterval(async () => {
+                try {
+                    const sRes = await fetch(`/api/youtube/status/${taskId}`);
+                    const sData = await sRes.json();
+                    if (!sData.success || !sData.task) return;
+                    const task = sData.task;
+
+                    const pct = task.percent || 15;
+                    if (percentText) percentText.textContent = `${pct}%`;
+                    if (fillBar) fillBar.style.width = `${pct}%`;
+
+                    if (task.status === "downloading") {
+                        if (statusText) statusText.textContent = `📥 កំពុងទាញយក: ${task.title || url}`;
+                        if (detailText) detailText.textContent = `ល្បឿន: ${task.speed || 'Fast'} • នៅសល់: ${task.eta || '...'}`;
+                    } else if (task.status === "uploading") {
+                        if (statusText) statusText.textContent = `🚀 កំពុង Encrypt & រក្សាទុកក្នុង Cloud 1000TB...`;
+                        if (detailText) detailText.textContent = "AES-256 Storage Chunking...";
+                    } else if (task.status === "completed") {
+                        clearInterval(pollTimer);
+                        if (statusText) statusText.textContent = `✅ បានរក្សាទុកក្នុង Cloud 1000TB ដោយជោគជ័យ!`;
+                        if (percentText) percentText.textContent = "100%";
+                        if (fillBar) fillBar.style.width = "100%";
+                        if (detailText) detailText.textContent = task.file_name || "Completed";
+                        importInput.value = "";
+                        setTimeout(() => { if (banner) banner.style.display = "none"; }, 4000);
+                        loadGmailVaultMedia(ytUserGmail, ytActiveMediaType);
+                        fetchStats();
+                    } else if (task.status === "error") {
+                        clearInterval(pollTimer);
+                        if (statusText) statusText.textContent = `✕ បរាជ័យ: ${task.error || "Unknown error"}`;
+                        if (fillBar) fillBar.style.background = "#ef4444";
+                    }
+                } catch (pe) {
+                    console.error("Poll error:", pe);
+                }
+            }, 1000);
+
+        } catch (e) {
+            console.error("Import error:", e);
+            if (statusText) statusText.textContent = `✕ Error: ${e.message}`;
+            if (fillBar) fillBar.style.background = "#ef4444";
+        }
+    }
+
+    if (btnImportVideo) {
+        btnImportVideo.addEventListener("click", () => handleImportFromYouTube("video"));
+    }
+    if (btnImportAudio) {
+        btnImportAudio.addEventListener("click", () => handleImportFromYouTube("audio"));
+    }
+    if (importInput) {
+        importInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") handleImportFromYouTube("video");
+        });
     }
 
     // Initial Media Load
     loadGmailVaultMedia(ytUserGmail, ytActiveMediaType);
 }
 
-// Upload Files to YouTube Media Vault
+// Upload Files to YouTube Media Vault (Using Turbo Multi-Stream Chunked Upload)
 async function uploadVaultFiles(filesList, preferredCategory) {
     if (!filesList || filesList.length === 0) return;
 
-    // Check Gmail
+    // Check Gmail - default to bunthahun7@gmail.com from user channel/screenshot
     if (!ytUserGmail) {
         const input = document.getElementById("ytGmailInput");
-        let entered = (input ? input.value.trim().toLowerCase() : "");
-        if (!entered) {
-            entered = prompt("សូមបញ្ចូលអាសយដ្ឋាន Gmail របស់អ្នកដើម្បីរក្សាទុកឯកសារ (ឧ. example@gmail.com):");
-        }
-        if (!entered || !entered.trim()) {
-            alert("តម្រូវឱ្យមាន Gmail ដើម្បីរក្សាទុកឯកសារក្នុង YouTube Vault!");
-            return;
-        }
+        let entered = (input ? input.value.trim().toLowerCase() : "") || "bunthahun7@gmail.com";
         if (!entered.includes("@")) entered += "@gmail.com";
         ytUserGmail = entered.trim().toLowerCase();
         localStorage.setItem("yt_user_gmail", ytUserGmail);
@@ -4851,60 +4953,241 @@ async function uploadVaultFiles(filesList, preferredCategory) {
     const nameText = document.getElementById("ytUploadProgressFileName");
     const detailText = document.getElementById("ytUploadProgressDetail");
 
-    if (banner) banner.style.display = "block";
+    if (banner) {
+        banner.style.display = "block";
+        if (fillBar) fillBar.style.background = "linear-gradient(90deg, #ef4444, #f97316)";
+    }
 
     for (let i = 0; i < filesList.length; i++) {
         const file = filesList[i];
-        if (nameText) nameText.textContent = `[${i + 1}/${filesList.length}] ${file.name}`;
-        if (statusText) statusText.textContent = `កំពុងផ្ទុកឡើង និង Encrypt ចូល 1000TB Cloud [Drive: ${driveOwner.toUpperCase()}]...`;
+        const safeFileName = file.name || "media_file.mp4";
+        const totalSize = file.size;
+        const startTime = Date.now();
+
+        if (nameText) nameText.textContent = `[${i + 1}/${filesList.length}] ${safeFileName}`;
+        if (statusText) statusText.textContent = `⚡ កំពុងរៀបចំ Upload ចូល 1000TB Cloud [Drive: ${driveOwner.toUpperCase()}]...`;
         if (percentText) percentText.textContent = "0%";
         if (fillBar) fillBar.style.width = "0%";
+        if (detailText) detailText.textContent = `0 MB / ${formatSize(totalSize)}`;
 
-        await new Promise((resolve) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open("POST", "/api/youtube/media/upload");
+        const CHUNK_SIZE = 4 * 1024 * 1024; // 4MB chunks
 
-            xhr.upload.onprogress = (e) => {
-                if (e.lengthComputable) {
-                    const pct = Math.round((e.loaded / e.total) * 100);
+        try {
+            if (totalSize > CHUNK_SIZE) {
+                // Multi-Stream Chunked Upload for reliable large video/picture transfer
+                const totalChunks = Math.ceil(totalSize / CHUNK_SIZE);
+                if (statusText) statusText.textContent = `⚡ កំពុងរៀបចំ Chunk Pipeline (4MB x ${totalChunks})...`;
+
+                const initRes = await fetch("/api/upload/chunk/init", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        file_name: safeFileName,
+                        file_size: totalSize,
+                        total_chunks: totalChunks,
+                        drive: driveOwner,
+                        uploader_email: ytUserGmail,
+                        gmail: ytUserGmail
+                    })
+                });
+                const initData = await initRes.json();
+                if (!initRes.ok || !initData.success) {
+                    throw new Error(initData.error || `Init failed (${initRes.status})`);
+                }
+                const uploadId = initData.upload_id;
+
+                const chunkLoaded = new Array(totalChunks).fill(0);
+                let completedChunks = 0;
+
+                function updateVaultProgress() {
+                    const loadedBytes = chunkLoaded.reduce((a, b) => a + b, 0);
+                    const pct = Math.min(99, Math.round((loadedBytes / totalSize) * 100));
                     if (percentText) percentText.textContent = `${pct}%`;
                     if (fillBar) fillBar.style.width = `${pct}%`;
+
+                    const elapsed = (Date.now() - startTime) / 1000 || 0.1;
+                    const speed = loadedBytes / elapsed;
+                    const speedMB = (speed / (1024 * 1024)).toFixed(1);
+
                     if (detailText) {
-                        detailText.textContent = `${formatBytes(e.loaded)} / ${formatBytes(e.total)}`;
+                        detailText.textContent = `${formatSize(loadedBytes)} / ${formatSize(totalSize)} (${speedMB} MB/s)`;
+                    }
+                    if (statusText) {
+                        statusText.textContent = `⚡ កំពុងផ្ទុកឡើង [Drive: ${driveOwner.toUpperCase()}] (${completedChunks}/${totalChunks} Chunks - ${pct}%)...`;
                     }
                 }
-            };
 
-            xhr.onload = () => {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    try {
-                        const res = JSON.parse(xhr.responseText);
-                        if (res.success) {
-                            if (percentText) percentText.textContent = "100%";
-                            if (fillBar) fillBar.style.width = "100%";
+                function uploadSingleChunk(partIdx) {
+                    return new Promise(async (resolve, reject) => {
+                        const start = partIdx * CHUNK_SIZE;
+                        const end = Math.min(totalSize, start + CHUNK_SIZE);
+                        const slice = file.slice(start, end);
+                        let blob = slice;
+                        try {
+                            if (typeof slice.arrayBuffer === "function") {
+                                const ab = await slice.arrayBuffer();
+                                if (ab && ab.byteLength > 0) {
+                                    blob = new Blob([ab], { type: "application/octet-stream" });
+                                }
+                            }
+                        } catch (e) {
+                            blob = slice;
                         }
-                    } catch (err) {}
+
+                        const form = new FormData();
+                        form.append("upload_id", uploadId);
+                        form.append("part_index", partIdx);
+                        form.append("file_name", safeFileName);
+                        form.append("chunk_file", blob, `part_${partIdx}.bin`);
+
+                        const xhr = new XMLHttpRequest();
+                        xhr.upload.onprogress = (e) => {
+                            if (e.lengthComputable && e.total > 0) {
+                                chunkLoaded[partIdx] = e.loaded;
+                                updateVaultProgress();
+                            }
+                        };
+
+                        xhr.onload = () => {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                try {
+                                    const res = JSON.parse(xhr.responseText || "{}");
+                                    if (res.success) {
+                                        chunkLoaded[partIdx] = blob.size;
+                                        completedChunks++;
+                                        updateVaultProgress();
+                                        resolve();
+                                    } else {
+                                        reject(new Error(res.error || `Chunk ${partIdx + 1} failed`));
+                                    }
+                                } catch (err) {
+                                    reject(new Error(`Server response error (${xhr.status})`));
+                                }
+                            } else {
+                                reject(new Error(`HTTP ${xhr.status}`));
+                            }
+                        };
+
+                        xhr.onerror = () => reject(new Error("Network connection error"));
+                        xhr.open("POST", "/api/upload/chunk", true);
+                        xhr.send(form);
+                    });
                 }
-                resolve();
-            };
 
-            xhr.onerror = () => {
-                resolve();
-            };
+                function uploadWithRetry(partIdx, retries = 2) {
+                    return uploadSingleChunk(partIdx).catch(err => {
+                        if (retries > 0) {
+                            return new Promise(r => setTimeout(r, 600)).then(() => uploadWithRetry(partIdx, retries - 1));
+                        }
+                        throw err;
+                    });
+                }
 
-            const formData = new FormData();
-            formData.append("file", file);
-            formData.append("gmail", ytUserGmail);
-            formData.append("drive_owner", driveOwner);
+                // Run 4 parallel chunk streams for ultra high speed
+                let nextPart = 0;
+                let activeWorkers = 0;
+                let workerErr = null;
+                const MAX_CONCURRENT = 4;
 
-            xhr.send(formData);
-        });
+                await new Promise((done, fail) => {
+                    function schedulePump() {
+                        if (workerErr) return;
+                        if (completedChunks >= totalChunks) {
+                            done();
+                            return;
+                        }
+                        while (activeWorkers < MAX_CONCURRENT && nextPart < totalChunks) {
+                            const p = nextPart++;
+                            activeWorkers++;
+                            uploadWithRetry(p).then(() => {
+                                activeWorkers--;
+                                schedulePump();
+                            }).catch((err) => {
+                                workerErr = err;
+                                fail(err);
+                            });
+                        }
+                    }
+                    schedulePump();
+                });
+
+                // Complete chunked upload
+                if (statusText) statusText.textContent = "⚡ កំពុងផ្ទៀងផ្ទាត់ និង Encrypt ក្នុង Cloud 1000TB...";
+                if (percentText) percentText.textContent = "99%";
+                if (fillBar) fillBar.style.width = "99%";
+
+                const compRes = await fetch("/api/upload/chunk/complete", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ upload_id: uploadId })
+                });
+                const compData = await compRes.json();
+                if (!compRes.ok || !compData.success) {
+                    throw new Error(compData.error || "Failed to finalize chunk upload");
+                }
+
+                if (percentText) percentText.textContent = "100%";
+                if (fillBar) fillBar.style.width = "100%";
+
+            } else {
+                // Direct single upload for smaller files (<= 4MB)
+                await new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open("POST", "/api/youtube/media/upload");
+
+                    xhr.upload.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            const pct = Math.round((e.loaded / e.total) * 100);
+                            if (percentText) percentText.textContent = `${pct}%`;
+                            if (fillBar) fillBar.style.width = `${pct}%`;
+                            if (detailText) {
+                                detailText.textContent = `${formatSize(e.loaded)} / ${formatSize(e.total)}`;
+                            }
+                        }
+                    };
+
+                    xhr.onload = () => {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            try {
+                                const res = JSON.parse(xhr.responseText);
+                                if (res.success) {
+                                    if (percentText) percentText.textContent = "100%";
+                                    if (fillBar) fillBar.style.width = "100%";
+                                    resolve();
+                                } else {
+                                    reject(new Error(res.error || "Upload failed"));
+                                }
+                            } catch (err) {
+                                reject(new Error("Response parse error"));
+                            }
+                        } else {
+                            reject(new Error(`Server returned HTTP ${xhr.status}`));
+                        }
+                    };
+
+                    xhr.onerror = () => reject(new Error("Network connection error"));
+
+                    const formData = new FormData();
+                    formData.append("file", file);
+                    formData.append("gmail", ytUserGmail);
+                    formData.append("drive_owner", driveOwner);
+                    xhr.send(formData);
+                });
+            }
+
+        } catch (fileErr) {
+            console.error("Vault file upload error:", fileErr);
+            if (statusText) statusText.textContent = `✕ បរាជ័យលើ "${safeFileName}": ${fileErr.message}`;
+            if (fillBar) fillBar.style.background = "#ef4444";
+            alert(`ការផ្ទុកឡើងឯកសារ "${safeFileName}" បានបរាជ័យ:\n${fileErr.message}`);
+            return;
+        }
     }
 
-    if (statusText) statusText.textContent = "✅ បានរក្សាទុកក្នុង Cloud ដោយជោគជ័យ!";
+    if (statusText) statusText.textContent = "✅ បានរក្សាទុកក្នុង 1000TB Cloud ដោយជោគជ័យ!";
     setTimeout(() => {
         if (banner) banner.style.display = "none";
-    }, 3000);
+    }, 3500);
 
     // Refresh media gallery
     loadGmailVaultMedia(ytUserGmail, ytActiveMediaType);
