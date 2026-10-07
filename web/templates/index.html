@@ -97,7 +97,7 @@
 
                 <button class="nav-item youtube-nav-item" data-cat="youtube" id="btnNavYouTube" style="margin-top: 6px; border: 1px solid rgba(239, 68, 68, 0.35); background: rgba(239, 68, 68, 0.12);">
                     <span class="nav-icon" style="color: #ef4444; font-size: 16px;">▶️</span>
-                    <span class="nav-label" id="tYouTube" style="color: #fca5a5; font-weight: 600;">YouTube Player</span>
+                    <span class="nav-label" id="tYouTube" style="color: #fca5a5; font-weight: 600;">YouTube Vault</span>
                 </button>
             </nav>
 
@@ -150,7 +150,7 @@
                 </div>
                 <div class="win-tab" id="tabYouTube" data-cat="youtube">
                     <span class="win-tab-icon" style="color: #ef4444;">▶️</span>
-                    <span class="win-tab-title" id="tabTitleYouTube">YouTube</span>
+                    <span class="win-tab-title" id="tabTitleYouTube">YouTube Vault</span>
                     <button class="win-tab-close" title="Close tab">✕</button>
                 </div>
                 <button class="win-tab-new" id="btnTabNew" title="New tab / Switch Drive">➕</button>
@@ -464,107 +464,185 @@
                     </div>
                 </div>
 
-                <!-- YouTube Studio & Cloud Saver Area -->
+                <!-- YouTube Media Vault (Upload Video & Picture with Gmail) -->
                 <div class="youtube-container" id="youtubeContainer" style="display: none;">
-                    <!-- YouTube Controls Header -->
-                    <div class="yt-header-bar">
-                        <div class="yt-controls-row">
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <button id="ytBtnBack" class="yt-nav-btn" title="ថយក្រោយ (Back)">◀</button>
-                                <button id="ytBtnReload" class="yt-nav-btn" title="ផ្ទុកឡើងវិញ (Reload)">🔄</button>
-                                <button id="ytBtnHome" class="yt-nav-btn" title="ទំព័រដើម (Home)">🏠</button>
+                    <!-- Gmail Authentication / Identity Bar -->
+                    <div class="yt-gmail-banner">
+                        <div class="yt-gmail-header-row">
+                            <div class="yt-gmail-brand">
+                                <span class="yt-brand-logo">▶️</span>
+                                <div>
+                                    <h3 class="yt-vault-title">YouTube Media Vault • រក្សាទុក វីដេអូ & រូបភាព</h3>
+                                    <p class="yt-vault-subtitle">គ្រាន់តែដាក់ Gmail របស់អ្នក រួច Upload វីដេអូ និងរូបភាព ដើម្បីរក្សាទុកឯកសារលើ Cloud 1000TB ដោយសុវត្ថិភាព</p>
+                                </div>
                             </div>
-                            <div class="yt-search-wrap">
-                                <span style="font-size: 15px; margin-right: 4px;">🔍</span>
-                                <input type="text" id="ytSearchInput" class="yt-search-input" placeholder="បញ្ចូល Link YouTube (https://...) ឬវាយពាក្យស្វែងរក (Search)...">
-                                <button id="ytClearInput" class="yt-clear-btn" title="Clear">✕</button>
+                            <!-- Connected Status Box (Hidden when not connected) -->
+                            <div class="yt-gmail-connected-box" id="ytGmailConnectedBox" style="display: none;">
+                                <div class="yt-status-indicator">
+                                    <span class="yt-status-dot online"></span>
+                                    <span class="yt-status-label">ភ្ជាប់ជាមួយ Gmail:</span>
+                                    <strong class="yt-active-gmail" id="ytActiveGmailText">user@gmail.com</strong>
+                                </div>
+                                <button class="yt-btn-switch-gmail" id="btnYtSwitchGmail" title="ផ្លាស់ប្តូរ Gmail">🔄 ប្តូរ Gmail</button>
                             </div>
-                            <button id="ytBtnPlay" class="yt-action-btn yt-btn-play">
-                                <span>▶️</span>
-                                <span>ចាក់វីដេអូ</span>
-                            </button>
-                            <button id="ytBtnSaveVideo" class="yt-action-btn yt-btn-download-video" title="Save MP4 Video directly to 1000TB Cloud">
-                                <span>📥</span>
-                                <span>Save Video (MP4)</span>
-                            </button>
-                            <button id="ytBtnSaveAudio" class="yt-action-btn yt-btn-download-audio" title="Save MP3 Audio directly to 1000TB Cloud">
-                                <span>🎵</span>
-                                <span>Save Audio (MP3)</span>
-                            </button>
-                            <select id="ytTargetDrive" class="yt-target-drive-select" title="Target Drive for saving">
-                                <option value="buntha">💾 Drive HUN BUNTHA</option>
-                                <option value="vuochlin">💾 Drive NEANG VUOCHLIN</option>
-                                <option value="mercy">💾 Drive Mercy Dental Care</option>
-                            </select>
-                            <button id="ytBtnOpenExternal" class="yt-nav-btn" title="បើកក្នុង YouTube ខាងក្រៅ" style="width: auto; padding: 0 12px; gap: 6px;">
-                                <span>🌐</span>
-                                <span>YouTube ក្រៅ</span>
-                            </button>
                         </div>
 
-                        <!-- Quick Shortcuts / Category Pills -->
-                        <div class="yt-categories-row">
-                            <span style="color: #64748b; font-size: 12px; font-weight: 600; white-space: nowrap;">ផ្លូវកាត់:</span>
-                            <button class="yt-cat-pill active" data-query="ចម្រៀងខ្មែរថ្មីៗ">🇰🇭 ចម្រៀងខ្មែរថ្មីៗ</button>
-                            <button class="yt-cat-pill" data-query="ចម្រៀងខ្មែរពីដើម ស៊ីន ស៊ីសាមុត">📻 ស៊ីន ស៊ីសាមុត & រស់ សេរីសុទ្ធា</button>
-                            <button class="yt-cat-pill" data-query="khmer comedy ចាក់សើច">😂 កំប្លែង Khmer Comedy</button>
-                            <button class="yt-cat-pill" data-query="khmer news today fresh news hang meas">📰 ព័ត៌មានជាតិ & អន្តរជាតិ</button>
-                            <button class="yt-cat-pill" data-query="relaxing acoustic lo-fi songs">🎧 Relaxing Lo-Fi & Acoustic</button>
-                            <button class="yt-cat-pill" data-query="khmer podcast ចំណេះដឹង">🎙️ Khmer Podcast & ចំណេះដឹង</button>
-                            <button class="yt-cat-pill" data-query="trending khmer music">🔥 កំពុងពេញនិយម (Trending)</button>
+                        <!-- Gmail Input Box (Displayed when not connected) -->
+                        <div class="yt-gmail-input-row" id="ytGmailInputRow">
+                            <div class="yt-gmail-input-wrap">
+                                <span class="yt-gmail-icon">✉️</span>
+                                <input type="email" id="ytGmailInput" class="yt-gmail-input" placeholder="បញ្ចូល Gmail របស់អ្នក (ឧ. buntha@gmail.com) រួចចុច 'ភ្ជាប់ប្រើភ្លាម'...">
+                            </div>
+                            <button id="btnYtConnectGmail" class="yt-btn-connect-gmail">
+                                <span>⚡</span>
+                                <span>ភ្ជាប់ប្រើភ្លាម</span>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Cloud Download Progress Banner -->
-                    <div class="yt-progress-banner" id="ytProgressBanner">
-                        <div class="yt-progress-header">
-                            <div class="yt-progress-title" id="ytProgressTitle">
-                                <span class="spinner-spin">⚡</span>
-                                <span id="ytProgressStatus">កំពុងទាញយកវីដេអូ YouTube ចូល Cloud...</span>
+                    <!-- Dual Upload Action Cards (Video & Picture) -->
+                    <div class="yt-upload-section">
+                        <div class="yt-upload-cards-grid">
+                            <!-- Card 1: Upload Video -->
+                            <div class="yt-upload-card yt-card-video" id="ytDropVideoCard">
+                                <div class="yt-upload-icon-circle video-circle">
+                                    <span>🎬</span>
+                                </div>
+                                <div class="yt-upload-info">
+                                    <h4 class="yt-upload-title">ផ្ទុកវីដេអូឡើង (Upload Videos)</h4>
+                                    <p class="yt-upload-desc">រក្សាទុកវីដេអូ MP4, MKV, MOV, WebM, AVI កម្រិត 4K/HD</p>
+                                </div>
+                                <div class="yt-upload-actions">
+                                    <button class="yt-btn-upload-action video-btn" id="btnYtTriggerUploadVideo">
+                                        <span>🎥</span>
+                                        <span>+ ជ្រើសរើសវីដេអូ</span>
+                                    </button>
+                                </div>
+                                <input type="file" id="ytVideoUploadInput" accept="video/*" multiple style="display: none;">
                             </div>
-                            <span id="ytProgressPercent" style="font-size: 13px; font-weight: 700; color: #38bdf8;">0%</span>
+
+                            <!-- Card 2: Upload Picture -->
+                            <div class="yt-upload-card yt-card-picture" id="ytDropPictureCard">
+                                <div class="yt-upload-icon-circle picture-circle">
+                                    <span>🖼️</span>
+                                </div>
+                                <div class="yt-upload-info">
+                                    <h4 class="yt-upload-title">ផ្ទុករូបភាពឡើង (Upload Pictures)</h4>
+                                    <p class="yt-upload-desc">រក្សាទុករូបថត JPG, PNG, WebP, GIF, HEIC កម្រិតច្បាស់</p>
+                                </div>
+                                <div class="yt-upload-actions">
+                                    <button class="yt-btn-upload-action picture-btn" id="btnYtTriggerUploadPicture">
+                                        <span>📸</span>
+                                        <span>+ ជ្រើសរើសរូបថត</span>
+                                    </button>
+                                </div>
+                                <input type="file" id="ytPictureUploadInput" accept="image/*" multiple style="display: none;">
+                            </div>
+                        </div>
+
+                        <!-- Target Drive Selector & Drag Hint -->
+                        <div class="yt-upload-footer-bar">
+                            <div class="yt-target-drive-wrap">
+                                <span class="yt-target-label">💾 ជ្រើសរើស Drive រក្សាទុក:</span>
+                                <select id="ytVaultTargetDrive" class="yt-vault-drive-select">
+                                    <option value="buntha">Drive HUN BUNTHA (1000TB)</option>
+                                    <option value="vuochlin">Drive NEANG VUOCHLIN (1000TB)</option>
+                                    <option value="mercy">Drive Mercy Dental Care (1000TB)</option>
+                                </select>
+                            </div>
+                            <div class="yt-drag-hint">
+                                <span>💡 អ្នកក៏អាចទាញទម្លាក់ (Drag & Drop) វីដេអូ ឬរូបភាព ចូលទីនេះបានភ្លាមៗ!</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Progress Banner -->
+                    <div class="yt-progress-banner" id="ytUploadProgressBanner" style="display: none;">
+                        <div class="yt-progress-header">
+                            <div class="yt-progress-title">
+                                <span class="spinner-spin">⚡</span>
+                                <span id="ytUploadProgressStatus">កំពុងផ្ទុកឯកសារឡើងចូល 1000TB Cloud...</span>
+                            </div>
+                            <span id="ytUploadProgressPercent" style="font-size: 14px; font-weight: 700; color: #38bdf8;">0%</span>
                         </div>
                         <div class="yt-progress-bar-bg">
-                            <div class="yt-progress-bar-fill" id="ytProgressBarFill"></div>
+                            <div class="yt-progress-bar-fill" id="ytUploadProgressBarFill" style="width: 0%;"></div>
                         </div>
                         <div class="yt-progress-subtext">
-                            <span id="ytProgressTargetName">គោលដៅ: Drive HUN BUNTHA</span>
-                            <span id="ytProgressDetail">ទំហំ & ល្បឿន...</span>
+                            <span id="ytUploadProgressFileName">ឯកសារ...</span>
+                            <span id="ytUploadProgressDetail">0 MB / 0 MB</span>
                         </div>
                     </div>
 
-                    <!-- Main YouTube Section: Video Player & Grid -->
-                    <div class="yt-player-section">
-                        <!-- Video Viewport Card -->
-                        <div class="yt-viewport-card">
-                            <iframe id="ytPlayerIframe" class="yt-iframe-player" src="https://www.youtube.com/embed/hXNDuYv8jg8?autoplay=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                    <!-- Player Viewport Card (Direct Video Player or YouTube Player) -->
+                    <div class="yt-player-section" id="ytPlayerSection">
+                        <!-- Direct HTML5 Video Player Viewport -->
+                        <div class="yt-viewport-card" id="ytViewportCard">
+                            <video id="ytDirectVideoPlayer" class="yt-html5-player" controls playsinline preload="metadata" style="display: none;"></video>
+                            <iframe id="ytPlayerIframe" class="yt-iframe-player" src="about:blank" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="display: none;"></iframe>
+                            <!-- Default Empty / Ready Poster State -->
+                            <div class="yt-player-placeholder" id="ytPlayerPlaceholder">
+                                <div class="yt-placeholder-icon">🎬</div>
+                                <h4>YouTube Cloud Media Player</h4>
+                                <p id="ytPlaceholderSubtitle">ចុច "▶️ ចាក់មើល" លើវីដេអូខាងក្រោម ឬផ្ទុកវីដេអូថ្មីឡើងដើម្បីទស្សនា</p>
+                            </div>
                         </div>
 
-                        <!-- Video Meta & Quick Actions Bar -->
-                        <div class="yt-video-meta-bar">
+                        <!-- Video Meta & Action Bar -->
+                        <div class="yt-video-meta-bar" id="ytVideoMetaBar" style="display: none;">
                             <div class="yt-meta-info">
-                                <div class="yt-now-title" id="ytNowTitle">YouTube Video Player & Cloud Saver</div>
-                                <div class="yt-now-channel" id="ytNowChannel">ជ្រើសរើសវីដេអូខាងក្រោម ឬបញ្ចូល Link ដើម្បីចាក់ និងទាញយកចូល 1000TB Cloud</div>
+                                <div class="yt-now-title" id="ytNowTitle">ឈ្មោះវីដេអូ</div>
+                                <div class="yt-now-channel" id="ytNowChannel">ព័ត៌មានឯកសារ</div>
                             </div>
                             <div class="yt-meta-actions">
-                                <button class="yt-action-btn yt-btn-download-video" id="ytBtnMetaDlVideo" style="height: 36px; font-size: 12px;">
+                                <button class="yt-action-btn yt-btn-download-video" id="ytBtnDownloadCurrent" title="ទាញយកឯកសារនេះ">
                                     <span>📥</span>
-                                    <span>Save Video (MP4)</span>
+                                    <span>ទាញយក</span>
                                 </button>
-                                <button class="yt-action-btn yt-btn-download-audio" id="ytBtnMetaDlAudio" style="height: 36px; font-size: 12px;">
-                                    <span>🎵</span>
-                                    <span>Save Audio (MP3)</span>
+                                <button class="yt-action-btn yt-btn-copy-link" id="ytBtnCopyCurrentLink" title="ចម្លងតំណភ្ជាប់ (Copy Link)">
+                                    <span>🔗</span>
+                                    <span>ចម្លង Link</span>
+                                </button>
+                                <button class="yt-action-btn yt-btn-delete-media" id="ytBtnDeleteCurrent" title="លុបឯកសារ">
+                                    <span>🗑️</span>
+                                    <span>លុប</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stored Media Vault Gallery (វីដេអូ & រូបភាពដែលបានរក្សាទុក) -->
+                    <div class="yt-gallery-section">
+                        <div class="yt-gallery-header">
+                            <div class="yt-gallery-tabs">
+                                <button class="yt-filter-tab active" data-type="all" id="btnYtTabAll">
+                                    <span>⭐ ទាំងអស់</span>
+                                    <span class="yt-count-pill" id="ytCountAll">0</span>
+                                </button>
+                                <button class="yt-filter-tab" data-type="video" id="btnYtTabVideos">
+                                    <span>🎬 វីដេអូ</span>
+                                    <span class="yt-count-pill" id="ytCountVideos">0</span>
+                                </button>
+                                <button class="yt-filter-tab" data-type="image" id="btnYtTabPictures">
+                                    <span>🖼️ រូបភាព</span>
+                                    <span class="yt-count-pill" id="ytCountPictures">0</span>
+                                </button>
+                            </div>
+
+                            <div class="yt-gallery-search-row">
+                                <div class="yt-gallery-search-wrap">
+                                    <span>🔍</span>
+                                    <input type="text" id="ytGallerySearchInput" placeholder="ស្វែងរកតាមឈ្មោះឯកសារ...">
+                                </div>
+                                <button class="yt-refresh-btn" id="btnYtRefreshGallery" title="ផ្ទុកឡើងវិញ">
+                                    <span>🔄</span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Search Results & Recommended Video Grid -->
-                        <div class="yt-results-title" id="ytResultsTitle">
-                            <span>✨</span>
-                            <span>វីដេអូពេញនិយម & លទ្ធផលស្វែងរក (YouTube Cloud Discovery)</span>
-                        </div>
-                        <div class="yt-grid-results" id="ytResultsGrid">
-                            <!-- Populated dynamically by JS -->
+                        <!-- Gallery Grid for Media Cards -->
+                        <div class="yt-media-grid" id="ytMediaGalleryGrid">
+                            <!-- Populated dynamically via JS -->
                         </div>
                     </div>
                 </div>
