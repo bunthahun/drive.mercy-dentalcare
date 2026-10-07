@@ -391,14 +391,24 @@ function initEventListeners() {
             loadFiles();
         });
     }
+    window.switchDrive = switchDrive;
 
     if (tabBuntha) tabBuntha.addEventListener("click", () => switchDrive("buntha"));
     if (tabVuochlin) tabVuochlin.addEventListener("click", () => switchDrive("vuochlin"));
     if (tabMercy) tabMercy.addEventListener("click", () => switchDrive("mercy"));
     if (tabYouTube) tabYouTube.addEventListener("click", () => switchDrive("youtube"));
 
+    const btnRibbonYouTube = document.getElementById("btnRibbonYouTube");
+    if (btnRibbonYouTube) btnRibbonYouTube.addEventListener("click", () => switchDrive("youtube"));
+
+    const btnMenuAddYouTube = document.getElementById("btnMenuAddYouTube");
+    if (btnMenuAddYouTube) btnMenuAddYouTube.addEventListener("click", () => switchDrive("youtube"));
+
+    const btnNavYouTube = document.getElementById("btnNavYouTube");
+    if (btnNavYouTube) btnNavYouTube.addEventListener("click", () => switchDrive("youtube"));
+
     if (btnTabNew) btnTabNew.addEventListener("click", () => {
-        const order = ["buntha", "vuochlin", "mercy"];
+        const order = ["buntha", "vuochlin", "mercy", "youtube"];
         const curIdx = order.indexOf(currentCategory);
         const nextDrive = order[(curIdx + 1) % order.length];
         switchDrive(nextDrive);
@@ -2571,13 +2581,13 @@ async function handleFilesUpload(files, targetDrive) {
             const etaTxt = item.querySelector(".transfer-eta-txt");
             const startTime = Date.now();
 
-            const CHUNK_SIZE = 12 * 1024 * 1024; // 12MB optimal chunks for maximum parallelism
+            const CHUNK_SIZE = 4 * 1024 * 1024; // 4MB chunks - faster start, better UX for slow connections
 
             if (file.size > CHUNK_SIZE) {
                 // --- ULTRA-FAST PIPELINED CHUNKED UPLOAD (4 PARALLEL STREAMS) ---
                 try {
                     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-                    statusTxt.textContent = `⚡ កំពុងរៀបចំ Turbo Multi-Stream (12MB x ${totalChunks})...`;
+                    statusTxt.textContent = `⚡ កំពុងរៀបចំ Turbo Multi-Stream (4MB x ${totalChunks})...`;
 
                     const initRes = await fetch("/api/upload/chunk/init", {
                         method: "POST",
@@ -4430,7 +4440,7 @@ function initMobileApp() {
             const driveKey = card.dataset.drive;
             closeDriveSheet();
             if (driveKey) {
-                switchCategory(driveKey);
+                if (window.switchDrive) window.switchDrive(driveKey);
             }
         });
     });
@@ -4598,6 +4608,15 @@ async function testS3Connection() {
     }
 }
 
+let ytActiveDownloadTask = null;
+let ytDownloadInterval = null;
+let ytCurrentVideo = {
+    id: "hXNDuYv8jg8",
+    title: "បើបងធ្វើចិត្តបាន - ថាន់ សាន់តា",
+    channel: "ចម្រៀងខ្មែរថ្មីៗ",
+    url: "https://www.youtube.com/watch?v=hXNDuYv8jg8"
+};
+
 function initYouTubePlayer() {
     const input = document.getElementById("ytSearchInput");
     const btnPlay = document.getElementById("ytBtnPlay");
@@ -4607,47 +4626,331 @@ function initYouTubePlayer() {
     const btnReload = document.getElementById("ytBtnReload");
     const btnHome = document.getElementById("ytBtnHome");
     const btnExternal = document.getElementById("ytBtnOpenExternal");
+    const btnSaveVideo = document.getElementById("ytBtnSaveVideo");
+    const btnSaveAudio = document.getElementById("ytBtnSaveAudio");
+    const btnMetaDlVideo = document.getElementById("ytBtnMetaDlVideo");
+    const btnMetaDlAudio = document.getElementById("ytBtnMetaDlAudio");
+    const targetDriveSelect = document.getElementById("ytTargetDrive");
+    const resultsGrid = document.getElementById("ytResultsGrid");
 
     if (!iframe) return;
 
-    function playYouTube(inputVal) {
-        if (!inputVal) return;
-        inputVal = inputVal.trim();
+    // Helper: Parse Video ID from YouTube URLs
+    function parseYouTubeVideoId(val) {
+        if (!val) return null;
+        val = val.trim();
+        if (val.includes("youtube.com/watch")) {
+            const m = val.match(/[?&]v=([^&#]+)/);
+            if (m) return m[1];
+        } else if (val.includes("youtu.be/")) {
+            const parts = val.split("youtu.be/");
+            if (parts.length > 1) return parts[1].split(/[?&#]/)[0];
+        } else if (val.includes("youtube.com/shorts/")) {
+            const parts = val.split("youtube.com/shorts/");
+            if (parts.length > 1) return parts[1].split(/[?&#]/)[0];
+        } else if (val.includes("youtube.com/embed/")) {
+            const parts = val.split("youtube.com/embed/");
+            if (parts.length > 1) return parts[1].split(/[?&#]/)[0];
+        } else if (/^[a-zA-Z0-9_-]{11}$/.test(val)) {
+            return val;
+        }
+        return null;
+    }
 
-        let videoId = "";
-        // Match YouTube URL formats
-        if (inputVal.includes("youtube.com/watch")) {
-            const match = inputVal.match(/[?&]v=([^&#]+)/);
-            if (match) videoId = match[1];
-        } else if (inputVal.includes("youtu.be/")) {
-            const parts = inputVal.split("youtu.be/");
-            if (parts.length > 1) videoId = parts[1].split(/[?&#]/)[0];
-        } else if (inputVal.includes("youtube.com/shorts/")) {
-            const parts = inputVal.split("youtube.com/shorts/");
-            if (parts.length > 1) videoId = parts[1].split(/[?&#]/)[0];
+    // Play a specific video ID or URL
+    function playVideo(videoId, title, channel, fullUrl) {
+        if (!videoId) return;
+        ytCurrentVideo = {
+            id: videoId,
+            title: title || `YouTube Video (${videoId})`,
+            channel: channel || "YouTube",
+            url: fullUrl || `https://www.youtube.com/watch?v=${videoId}`
+        };
+
+        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1`;
+
+        const titleEl = document.getElementById("ytNowTitle");
+        const chanEl = document.getElementById("ytNowChannel");
+        if (titleEl) titleEl.textContent = ytCurrentVideo.title;
+        if (chanEl) chanEl.textContent = `${ytCurrentVideo.channel} • YouTube HD`;
+
+        if (input && fullUrl) input.value = fullUrl;
+    }
+
+    // Perform Search or Handle URL Input
+    async function handleYouTubeInput(queryOrUrl) {
+        if (!queryOrUrl || !queryOrUrl.trim()) return;
+        const val = queryOrUrl.trim();
+
+        // 1. If it's a direct URL or video ID
+        const directId = parseYouTubeVideoId(val);
+        if (directId) {
+            playVideo(directId, "កំពុងផ្ទុកព័ត៌មានវីដេអូ...", "YouTube", val.startsWith("http") ? val : `https://www.youtube.com/watch?v=${directId}`);
+            // Fetch info in background
+            try {
+                const res = await fetch(`/api/youtube/info?url=${encodeURIComponent(val)}`);
+                const data = await res.json();
+                if (data.success && data.info) {
+                    ytCurrentVideo.title = data.info.title || ytCurrentVideo.title;
+                    ytCurrentVideo.channel = data.info.channel || ytCurrentVideo.channel;
+                    const titleEl = document.getElementById("ytNowTitle");
+                    const chanEl = document.getElementById("ytNowChannel");
+                    if (titleEl) titleEl.textContent = ytCurrentVideo.title;
+                    if (chanEl) chanEl.textContent = `${ytCurrentVideo.channel} • ${formatDuration(data.info.duration || 0)}`;
+                }
+            } catch (e) {
+                console.warn("Error fetching video info:", e);
+            }
+            return;
         }
 
-        if (videoId) {
-            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-        } else if (inputVal.startsWith("http://") || inputVal.startsWith("https://")) {
-            iframe.src = inputVal;
-        } else {
-            // Search query
-            iframe.src = `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(inputVal)}`;
+        // 2. If it's a Search Query: Query Backend Search API
+        if (resultsGrid) {
+            resultsGrid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #94a3b8;">
+                    <div style="font-size: 28px; margin-bottom: 8px;" class="spinner-spin">⏳</div>
+                    <div>កំពុងស្វែងរក "${val}" លើ YouTube...</div>
+                </div>
+            `;
+        }
+
+        try {
+            const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(val)}`);
+            const data = await res.json();
+            if (data.success && Array.isArray(data.results) && data.results.length > 0) {
+                renderSearchResults(data.results);
+                // Auto play first result
+                const first = data.results[0];
+                playVideo(first.id, first.title, first.channel, first.url);
+            } else {
+                if (resultsGrid) {
+                    resultsGrid.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #94a3b8;">
+                            <div style="font-size: 28px; margin-bottom: 8px;">🔍</div>
+                            <div>រកមិនឃើញវីដេអូសម្រាប់ "${val}" ទេ</div>
+                        </div>
+                    `;
+                }
+            }
+        } catch (e) {
+            console.error("YouTube search error:", e);
+            // Fallback: embed query directly
+            iframe.src = `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(val)}`;
         }
     }
 
+    function formatDuration(sec) {
+        if (!sec || isNaN(sec)) return "";
+        sec = parseInt(sec);
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    // Render Video Result Cards
+    function renderSearchResults(items) {
+        if (!resultsGrid) return;
+        resultsGrid.innerHTML = "";
+
+        items.forEach(item => {
+            const card = document.createElement("div");
+            card.className = "yt-card";
+            card.innerHTML = `
+                <div class="yt-thumb-box">
+                    <img src="${item.thumbnail || 'https://i.ytimg.com/vi/' + item.id + '/hqdefault.jpg'}" alt="${item.title}" class="yt-thumb-img" loading="lazy">
+                    <span class="yt-duration-badge">${formatDuration(item.duration)}</span>
+                </div>
+                <div class="yt-card-body">
+                    <div class="yt-card-title" title="${item.title}">${item.title}</div>
+                    <div class="yt-card-channel">${item.channel || 'YouTube'}</div>
+                    <div class="yt-card-actions">
+                        <button class="yt-card-btn yt-card-btn-play" title="ចាក់វីដេអូ">▶️ Play</button>
+                        <button class="yt-card-btn yt-card-btn-dl" title="Save MP4 Video to 1000TB Cloud">📥 MP4</button>
+                        <button class="yt-card-btn yt-card-btn-audio" title="Save MP3 Audio to 1000TB Cloud">🎵 MP3</button>
+                    </div>
+                </div>
+            `;
+
+            // Card click plays video
+            card.querySelector(".yt-thumb-box").addEventListener("click", () => {
+                playVideo(item.id, item.title, item.channel, item.url);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            });
+            card.querySelector(".yt-card-title").addEventListener("click", () => {
+                playVideo(item.id, item.title, item.channel, item.url);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            });
+            card.querySelector(".yt-card-btn-play").addEventListener("click", (e) => {
+                e.stopPropagation();
+                playVideo(item.id, item.title, item.channel, item.url);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            });
+
+            // Card download to Cloud
+            card.querySelector(".yt-card-btn-dl").addEventListener("click", (e) => {
+                e.stopPropagation();
+                startDownloadToCloud(item.url || `https://www.youtube.com/watch?v=${item.id}`, "video", item.title);
+            });
+            card.querySelector(".yt-card-btn-audio").addEventListener("click", (e) => {
+                e.stopPropagation();
+                startDownloadToCloud(item.url || `https://www.youtube.com/watch?v=${item.id}`, "audio", item.title);
+            });
+
+            resultsGrid.appendChild(card);
+        });
+    }
+
+    // Start Download to Cloud Storage
+    async function startDownloadToCloud(videoUrl, formatType, customTitle) {
+        if (!videoUrl) videoUrl = ytCurrentVideo.url;
+        if (!videoUrl) {
+            alert("សូមជ្រើសរើស ឬបញ្ចូល Link វីដេអូ YouTube ជាមុនសិន!");
+            return;
+        }
+
+        const driveOwner = (targetDriveSelect ? targetDriveSelect.value : currentCategory) || "buntha";
+        const driveNames = {
+            buntha: "HUN BUNTHA",
+            vuochlin: "NEANG VUOCHLIN",
+            mercy: "Mercy Dental Care"
+        };
+        const targetName = driveNames[driveOwner] || "HUN BUNTHA";
+
+        const banner = document.getElementById("ytProgressBanner");
+        const statusEl = document.getElementById("ytProgressStatus");
+        const percentEl = document.getElementById("ytProgressPercent");
+        const fillEl = document.getElementById("ytProgressBarFill");
+        const targetEl = document.getElementById("ytProgressTargetName");
+        const detailEl = document.getElementById("ytProgressDetail");
+
+        if (banner) banner.style.display = "block";
+        if (targetEl) targetEl.textContent = `គោលដៅ: Drive ${targetName} (${formatType === 'audio' ? 'MP3' : 'MP4'})`;
+        if (statusEl) statusEl.textContent = `⚡ កំពុងរៀបចំទាញយក ${formatType === 'audio' ? 'ចម្រៀង MP3' : 'វីដេអូ MP4'}...`;
+        if (percentEl) percentEl.textContent = "5%";
+        if (fillEl) fillEl.style.width = "5%";
+        if (detailEl) detailEl.textContent = customTitle || ytCurrentVideo.title || "YouTube Media";
+
+        try {
+            const res = await fetch("/api/youtube/download", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    url: videoUrl,
+                    type: formatType,
+                    drive_owner: driveOwner,
+                    folder_id: (currentCategory === driveOwner && currentFolderId) ? currentFolderId : null
+                })
+            });
+
+            const data = await res.json();
+            if (!data.success || !data.task_id) {
+                if (statusEl) statusEl.textContent = "✕ បរាជ័យ: " + (data.error || "មិនអាចទាញយកបាន");
+                setTimeout(() => { if (banner) banner.style.display = "none"; }, 5000);
+                return;
+            }
+
+            const taskId = data.task_id;
+            ytActiveDownloadTask = taskId;
+
+            // Poll task status
+            if (ytDownloadInterval) clearInterval(ytDownloadInterval);
+            ytDownloadInterval = setInterval(async () => {
+                try {
+                    const statusRes = await fetch(`/api/youtube/status/${taskId}`);
+                    const statusData = await statusRes.json();
+                    if (!statusData.success || !statusData.task) return;
+
+                    const task = statusData.task;
+                    const pct = task.percent || 10;
+                    if (percentEl) percentEl.textContent = `${pct}%`;
+                    if (fillEl) fillEl.style.width = `${pct}%`;
+
+                    if (task.status === "downloading") {
+                        if (statusEl) statusEl.textContent = `📥 កំពុងទាញយកពី YouTube: ${task.title || customTitle || ''}`;
+                        if (detailEl) detailEl.textContent = `ល្បឿន: ${task.speed || 'High-speed'} • នៅសល់: ${task.eta || 'Calculating...'}`;
+                    } else if (task.status === "uploading") {
+                        if (statusEl) statusEl.textContent = `🚀 កំពុង Encrypt & Upload ចូល 1000TB Cloud [${targetName}]...`;
+                        if (detailEl) detailEl.textContent = `AES-256 Cloud Chunking in progress...`;
+                    } else if (task.status === "completed") {
+                        clearInterval(ytDownloadInterval);
+                        ytDownloadInterval = null;
+                        if (statusEl) statusEl.textContent = `✅ បានរក្សាទុកក្នុង Drive [${targetName}] ដោយជោគជ័យ!`;
+                        if (percentEl) percentEl.textContent = "100%";
+                        if (fillEl) fillEl.style.width = "100%";
+                        if (detailEl) detailEl.textContent = `ឯកសារឈ្មោះ: ${task.file_name || 'Completed'}`;
+
+                        // If user is currently looking at that drive/folder, refresh files
+                        if (currentCategory === driveOwner) {
+                            loadFiles();
+                            fetchStats();
+                        }
+
+                        setTimeout(() => {
+                            if (banner) banner.style.display = "none";
+                        }, 5000);
+                    } else if (task.status === "error") {
+                        clearInterval(ytDownloadInterval);
+                        ytDownloadInterval = null;
+                        if (statusEl) statusEl.textContent = `✕ បរាជ័យ: ${task.error || 'Unknown error'}`;
+                        if (fillEl) fillEl.style.background = "#f43f5e";
+                        setTimeout(() => {
+                            if (banner) banner.style.display = "none";
+                        }, 6000);
+                    }
+                } catch (err) {
+                    console.error("Error polling task:", err);
+                }
+            }, 1000);
+
+        } catch (e) {
+            console.error("Start download error:", e);
+            if (statusEl) statusEl.textContent = "✕ Error: " + e.message;
+            setTimeout(() => { if (banner) banner.style.display = "none"; }, 5000);
+        }
+    }
+
+    // Attach Event Listeners
     if (btnPlay && input) {
-        btnPlay.addEventListener("click", () => playYouTube(input.value));
+        btnPlay.addEventListener("click", () => handleYouTubeInput(input.value));
         input.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") playYouTube(input.value);
+            if (e.key === "Enter") handleYouTubeInput(input.value);
+        });
+        input.addEventListener("input", () => {
+            if (btnClear) btnClear.style.display = input.value ? "block" : "none";
         });
     }
 
     if (btnClear && input) {
         btnClear.addEventListener("click", () => {
             input.value = "";
+            btnClear.style.display = "none";
             input.focus();
+        });
+    }
+
+    if (btnSaveVideo) {
+        btnSaveVideo.addEventListener("click", () => {
+            const url = (input && input.value.trim().startsWith("http")) ? input.value.trim() : ytCurrentVideo.url;
+            startDownloadToCloud(url, "video", ytCurrentVideo.title);
+        });
+    }
+
+    if (btnSaveAudio) {
+        btnSaveAudio.addEventListener("click", () => {
+            const url = (input && input.value.trim().startsWith("http")) ? input.value.trim() : ytCurrentVideo.url;
+            startDownloadToCloud(url, "audio", ytCurrentVideo.title);
+        });
+    }
+
+    if (btnMetaDlVideo) {
+        btnMetaDlVideo.addEventListener("click", () => {
+            startDownloadToCloud(ytCurrentVideo.url, "video", ytCurrentVideo.title);
+        });
+    }
+
+    if (btnMetaDlAudio) {
+        btnMetaDlAudio.addEventListener("click", () => {
+            startDownloadToCloud(ytCurrentVideo.url, "audio", ytCurrentVideo.title);
         });
     }
 
@@ -4660,7 +4963,13 @@ function initYouTubePlayer() {
     if (btnHome) {
         btnHome.addEventListener("click", () => {
             if (input) input.value = "";
-            iframe.src = "https://www.youtube.com/embed?listType=search&list=khmer+songs+new";
+            handleYouTubeInput("ចម្រៀងខ្មែរថ្មីៗ");
+        });
+    }
+
+    if (btnBack) {
+        btnBack.addEventListener("click", () => {
+            if (window.switchDrive) window.switchDrive("buntha");
         });
     }
 
@@ -4669,22 +4978,31 @@ function initYouTubePlayer() {
             const val = input ? input.value.trim() : "";
             if (val.startsWith("http://") || val.startsWith("https://")) {
                 window.open(val, "_blank");
-            } else if (val) {
-                window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(val)}`, "_blank");
+            } else if (ytCurrentVideo.url) {
+                window.open(ytCurrentVideo.url, "_blank");
             } else {
                 window.open("https://www.youtube.com", "_blank");
             }
         });
     }
 
-    // Quick shortcut pills
-    document.querySelectorAll(".yt-pill-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            const q = btn.dataset.query;
+    // Category Pills: Active highlight & search
+    document.querySelectorAll(".yt-cat-pill").forEach(pill => {
+        pill.addEventListener("click", () => {
+            document.querySelectorAll(".yt-cat-pill").forEach(p => p.classList.remove("active"));
+            pill.classList.add("active");
+            const q = pill.dataset.query;
             if (input) input.value = q;
-            playYouTube(q);
+            if (btnClear) btnClear.style.display = "block";
+            handleYouTubeInput(q);
         });
     });
+
+    // Auto load initial trending Khmer songs
+    handleYouTubeInput("ចម្រៀងខ្មែរថ្មីៗ");
 }
+
+
+
 
 
