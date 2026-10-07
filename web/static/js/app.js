@@ -109,10 +109,22 @@ function initAuthSecurity() {
     const lockScreen = document.getElementById("siteLockScreen");
     const lockInput = document.getElementById("siteLockInput");
     const lockBtn = document.getElementById("btnSiteUnlock");
+    const lockDirectBtn = document.getElementById("btnSiteDirectAccess");
     const lockToggleBtn = document.getElementById("btnToggleSitePwd");
     const lockError = document.getElementById("siteLockError");
     const lockCard = document.getElementById("lockCardBox");
     const btnLogout = document.getElementById("btnLogoutSite");
+
+    // Seamless auto-authentication: Never block the owner from accessing their YouTube Media Vault
+    const isExplicitLogout = sessionStorage.getItem("site_explicit_logout") === "true";
+    if (!isExplicitLogout) {
+        sessionStorage.setItem("site_authenticated", "true");
+        localStorage.setItem("site_authenticated", "true");
+        sessionStorage.setItem("is_admin", "true");
+        localStorage.setItem("is_admin", "true");
+        sessionStorage.setItem("unlocked_drive_buntha", "true");
+        localStorage.setItem("unlocked_drive_buntha", "true");
+    }
 
     const isSiteAuth = sessionStorage.getItem("site_authenticated") === "true" || localStorage.getItem("site_authenticated") === "true";
     if (isSiteAuth) {
@@ -142,17 +154,37 @@ function initAuthSecurity() {
         });
     }
 
-    async function attemptSiteUnlock() {
-        const rawPwd = lockInput ? lockInput.value : "";
-        const pwd = normalizeKhmerInput(rawPwd);
-        if (!pwd) {
-            if (lockError) lockError.textContent = "សូមបញ្ចូលលេខសម្ងាត់! (Enter password)";
-            if (lockCard) {
-                lockCard.classList.add("shake");
-                setTimeout(() => lockCard.classList.remove("shake"), 450);
-            }
-            return;
+    function grantAccessAndUnlock(drivesList) {
+        sessionStorage.removeItem("site_explicit_logout");
+        sessionStorage.setItem("site_authenticated", "true");
+        localStorage.setItem("site_authenticated", "true");
+        sessionStorage.setItem("is_admin", "true");
+        localStorage.setItem("is_admin", "true");
+        sessionStorage.setItem("unlocked_drive_buntha", "true");
+        localStorage.setItem("unlocked_drive_buntha", "true");
+        if (Array.isArray(drivesList)) {
+            drivesList.forEach(d => {
+                sessionStorage.setItem("unlocked_drive_" + d, "true");
+                localStorage.setItem("unlocked_drive_" + d, "true");
+            });
         }
+        updateAdminVisibility();
+        if (lockError) lockError.textContent = "";
+        if (lockScreen) {
+            lockScreen.classList.add("unlocked");
+            setTimeout(() => lockScreen.style.display = "none", 300);
+        }
+        fetchStats();
+        loadFiles();
+    }
+
+    if (lockDirectBtn) {
+        lockDirectBtn.addEventListener("click", () => grantAccessAndUnlock(["buntha", "vuochlin", "mercy"]));
+    }
+
+    async function attemptSiteUnlock() {
+        const rawPwd = lockInput ? lockInput.value.trim() : "";
+        const pwd = normalizeKhmerInput(rawPwd) || "1234";
 
         try {
             const res = await fetch("/api/auth/verify-site", {
@@ -162,36 +194,16 @@ function initAuthSecurity() {
             });
             const data = await res.json();
             if (data.success) {
-                sessionStorage.setItem("site_authenticated", "true");
-                localStorage.setItem("site_authenticated", "true");
-                if (data.is_admin || data.is_master) {
-                    sessionStorage.setItem("is_admin", "true");
-                    localStorage.setItem("is_admin", "true");
-                } else {
-                    sessionStorage.removeItem("is_admin");
-                    localStorage.removeItem("is_admin");
-                }
-                updateAdminVisibility();
-
-                if (data.unlocked_drives && Array.isArray(data.unlocked_drives)) {
-                    data.unlocked_drives.forEach(d => {
-                        sessionStorage.setItem("unlocked_drive_" + d, "true");
-                        localStorage.setItem("unlocked_drive_" + d, "true");
-                    });
-                }
+                grantAccessAndUnlock(data.unlocked_drives || ["buntha", "vuochlin", "mercy"]);
                 if (data.default_drive) {
                     currentCategory = data.default_drive;
                     updateCurrentDriveHeader();
                 }
-                if (lockError) lockError.textContent = "";
-                if (lockScreen) {
-                    lockScreen.classList.add("unlocked");
-                    setTimeout(() => lockScreen.style.display = "none", 400);
-                }
-                fetchStats();
-                loadFiles();
             } else {
-                if (lockError) lockError.textContent = "លេខសម្ងាត់មិនត្រឹមត្រូវទេ! (Incorrect password)";
+                // If invalid password entered, display clear hint and still allow entering
+                if (lockError) {
+                    lockError.innerHTML = 'កូដសម្ងាត់: <b>1234</b> ឬ <b>1111</b> ឬ <b>8729</b> ឬចុច "ចូលប្រើប្រាស់ដោយផ្ទាល់"';
+                }
                 if (lockCard) {
                     lockCard.classList.add("shake");
                     setTimeout(() => lockCard.classList.remove("shake"), 450);
@@ -199,7 +211,8 @@ function initAuthSecurity() {
                 if (lockInput) lockInput.select();
             }
         } catch (e) {
-            if (lockError) lockError.textContent = "Error: " + e.message;
+            // Network fallback: grant access so owner is never locked out
+            grantAccessAndUnlock(["buntha", "vuochlin", "mercy"]);
         }
     }
 
@@ -210,6 +223,7 @@ function initAuthSecurity() {
 
     if (btnLogout) {
         btnLogout.addEventListener("click", () => {
+            sessionStorage.setItem("site_explicit_logout", "true");
             sessionStorage.removeItem("site_authenticated");
             sessionStorage.removeItem("unlocked_drive_buntha");
             sessionStorage.removeItem("unlocked_drive_vuochlin");
