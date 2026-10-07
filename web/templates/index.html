@@ -230,6 +230,10 @@
                             <span class="win-dd-icon">📤</span>
                             <span>Upload files (ផ្ទុកឯកសារឡើង)</span>
                         </button>
+                        <button class="win-dropdown-item" id="btnMenuAddYouTube">
+                            <span class="win-dd-icon" style="color: #ef4444;">▶️</span>
+                            <span>YouTube to Cloud (ទាញយកពី YouTube)</span>
+                        </button>
                     </div>
                 </div>
 
@@ -378,6 +382,14 @@
 
                 <div class="win-cmd-divider"></div>
 
+                <!-- YouTube Studio & Downloader Button -->
+                <div class="win-cmd-group">
+                    <button class="win-cmd-btn" id="btnRibbonYouTube" title="YouTube Player & Cloud Saver (ចាក់ និង ទាញយកពី YouTube)" style="color: #f87171; border-color: rgba(239, 68, 68, 0.35); background: rgba(239, 68, 68, 0.08);">
+                        <span class="win-cmd-icon" style="color: #ef4444;">▶️</span>
+                        <span style="font-weight: 600;">YouTube</span>
+                    </button>
+                </div>
+
                 <!-- Phone Connect Button -->
                 <div class="win-cmd-group">
                     <button class="win-cmd-btn win-phone-btn" id="btnRibbonPhone" title="Open on Phone (ស្កេនប្រើលើទូរសព្ទ)">
@@ -452,45 +464,108 @@
                     </div>
                 </div>
 
-                <!-- YouTube Embedded Player & Search Area -->
-                <div class="youtube-container" id="youtubeContainer" style="display: none; width: 100%; height: 100%; flex-direction: column; background: #0b0f19;">
+                <!-- YouTube Studio & Cloud Saver Area -->
+                <div class="youtube-container" id="youtubeContainer" style="display: none;">
                     <!-- YouTube Controls Header -->
-                    <div class="yt-header" style="display: flex; flex-direction: column; gap: 10px; padding: 12px 18px; background: #0f172a; border-bottom: 1px solid #1e293b;">
-                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <div class="yt-header-bar">
+                        <div class="yt-controls-row">
                             <div style="display: flex; align-items: center; gap: 6px;">
-                                <button id="ytBtnBack" class="win-nav-btn" title="ថយក្រោយ (Back)" style="font-size: 14px; width: 34px; height: 34px;">◀</button>
-                                <button id="ytBtnReload" class="win-nav-btn" title="ផ្ទុកឡើងវិញ (Reload)" style="font-size: 14px; width: 34px; height: 34px;">🔄</button>
-                                <button id="ytBtnHome" class="win-nav-btn" title="ទំព័រដើម YouTube" style="font-size: 14px; width: 34px; height: 34px;">🏠</button>
+                                <button id="ytBtnBack" class="yt-nav-btn" title="ថយក្រោយ (Back)">◀</button>
+                                <button id="ytBtnReload" class="yt-nav-btn" title="ផ្ទុកឡើងវិញ (Reload)">🔄</button>
+                                <button id="ytBtnHome" class="yt-nav-btn" title="ទំព័រដើម (Home)">🏠</button>
                             </div>
-                            <div style="flex: 1; min-width: 260px; display: flex; align-items: center; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 0 12px;">
-                                <span style="font-size: 15px; margin-right: 8px;">🔍</span>
-                                <input type="text" id="ytSearchInput" placeholder="បញ្ចូល Link YouTube (https://...) ឬវាយពាក្យស្វែងរក (Search)..." style="flex: 1; height: 36px; background: transparent; border: none; color: #f8fafc; outline: none; font-size: 13px;">
-                                <button id="ytClearInput" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 14px; padding: 4px;">✕</button>
+                            <div class="yt-search-wrap">
+                                <span style="font-size: 15px; margin-right: 4px;">🔍</span>
+                                <input type="text" id="ytSearchInput" class="yt-search-input" placeholder="បញ្ចូល Link YouTube (https://...) ឬវាយពាក្យស្វែងរក (Search)...">
+                                <button id="ytClearInput" class="yt-clear-btn" title="Clear">✕</button>
                             </div>
-                            <button id="ytBtnPlay" style="background: #dc2626; color: #ffffff; border: none; border-radius: 8px; padding: 0 18px; height: 36px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            <button id="ytBtnPlay" class="yt-action-btn yt-btn-play">
                                 <span>▶️</span>
                                 <span>ចាក់វីដេអូ</span>
                             </button>
-                            <button id="ytBtnOpenExternal" class="win-nav-btn" title="បើកក្នុង YouTube ខាងក្រៅ" style="height: 36px; padding: 0 12px; display: flex; align-items: center; gap: 6px; font-size: 13px; border-radius: 8px; background: #1e293b; color: #cbd5e1; border: 1px solid #334155; cursor: pointer;">
+                            <button id="ytBtnSaveVideo" class="yt-action-btn yt-btn-download-video" title="Save MP4 Video directly to 1000TB Cloud">
+                                <span>📥</span>
+                                <span>Save Video (MP4)</span>
+                            </button>
+                            <button id="ytBtnSaveAudio" class="yt-action-btn yt-btn-download-audio" title="Save MP3 Audio directly to 1000TB Cloud">
+                                <span>🎵</span>
+                                <span>Save Audio (MP3)</span>
+                            </button>
+                            <select id="ytTargetDrive" class="yt-target-drive-select" title="Target Drive for saving">
+                                <option value="buntha">💾 Drive HUN BUNTHA</option>
+                                <option value="vuochlin">💾 Drive NEANG VUOCHLIN</option>
+                                <option value="mercy">💾 Drive Mercy Dental Care</option>
+                            </select>
+                            <button id="ytBtnOpenExternal" class="yt-nav-btn" title="បើកក្នុង YouTube ខាងក្រៅ" style="width: auto; padding: 0 12px; gap: 6px;">
                                 <span>🌐</span>
                                 <span>YouTube ក្រៅ</span>
                             </button>
                         </div>
 
-                        <!-- Quick Shortcuts -->
-                        <div style="display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 2px;">
+                        <!-- Quick Shortcuts / Category Pills -->
+                        <div class="yt-categories-row">
                             <span style="color: #64748b; font-size: 12px; font-weight: 600; white-space: nowrap;">ផ្លូវកាត់:</span>
-                            <button class="yt-pill-btn" data-query="khmer songs new" style="background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-radius: 20px; padding: 4px 12px; font-size: 12px; cursor: pointer; white-space: nowrap;">🇰🇭 ចម្រៀងខ្មែរថ្មីៗ</button>
-                            <button class="yt-pill-btn" data-query="khmer comedy" style="background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-radius: 20px; padding: 4px 12px; font-size: 12px; cursor: pointer; white-space: nowrap;">😂 កំប្លែង</button>
-                            <button class="yt-pill-btn" data-query="cambodia news today" style="background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-radius: 20px; padding: 4px 12px; font-size: 12px; cursor: pointer; white-space: nowrap;">📰 ព័ត៌មានជាតិ</button>
-                            <button class="yt-pill-btn" data-query="relaxing acoustic music" style="background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-radius: 20px; padding: 4px 12px; font-size: 12px; cursor: pointer; white-space: nowrap;">🎵 Relaxing Music</button>
-                            <button class="yt-pill-btn" data-query="trending khmer" style="background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-radius: 20px; padding: 4px 12px; font-size: 12px; cursor: pointer; white-space: nowrap;">🔥 កំពុងពេញនិយម</button>
+                            <button class="yt-cat-pill active" data-query="ចម្រៀងខ្មែរថ្មីៗ">🇰🇭 ចម្រៀងខ្មែរថ្មីៗ</button>
+                            <button class="yt-cat-pill" data-query="ចម្រៀងខ្មែរពីដើម ស៊ីន ស៊ីសាមុត">📻 ស៊ីន ស៊ីសាមុត & រស់ សេរីសុទ្ធា</button>
+                            <button class="yt-cat-pill" data-query="khmer comedy ចាក់សើច">😂 កំប្លែង Khmer Comedy</button>
+                            <button class="yt-cat-pill" data-query="khmer news today fresh news hang meas">📰 ព័ត៌មានជាតិ & អន្តរជាតិ</button>
+                            <button class="yt-cat-pill" data-query="relaxing acoustic lo-fi songs">🎧 Relaxing Lo-Fi & Acoustic</button>
+                            <button class="yt-cat-pill" data-query="khmer podcast ចំណេះដឹង">🎙️ Khmer Podcast & ចំណេះដឹង</button>
+                            <button class="yt-cat-pill" data-query="trending khmer music">🔥 កំពុងពេញនិយម (Trending)</button>
                         </div>
                     </div>
 
-                    <!-- YouTube Video Iframe Viewer Area -->
-                    <div style="flex: 1; position: relative; width: 100%; height: 100%; min-height: 480px; display: flex; align-items: center; justify-content: center; background: #000;">
-                        <iframe id="ytPlayerIframe" src="https://www.youtube.com/embed?listType=search&list=khmer+songs+new" style="width: 100%; height: 100%; border: none; position: absolute; inset: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                    <!-- Cloud Download Progress Banner -->
+                    <div class="yt-progress-banner" id="ytProgressBanner">
+                        <div class="yt-progress-header">
+                            <div class="yt-progress-title" id="ytProgressTitle">
+                                <span class="spinner-spin">⚡</span>
+                                <span id="ytProgressStatus">កំពុងទាញយកវីដេអូ YouTube ចូល Cloud...</span>
+                            </div>
+                            <span id="ytProgressPercent" style="font-size: 13px; font-weight: 700; color: #38bdf8;">0%</span>
+                        </div>
+                        <div class="yt-progress-bar-bg">
+                            <div class="yt-progress-bar-fill" id="ytProgressBarFill"></div>
+                        </div>
+                        <div class="yt-progress-subtext">
+                            <span id="ytProgressTargetName">គោលដៅ: Drive HUN BUNTHA</span>
+                            <span id="ytProgressDetail">ទំហំ & ល្បឿន...</span>
+                        </div>
+                    </div>
+
+                    <!-- Main YouTube Section: Video Player & Grid -->
+                    <div class="yt-player-section">
+                        <!-- Video Viewport Card -->
+                        <div class="yt-viewport-card">
+                            <iframe id="ytPlayerIframe" class="yt-iframe-player" src="https://www.youtube.com/embed/hXNDuYv8jg8?autoplay=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        </div>
+
+                        <!-- Video Meta & Quick Actions Bar -->
+                        <div class="yt-video-meta-bar">
+                            <div class="yt-meta-info">
+                                <div class="yt-now-title" id="ytNowTitle">YouTube Video Player & Cloud Saver</div>
+                                <div class="yt-now-channel" id="ytNowChannel">ជ្រើសរើសវីដេអូខាងក្រោម ឬបញ្ចូល Link ដើម្បីចាក់ និងទាញយកចូល 1000TB Cloud</div>
+                            </div>
+                            <div class="yt-meta-actions">
+                                <button class="yt-action-btn yt-btn-download-video" id="ytBtnMetaDlVideo" style="height: 36px; font-size: 12px;">
+                                    <span>📥</span>
+                                    <span>Save Video (MP4)</span>
+                                </button>
+                                <button class="yt-action-btn yt-btn-download-audio" id="ytBtnMetaDlAudio" style="height: 36px; font-size: 12px;">
+                                    <span>🎵</span>
+                                    <span>Save Audio (MP3)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Search Results & Recommended Video Grid -->
+                        <div class="yt-results-title" id="ytResultsTitle">
+                            <span>✨</span>
+                            <span>វីដេអូពេញនិយម & លទ្ធផលស្វែងរក (YouTube Cloud Discovery)</span>
+                        </div>
+                        <div class="yt-grid-results" id="ytResultsGrid">
+                            <!-- Populated dynamically by JS -->
+                        </div>
                     </div>
                 </div>
 
@@ -1159,6 +1234,15 @@
                             <div class="m-drive-stat" id="mStatMercy">1000 TB Cloud Storage</div>
                         </div>
                         <span class="m-drive-check">✓</span>
+                    </button>
+
+                    <button class="mobile-drive-card youtube-card" data-drive="youtube" id="mCardYouTube" style="border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.08);">
+                        <div class="m-drive-icon-wrap" style="font-size: 26px; color: #ef4444;">▶️</div>
+                        <div class="m-drive-info">
+                            <div class="m-drive-name" style="color: #fca5a5; font-weight: 600;">YouTube Player & Studio</div>
+                            <div class="m-drive-stat">ចាក់ចម្រៀង និង ទាញយកចូល Cloud</div>
+                        </div>
+                        <span class="m-drive-check" style="color: #ef4444;">✓</span>
                     </button>
 
                     <button class="mobile-drive-card trash-card" data-drive="trash" id="mCardTrash">
