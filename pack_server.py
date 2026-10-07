@@ -1482,6 +1482,207 @@ def send_file_to_telegram_route():
             temp_path.unlink()
         return jsonify({{"success": False, "error": str(e)}}), 500
 
+# --- YOUTUBE CLOUD INTEGRATION ---
+YOUTUBE_TASKS = {{}}
+
+def run_youtube_download_task(task_id: str, url: str, format_type: str, drive_owner: str, folder_id):
+    try:
+        import yt_dlp
+    except ImportError:
+        YOUTUBE_TASKS[task_id] = {{
+            "status": "error",
+            "percent": 0,
+            "error": "yt-dlp library is not installed on the server."
+        }}
+        return
+
+    task = YOUTUBE_TASKS.get(task_id, {{}})
+    safe_tid = re.sub(r'[^a-zA-Z0-9_-]', '', task_id)
+    try:
+        task["status"] = "downloading"
+        task["percent"] = 15
+
+        def ydl_progress_hook(d):
+            if d.get("status") == "downloading":
+                total = d.get("total_bytes") or d.get("total_bytes_estimate") or 0
+                downloaded = d.get("downloaded_bytes") or 0
+                if total > 0:
+                    pct = int((downloaded / total) * 70)
+                    task["percent"] = min(70, max(15, pct))
+                speed = d.get("speed")
+                if speed:
+                    task["speed"] = f"{{round(speed / (1024 * 1024), 1)}} MB/s"
+                eta = d.get("eta")
+                if eta:
+                    task["eta"] = f"{{eta}}s"
+            elif d.get("status") == "finished":
+                task["percent"] = 70
+                task["status"] = "uploading"
+
+        out_template = str(CACHE_DIR / f"yt_{{safe_tid}}_%(title).80s.%(ext)s")
+
+        if format_type == "audio":
+            ydl_opts = {{
+                "format": "bestaudio/best",
+                "outtmpl": out_template,
+                "quiet": True,
+                "no_warnings": True,
+                "progress_hooks": [ydl_progress_hook],
+                "postprocessors": [{{
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": "mp3",
+                    "preferredquality": "192",
+                }}]
+            }}
+        else:
+            ydl_opts = {{
+                "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+                "outtmpl": out_template,
+                "quiet": True,
+                "no_warnings": True,
+                "progress_hooks": [ydl_progress_hook],
+            }}
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            meta = ydl.extract_info(url, download=True)
+            video_title = meta.get("title") or "YouTube_Video"
+            task["title"] = video_title
+
+        matching_files = list(CACHE_DIR.glob(f"yt_{{safe_tid}}_*"))
+        if not matching_files:
+            raise FileNotFoundError("Downloaded YouTube file could not be located in cache")
+
+        downloaded_file = matching_files[0]
+        ext = downloaded_file.suffix.lstrip(".").lower()
+        clean_name = f"{{video_title}}.{{ext}}"
+        clean_name = re.sub(r'[\\\\/*?:\\"<>|]', '_', clean_name)
+
+        task["status"] = "uploading"
+        task["percent"] = 75
+
+        up_res = engine.upload_file(
+            local_path=str(downloaded_file),
+            drive_owner=drive_owner or "buntha",
+            custom_filename=clean_name,
+            folder_id=int(folder_id) if folder_id else None
+        )
+
+        task["percent"] = 100
+        task["status"] = "completed"
+        task["file_id"] = up_res.get("id")
+        task["file_name"] = clean_name
+
+        try:
+            if downloaded_file.exists():
+                downloaded_file.unlink()
+        except Exception:
+            pass
+
+    except Exception as e:
+        task["status"] = "error"
+        task["error"] = str(e)
+        for f in CACHE_DIR.glob(f"yt_{{safe_tid}}_*"):
+            try: f.unlink()
+            except Exception: pass
+
+@app.route("/api/youtube/search", methods=["GET"])
+def yt_search_route():
+    query = request.args.get("q", "").strip()
+    if not query:
+        return jsonify({{"success": True, "results": []}})
+    try:
+        import yt_dlp
+        ydl_opts = {{
+            "quiet": True,
+            "extract_flat": True,
+            "skip_download": True,
+            "no_warnings": True
+        }}
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            res = ydl.extract_info(f"ytsearch8:{{query}}", download=False)
+            results = []
+            for item in res.get("entries", []):
+                if not item: continue
+                v_id = item.get("id")
+                if not v_id: continue
+                results.append({{
+                    "id": v_id,
+                    "title": item.get("title", "Untitled"),
+                    "channel": item.get("channel") or item.get("uploader") or "YouTube",
+                    "duration": item.get("duration", 0),
+                    "thumbnail": item.get("thumbnail") or f"https://i.ytimg.com/vi/{{v_id}}/hqdefault.jpg",
+                    "url": item.get("url") or f"https://www.youtube.com/watch?v={{v_id}}"
+                }})
+            return jsonify({{"success": True, "results": results}})
+    except Exception as e:
+        return jsonify({{"success": False, "error": str(e), "results": []}})
+
+@app.route("/api/youtube/info", methods=["GET", "POST"])
+def yt_info_route():
+    url = request.args.get("url") or (request.json or {{}}).get("url")
+    if not url:
+        return jsonify({{"success": False, "error": "Missing URL"}}), 400
+    try:
+        import yt_dlp
+        ydl_opts = {{"quiet": True, "skip_download": True, "no_warnings": True}}
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            return jsonify({{
+                "success": True,
+                "info": {{
+                    "id": info.get("id"),
+                    "title": info.get("title"),
+                    "channel": info.get("channel") or info.get("uploader"),
+                    "duration": info.get("duration"),
+                    "thumbnail": info.get("thumbnail")
+                }}
+            }})
+    except Exception as e:
+        return jsonify({{"success": False, "error": str(e)}}), 500
+
+@app.route("/api/youtube/download", methods=["POST"])
+def yt_download_route():
+    data = request.json or {{}}
+    url = data.get("url", "").strip()
+    if not url:
+        return jsonify({{"success": False, "error": "URL is required"}}), 400
+
+    format_type = data.get("type", "video")
+    drive_owner = data.get("drive_owner", "buntha")
+    folder_id = data.get("folder_id")
+
+    task_id = hashlib.md5(f"{{url}}_{{time.time()}}".encode()).hexdigest()[:12]
+    YOUTUBE_TASKS[task_id] = {{
+        "task_id": task_id,
+        "url": url,
+        "type": format_type,
+        "drive_owner": drive_owner,
+        "folder_id": folder_id,
+        "status": "queued",
+        "percent": 5,
+        "created_at": time.time()
+    }}
+
+    t = threading.Thread(
+        target=run_youtube_download_task,
+        args=(task_id, url, format_type, drive_owner, folder_id),
+        daemon=True
+    )
+    t.start()
+
+    return jsonify({{"success": True, "task_id": task_id, "message": "Download task queued"}})
+
+@app.route("/api/youtube/status/<task_id>", methods=["GET"])
+def yt_status_route(task_id):
+    task = YOUTUBE_TASKS.get(task_id)
+    if not task:
+        return jsonify({{"success": False, "error": "Task not found"}}), 404
+    return jsonify({{"success": True, "task": task}})
+
+@app.route("/api/youtube/tasks", methods=["GET"])
+def yt_tasks_route():
+    return jsonify({{"success": True, "tasks": list(YOUTUBE_TASKS.values())}})
+
 # Restore DB from pinned Telegram backup on startup
 try:
     restore_database_from_telegram()
