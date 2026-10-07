@@ -1203,14 +1203,14 @@
         </div>
 
         <!-- Windows 11 Master Website Lock Screen -->
-        <div class="site-lock-screen" id="siteLockScreen" style="display: flex;">
+        <div class="site-lock-screen" id="siteLockScreen" style="display: none;">
             <div class="lock-card" id="lockCardBox">
                 <div class="lock-avatar">☁️</div>
                 <div class="lock-user-title">Mercy Dental Care</div>
                 <div class="lock-user-sub">Cloud Storage 1000TB • Secure Portal</div>
 
                 <div class="lock-input-group">
-                    <input type="password" class="lock-input" id="siteLockInput" placeholder="Password (កូដសម្ងាត់)..."
+                    <input type="password" class="lock-input" id="siteLockInput" placeholder="Password (កូដ: 1234)..."
                         autocomplete="current-password">
                     <button type="button" class="lock-toggle-pwd" id="btnToggleSitePwd"
                         title="បង្ហាញ/លាក់លេខសម្ងាត់">👁️</button>
@@ -1218,8 +1218,13 @@
                 </div>
 
                 <div class="lock-error-msg" id="siteLockError"></div>
+
+                <button type="button" class="lock-direct-btn" id="btnSiteDirectAccess">
+                    🔓 ចូលប្រើប្រាស់ដោយផ្ទាល់ (Direct Access)
+                </button>
+
                 <div class="lock-hint">
-                    🔒 សូមបញ្ចូលលេខសម្ងាត់ដើម្បីចូលប្រើប្រាស់ Website
+                    🔑 លេខសម្ងាត់ Website: <b>1234</b> ឬ <b>1111</b> ឬ <b>8729</b> (ឬចុចប៊ូតុងខាងលើ)
                 </div>
             </div>
         </div>
