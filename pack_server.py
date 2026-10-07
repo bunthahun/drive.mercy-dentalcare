@@ -788,6 +788,7 @@ def upload_chunk_init():
     drive = str(data.get("drive", "buntha")).strip()
     folder_id = data.get("folder_id")
     folder_id = int(folder_id) if folder_id and str(folder_id).isdigit() else None
+    uploader_email = (data.get("uploader_email") or data.get("gmail") or "").strip().lower() or None
     
     import uuid
     upload_id = f"chunk_{{uuid.uuid4().hex[:12]}}"
@@ -800,6 +801,7 @@ def upload_chunk_init():
         "total_chunks": total_chunks,
         "drive": drive,
         "folder_id": folder_id,
+        "uploader_email": uploader_email,
         "mime_type": mime_type,
         "chunks": {{}},
         "futures": {{}},
@@ -922,7 +924,8 @@ def upload_chunk_complete():
             cloud_backend=cloud_type,
             chunks=chunks_info,
             drive_owner=session["drive"],
-            folder_id=session["folder_id"]
+            folder_id=session["folder_id"],
+            uploader_email=session.get("uploader_email")
         )
         schedule_db_backup()
         
