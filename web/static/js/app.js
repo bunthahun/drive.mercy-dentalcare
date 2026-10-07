@@ -4929,6 +4929,50 @@ function initYouTubePlayer() {
         }
     }
 
+    const btnInstantAdd = document.getElementById("btnYtInstantAddLink");
+
+    async function handleInstantAddYouTube() {
+        if (!importInput) return;
+        const url = importInput.value.trim();
+        if (!url) {
+            alert("សូមបញ្ចូល ឬបិទភ្ជាប់ Link វីដេអូ YouTube (ឧ. https://youtu.be/... ឬ https://www.youtube.com/watch?v=...)!");
+            importInput.focus();
+            return;
+        }
+
+        const driveSelect = document.getElementById("ytVaultTargetDrive");
+        const driveOwner = (driveSelect ? driveSelect.value : "buntha") || "buntha";
+
+        try {
+            if (btnInstantAdd) btnInstantAdd.textContent = "⏳ កំពុងបន្ថែម...";
+            const res = await fetch("/api/youtube/media/add-link", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    url: url,
+                    drive_owner: driveOwner,
+                    gmail: ytUserGmail || "bunthahun7@gmail.com"
+                })
+            });
+            const data = await res.json();
+            if (btnInstantAdd) btnInstantAdd.innerHTML = `<span>➕</span><span>បន្ថែមចូល Gallery ភ្លាមៗ</span>`;
+
+            if (data.success && data.file) {
+                importInput.value = "";
+                loadGmailVaultMedia(ytUserGmail, ytActiveMediaType);
+                playVaultVideo(data.file);
+            } else {
+                alert("មិនអាចបន្ថែមវីដេអូបានទេ: " + (data.error || "Invalid URL"));
+            }
+        } catch (e) {
+            if (btnInstantAdd) btnInstantAdd.innerHTML = `<span>➕</span><span>បន្ថែមចូល Gallery ភ្លាមៗ</span>`;
+            alert("Error: " + e.message);
+        }
+    }
+
+    if (btnInstantAdd) {
+        btnInstantAdd.addEventListener("click", handleInstantAddYouTube);
+    }
     if (btnImportVideo) {
         btnImportVideo.addEventListener("click", () => handleImportFromYouTube("video"));
     }
@@ -4937,7 +4981,7 @@ function initYouTubePlayer() {
     }
     if (importInput) {
         importInput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") handleImportFromYouTube("video");
+            if (e.key === "Enter") handleInstantAddYouTube();
         });
     }
 
@@ -5284,9 +5328,23 @@ function renderVaultGallery(items) {
         const card = document.createElement("div");
         card.className = "yt-vault-card";
 
-        const thumbHtml = isVideo
-            ? `<div class="yt-vault-video-thumb-icon">▶</div>`
-            : `<img src="/api/view/${file.id}" alt="${file.file_name}" loading="lazy" onerror="this.onerror=null; this.src='/static/drive_icon.png';">`;
+        let ytThumb = "";
+        try {
+            const parsed = typeof file.chunks === "string" ? JSON.parse(file.chunks) : file.chunks;
+            if (Array.isArray(parsed) && parsed[0] && parsed[0].thumbnail) {
+                ytThumb = parsed[0].thumbnail;
+            }
+        } catch(e) {}
+        if (!ytThumb && file.sha256 && file.sha256.startsWith("yt_")) {
+            const yid = file.sha256.replace("yt_", "");
+            ytThumb = `https://i.ytimg.com/vi/${yid}/hqdefault.jpg`;
+        }
+
+        const thumbHtml = ytThumb
+            ? `<img src="${ytThumb}" alt="${file.file_name}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='/static/drive_icon.png';"><div class="yt-vault-video-thumb-icon">▶</div>`
+            : (isVideo
+                ? `<div class="yt-vault-video-thumb-icon">▶</div>`
+                : `<img src="/api/view/${file.id}" alt="${file.file_name}" loading="lazy" onerror="this.onerror=null; this.src='/static/drive_icon.png';">`);
 
         const badgeHtml = isVideo
             ? `<span class="yt-vault-type-badge video">🎬 VIDEO</span>`
@@ -5366,20 +5424,47 @@ function playVaultVideo(file) {
     const chanEl = document.getElementById("ytNowChannel");
 
     if (placeholder) placeholder.style.display = "none";
-    if (iframe) iframe.style.display = "none";
 
-    if (videoEl) {
-        videoEl.style.display = "block";
-        videoEl.src = `/api/view/${file.id}`;
-        videoEl.load();
-        videoEl.play().catch(() => {});
+    const isYouTubeVideo = file.cloud_backend === "youtube" || file.mime_type === "video/youtube" || (file.sha256 && file.sha256.startsWith("yt_"));
+    if (isYouTubeVideo) {
+        let ytId = "";
+        try {
+            const parsed = typeof file.chunks === "string" ? JSON.parse(file.chunks) : file.chunks;
+            if (Array.isArray(parsed) && parsed[0] && parsed[0].youtube_id) {
+                ytId = parsed[0].youtube_id;
+            }
+        } catch (e) {}
+        if (!ytId && file.sha256 && file.sha256.startsWith("yt_")) {
+            ytId = file.sha256.replace("yt_", "");
+        }
+        if (videoEl) {
+            videoEl.pause();
+            videoEl.src = "";
+            videoEl.style.display = "none";
+        }
+        if (iframe) {
+            iframe.style.display = "block";
+            iframe.src = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`;
+        }
+    } else {
+        if (iframe) {
+            iframe.src = "";
+            iframe.style.display = "none";
+        }
+        if (videoEl) {
+            videoEl.style.display = "block";
+            videoEl.src = `/api/view/${file.id}`;
+            videoEl.load();
+            videoEl.play().catch(() => {});
+        }
     }
 
     if (metaBar) metaBar.style.display = "flex";
     if (titleEl) titleEl.textContent = file.file_name;
     if (chanEl) {
         const uploader = file.uploader_email ? `Gmail: ${file.uploader_email}` : `Drive: ${(file.drive_owner || 'buntha').toUpperCase()}`;
-        chanEl.textContent = `ទំហំ: ${formatBytes(file.file_size)} • ${uploader} • ${file.created_at || ''}`;
+        const szText = file.file_size > 0 ? `ទំហំ: ${formatBytes(file.file_size)} • ` : 'YouTube Video • ';
+        chanEl.textContent = `${szText}${uploader} • ${file.created_at || ''}`;
     }
 
     // Scroll smoothly to player
