@@ -1376,12 +1376,15 @@ async function loadFiles() {
     const cmdBar = document.querySelector(".win-command-bar");
 
     if (currentCategory === "youtube") {
-        if (ytContainer) ytContainer.style.display = "flex";
+        if (ytContainer) ytContainer.style.display = "block";
         if (winDetails) winDetails.style.display = "none";
         if (winItems) winItems.style.display = "none";
         if (emptyState) emptyState.style.display = "none";
         if (cmdBar) cmdBar.style.display = "none";
         renderBreadcrumbs();
+        if (typeof refreshYouTubeMediaVault === "function") {
+            refreshYouTubeMediaVault();
+        }
         return;
     } else {
         if (ytContainer) ytContainer.style.display = "none";
@@ -4617,389 +4620,515 @@ let ytCurrentVideo = {
     url: "https://www.youtube.com/watch?v=hXNDuYv8jg8"
 };
 
+let ytUserGmail = localStorage.getItem("yt_user_gmail") || "";
+let ytActiveMediaType = "all";
+let ytVaultFilesCache = [];
+let ytActiveSelectedFile = null;
+
+function refreshYouTubeMediaVault() {
+    ytUserGmail = localStorage.getItem("yt_user_gmail") || "";
+    updateGmailStatusUI();
+    loadGmailVaultMedia(ytUserGmail, ytActiveMediaType);
+}
+
+function updateGmailStatusUI() {
+    const inputRow = document.getElementById("ytGmailInputRow");
+    const connectedBox = document.getElementById("ytGmailConnectedBox");
+    const activeText = document.getElementById("ytActiveGmailText");
+    const input = document.getElementById("ytGmailInput");
+
+    if (ytUserGmail && ytUserGmail.trim()) {
+        if (connectedBox) connectedBox.style.display = "flex";
+        if (inputRow) inputRow.style.display = "none";
+        if (activeText) activeText.textContent = ytUserGmail;
+    } else {
+        if (connectedBox) connectedBox.style.display = "none";
+        if (inputRow) inputRow.style.display = "flex";
+        if (input) input.value = "";
+    }
+}
+
 function initYouTubePlayer() {
-    const input = document.getElementById("ytSearchInput");
-    const btnPlay = document.getElementById("ytBtnPlay");
-    const btnClear = document.getElementById("ytClearInput");
-    const iframe = document.getElementById("ytPlayerIframe");
-    const btnBack = document.getElementById("ytBtnBack");
-    const btnReload = document.getElementById("ytBtnReload");
-    const btnHome = document.getElementById("ytBtnHome");
-    const btnExternal = document.getElementById("ytBtnOpenExternal");
-    const btnSaveVideo = document.getElementById("ytBtnSaveVideo");
-    const btnSaveAudio = document.getElementById("ytBtnSaveAudio");
-    const btnMetaDlVideo = document.getElementById("ytBtnMetaDlVideo");
-    const btnMetaDlAudio = document.getElementById("ytBtnMetaDlAudio");
-    const targetDriveSelect = document.getElementById("ytTargetDrive");
-    const resultsGrid = document.getElementById("ytResultsGrid");
+    const gmailInput = document.getElementById("ytGmailInput");
+    const btnConnectGmail = document.getElementById("btnYtConnectGmail");
+    const btnSwitchGmail = document.getElementById("btnYtSwitchGmail");
+    const btnTriggerVideo = document.getElementById("btnYtTriggerUploadVideo");
+    const btnTriggerPicture = document.getElementById("btnYtTriggerUploadPicture");
+    const videoInput = document.getElementById("ytVideoUploadInput");
+    const pictureInput = document.getElementById("ytPictureUploadInput");
+    const searchInput = document.getElementById("ytGallerySearchInput");
+    const btnRefresh = document.getElementById("btnYtRefreshGallery");
+    const tabAll = document.getElementById("btnYtTabAll");
+    const tabVideos = document.getElementById("btnYtTabVideos");
+    const tabPictures = document.getElementById("btnYtTabPictures");
 
-    if (!iframe) return;
+    // Initialize Gmail status UI
+    updateGmailStatusUI();
 
-    // Helper: Parse Video ID from YouTube URLs
-    function parseYouTubeVideoId(val) {
-        if (!val) return null;
-        val = val.trim();
-        if (val.includes("youtube.com/watch")) {
-            const m = val.match(/[?&]v=([^&#]+)/);
-            if (m) return m[1];
-        } else if (val.includes("youtu.be/")) {
-            const parts = val.split("youtu.be/");
-            if (parts.length > 1) return parts[1].split(/[?&#]/)[0];
-        } else if (val.includes("youtube.com/shorts/")) {
-            const parts = val.split("youtube.com/shorts/");
-            if (parts.length > 1) return parts[1].split(/[?&#]/)[0];
-        } else if (val.includes("youtube.com/embed/")) {
-            const parts = val.split("youtube.com/embed/");
-            if (parts.length > 1) return parts[1].split(/[?&#]/)[0];
-        } else if (/^[a-zA-Z0-9_-]{11}$/.test(val)) {
-            return val;
-        }
-        return null;
-    }
-
-    // Play a specific video ID or URL
-    function playVideo(videoId, title, channel, fullUrl) {
-        if (!videoId) return;
-        ytCurrentVideo = {
-            id: videoId,
-            title: title || `YouTube Video (${videoId})`,
-            channel: channel || "YouTube",
-            url: fullUrl || `https://www.youtube.com/watch?v=${videoId}`
-        };
-
-        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1`;
-
-        const titleEl = document.getElementById("ytNowTitle");
-        const chanEl = document.getElementById("ytNowChannel");
-        if (titleEl) titleEl.textContent = ytCurrentVideo.title;
-        if (chanEl) chanEl.textContent = `${ytCurrentVideo.channel} • YouTube HD`;
-
-        if (input && fullUrl) input.value = fullUrl;
-    }
-
-    // Perform Search or Handle URL Input
-    async function handleYouTubeInput(queryOrUrl) {
-        if (!queryOrUrl || !queryOrUrl.trim()) return;
-        const val = queryOrUrl.trim();
-
-        // 1. If it's a direct URL or video ID
-        const directId = parseYouTubeVideoId(val);
-        if (directId) {
-            playVideo(directId, "កំពុងផ្ទុកព័ត៌មានវីដេអូ...", "YouTube", val.startsWith("http") ? val : `https://www.youtube.com/watch?v=${directId}`);
-            // Fetch info in background
-            try {
-                const res = await fetch(`/api/youtube/info?url=${encodeURIComponent(val)}`);
-                const data = await res.json();
-                if (data.success && data.info) {
-                    ytCurrentVideo.title = data.info.title || ytCurrentVideo.title;
-                    ytCurrentVideo.channel = data.info.channel || ytCurrentVideo.channel;
-                    const titleEl = document.getElementById("ytNowTitle");
-                    const chanEl = document.getElementById("ytNowChannel");
-                    if (titleEl) titleEl.textContent = ytCurrentVideo.title;
-                    if (chanEl) chanEl.textContent = `${ytCurrentVideo.channel} • ${formatDuration(data.info.duration || 0)}`;
-                }
-            } catch (e) {
-                console.warn("Error fetching video info:", e);
-            }
+    // Gmail Connect
+    function doConnectGmail() {
+        if (!gmailInput) return;
+        let val = gmailInput.value.trim().toLowerCase();
+        if (!val) {
+            alert("សូមបញ្ចូលអាសយដ្ឋាន Gmail របស់អ្នក (ឧ. example@gmail.com)!");
+            gmailInput.focus();
             return;
         }
-
-        // 2. If it's a Search Query: Query Backend Search API
-        if (resultsGrid) {
-            resultsGrid.innerHTML = `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #94a3b8;">
-                    <div style="font-size: 28px; margin-bottom: 8px;" class="spinner-spin">⏳</div>
-                    <div>កំពុងស្វែងរក "${val}" លើ YouTube...</div>
-                </div>
-            `;
+        if (!val.includes("@")) {
+            val = val + "@gmail.com";
         }
-
-        try {
-            const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(val)}`);
-            const data = await res.json();
-            if (data.success && Array.isArray(data.results) && data.results.length > 0) {
-                renderSearchResults(data.results);
-                // Auto play first result
-                const first = data.results[0];
-                playVideo(first.id, first.title, first.channel, first.url);
-            } else {
-                if (resultsGrid) {
-                    resultsGrid.innerHTML = `
-                        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #94a3b8;">
-                            <div style="font-size: 28px; margin-bottom: 8px;">🔍</div>
-                            <div>រកមិនឃើញវីដេអូសម្រាប់ "${val}" ទេ</div>
-                        </div>
-                    `;
-                }
-            }
-        } catch (e) {
-            console.error("YouTube search error:", e);
-            // Fallback: embed query directly
-            iframe.src = `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(val)}`;
-        }
+        ytUserGmail = val;
+        localStorage.setItem("yt_user_gmail", ytUserGmail);
+        updateGmailStatusUI();
+        loadGmailVaultMedia(ytUserGmail, ytActiveMediaType);
     }
 
-    function formatDuration(sec) {
-        if (!sec || isNaN(sec)) return "";
-        sec = parseInt(sec);
-        const m = Math.floor(sec / 60);
-        const s = sec % 60;
-        return `${m}:${s < 10 ? '0' : ''}${s}`;
+    if (btnConnectGmail) {
+        btnConnectGmail.addEventListener("click", doConnectGmail);
     }
-
-    // Render Video Result Cards
-    function renderSearchResults(items) {
-        if (!resultsGrid) return;
-        resultsGrid.innerHTML = "";
-
-        items.forEach(item => {
-            const card = document.createElement("div");
-            card.className = "yt-card";
-            card.innerHTML = `
-                <div class="yt-thumb-box">
-                    <img src="${item.thumbnail || 'https://i.ytimg.com/vi/' + item.id + '/hqdefault.jpg'}" alt="${item.title}" class="yt-thumb-img" loading="lazy">
-                    <span class="yt-duration-badge">${formatDuration(item.duration)}</span>
-                </div>
-                <div class="yt-card-body">
-                    <div class="yt-card-title" title="${item.title}">${item.title}</div>
-                    <div class="yt-card-channel">${item.channel || 'YouTube'}</div>
-                    <div class="yt-card-actions">
-                        <button class="yt-card-btn yt-card-btn-play" title="ចាក់វីដេអូ">▶️ Play</button>
-                        <button class="yt-card-btn yt-card-btn-dl" title="Save MP4 Video to 1000TB Cloud">📥 MP4</button>
-                        <button class="yt-card-btn yt-card-btn-audio" title="Save MP3 Audio to 1000TB Cloud">🎵 MP3</button>
-                    </div>
-                </div>
-            `;
-
-            // Card click plays video
-            card.querySelector(".yt-thumb-box").addEventListener("click", () => {
-                playVideo(item.id, item.title, item.channel, item.url);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-            });
-            card.querySelector(".yt-card-title").addEventListener("click", () => {
-                playVideo(item.id, item.title, item.channel, item.url);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-            });
-            card.querySelector(".yt-card-btn-play").addEventListener("click", (e) => {
-                e.stopPropagation();
-                playVideo(item.id, item.title, item.channel, item.url);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-            });
-
-            // Card download to Cloud
-            card.querySelector(".yt-card-btn-dl").addEventListener("click", (e) => {
-                e.stopPropagation();
-                startDownloadToCloud(item.url || `https://www.youtube.com/watch?v=${item.id}`, "video", item.title);
-            });
-            card.querySelector(".yt-card-btn-audio").addEventListener("click", (e) => {
-                e.stopPropagation();
-                startDownloadToCloud(item.url || `https://www.youtube.com/watch?v=${item.id}`, "audio", item.title);
-            });
-
-            resultsGrid.appendChild(card);
+    if (gmailInput) {
+        gmailInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") doConnectGmail();
         });
     }
 
-    // Start Download to Cloud Storage
-    async function startDownloadToCloud(videoUrl, formatType, customTitle) {
-        if (!videoUrl) videoUrl = ytCurrentVideo.url;
-        if (!videoUrl) {
-            alert("សូមជ្រើសរើស ឬបញ្ចូល Link វីដេអូ YouTube ជាមុនសិន!");
-            return;
-        }
-
-        const driveOwner = (targetDriveSelect ? targetDriveSelect.value : currentCategory) || "buntha";
-        const driveNames = {
-            buntha: "HUN BUNTHA",
-            vuochlin: "NEANG VUOCHLIN",
-            mercy: "Mercy Dental Care"
-        };
-        const targetName = driveNames[driveOwner] || "HUN BUNTHA";
-
-        const banner = document.getElementById("ytProgressBanner");
-        const statusEl = document.getElementById("ytProgressStatus");
-        const percentEl = document.getElementById("ytProgressPercent");
-        const fillEl = document.getElementById("ytProgressBarFill");
-        const targetEl = document.getElementById("ytProgressTargetName");
-        const detailEl = document.getElementById("ytProgressDetail");
-
-        if (banner) banner.style.display = "block";
-        if (targetEl) targetEl.textContent = `គោលដៅ: Drive ${targetName} (${formatType === 'audio' ? 'MP3' : 'MP4'})`;
-        if (statusEl) statusEl.textContent = `⚡ កំពុងរៀបចំទាញយក ${formatType === 'audio' ? 'ចម្រៀង MP3' : 'វីដេអូ MP4'}...`;
-        if (percentEl) percentEl.textContent = "5%";
-        if (fillEl) fillEl.style.width = "5%";
-        if (detailEl) detailEl.textContent = customTitle || ytCurrentVideo.title || "YouTube Media";
-
-        try {
-            const res = await fetch("/api/youtube/download", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    url: videoUrl,
-                    type: formatType,
-                    drive_owner: driveOwner,
-                    folder_id: (currentCategory === driveOwner && currentFolderId) ? currentFolderId : null
-                })
-            });
-
-            const data = await res.json();
-            if (!data.success || !data.task_id) {
-                if (statusEl) statusEl.textContent = "✕ បរាជ័យ: " + (data.error || "មិនអាចទាញយកបាន");
-                setTimeout(() => { if (banner) banner.style.display = "none"; }, 5000);
-                return;
-            }
-
-            const taskId = data.task_id;
-            ytActiveDownloadTask = taskId;
-
-            // Poll task status
-            if (ytDownloadInterval) clearInterval(ytDownloadInterval);
-            ytDownloadInterval = setInterval(async () => {
-                try {
-                    const statusRes = await fetch(`/api/youtube/status/${taskId}`);
-                    const statusData = await statusRes.json();
-                    if (!statusData.success || !statusData.task) return;
-
-                    const task = statusData.task;
-                    const pct = task.percent || 10;
-                    if (percentEl) percentEl.textContent = `${pct}%`;
-                    if (fillEl) fillEl.style.width = `${pct}%`;
-
-                    if (task.status === "downloading") {
-                        if (statusEl) statusEl.textContent = `📥 កំពុងទាញយកពី YouTube: ${task.title || customTitle || ''}`;
-                        if (detailEl) detailEl.textContent = `ល្បឿន: ${task.speed || 'High-speed'} • នៅសល់: ${task.eta || 'Calculating...'}`;
-                    } else if (task.status === "uploading") {
-                        if (statusEl) statusEl.textContent = `🚀 កំពុង Encrypt & Upload ចូល 1000TB Cloud [${targetName}]...`;
-                        if (detailEl) detailEl.textContent = `AES-256 Cloud Chunking in progress...`;
-                    } else if (task.status === "completed") {
-                        clearInterval(ytDownloadInterval);
-                        ytDownloadInterval = null;
-                        if (statusEl) statusEl.textContent = `✅ បានរក្សាទុកក្នុង Drive [${targetName}] ដោយជោគជ័យ!`;
-                        if (percentEl) percentEl.textContent = "100%";
-                        if (fillEl) fillEl.style.width = "100%";
-                        if (detailEl) detailEl.textContent = `ឯកសារឈ្មោះ: ${task.file_name || 'Completed'}`;
-
-                        // If user is currently looking at that drive/folder, refresh files
-                        if (currentCategory === driveOwner) {
-                            loadFiles();
-                            fetchStats();
-                        }
-
-                        setTimeout(() => {
-                            if (banner) banner.style.display = "none";
-                        }, 5000);
-                    } else if (task.status === "error") {
-                        clearInterval(ytDownloadInterval);
-                        ytDownloadInterval = null;
-                        if (statusEl) statusEl.textContent = `✕ បរាជ័យ: ${task.error || 'Unknown error'}`;
-                        if (fillEl) fillEl.style.background = "#f43f5e";
-                        setTimeout(() => {
-                            if (banner) banner.style.display = "none";
-                        }, 6000);
-                    }
-                } catch (err) {
-                    console.error("Error polling task:", err);
-                }
-            }, 1000);
-
-        } catch (e) {
-            console.error("Start download error:", e);
-            if (statusEl) statusEl.textContent = "✕ Error: " + e.message;
-            setTimeout(() => { if (banner) banner.style.display = "none"; }, 5000);
-        }
-    }
-
-    // Attach Event Listeners
-    if (btnPlay && input) {
-        btnPlay.addEventListener("click", () => handleYouTubeInput(input.value));
-        input.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") handleYouTubeInput(input.value);
-        });
-        input.addEventListener("input", () => {
-            if (btnClear) btnClear.style.display = input.value ? "block" : "none";
-        });
-    }
-
-    if (btnClear && input) {
-        btnClear.addEventListener("click", () => {
-            input.value = "";
-            btnClear.style.display = "none";
-            input.focus();
-        });
-    }
-
-    if (btnSaveVideo) {
-        btnSaveVideo.addEventListener("click", () => {
-            const url = (input && input.value.trim().startsWith("http")) ? input.value.trim() : ytCurrentVideo.url;
-            startDownloadToCloud(url, "video", ytCurrentVideo.title);
-        });
-    }
-
-    if (btnSaveAudio) {
-        btnSaveAudio.addEventListener("click", () => {
-            const url = (input && input.value.trim().startsWith("http")) ? input.value.trim() : ytCurrentVideo.url;
-            startDownloadToCloud(url, "audio", ytCurrentVideo.title);
-        });
-    }
-
-    if (btnMetaDlVideo) {
-        btnMetaDlVideo.addEventListener("click", () => {
-            startDownloadToCloud(ytCurrentVideo.url, "video", ytCurrentVideo.title);
-        });
-    }
-
-    if (btnMetaDlAudio) {
-        btnMetaDlAudio.addEventListener("click", () => {
-            startDownloadToCloud(ytCurrentVideo.url, "audio", ytCurrentVideo.title);
-        });
-    }
-
-    if (btnReload) {
-        btnReload.addEventListener("click", () => {
-            iframe.src = iframe.src;
-        });
-    }
-
-    if (btnHome) {
-        btnHome.addEventListener("click", () => {
-            if (input) input.value = "";
-            handleYouTubeInput("ចម្រៀងខ្មែរថ្មីៗ");
-        });
-    }
-
-    if (btnBack) {
-        btnBack.addEventListener("click", () => {
-            if (window.switchDrive) window.switchDrive("buntha");
-        });
-    }
-
-    if (btnExternal) {
-        btnExternal.addEventListener("click", () => {
-            const val = input ? input.value.trim() : "";
-            if (val.startsWith("http://") || val.startsWith("https://")) {
-                window.open(val, "_blank");
-            } else if (ytCurrentVideo.url) {
-                window.open(ytCurrentVideo.url, "_blank");
-            } else {
-                window.open("https://www.youtube.com", "_blank");
+    // Gmail Switch
+    if (btnSwitchGmail) {
+        btnSwitchGmail.addEventListener("click", () => {
+            const inputRow = document.getElementById("ytGmailInputRow");
+            const connectedBox = document.getElementById("ytGmailConnectedBox");
+            if (connectedBox) connectedBox.style.display = "none";
+            if (inputRow) inputRow.style.display = "flex";
+            if (gmailInput) {
+                gmailInput.value = ytUserGmail;
+                gmailInput.focus();
+                gmailInput.select();
             }
         });
     }
 
-    // Category Pills: Active highlight & search
-    document.querySelectorAll(".yt-cat-pill").forEach(pill => {
-        pill.addEventListener("click", () => {
-            document.querySelectorAll(".yt-cat-pill").forEach(p => p.classList.remove("active"));
-            pill.classList.add("active");
-            const q = pill.dataset.query;
-            if (input) input.value = q;
-            if (btnClear) btnClear.style.display = "block";
-            handleYouTubeInput(q);
+    // Trigger File Inputs
+    if (btnTriggerVideo && videoInput) {
+        btnTriggerVideo.addEventListener("click", () => videoInput.click());
+        videoInput.addEventListener("change", (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                uploadVaultFiles(Array.from(e.target.files), "videos");
+                e.target.value = "";
+            }
+        });
+    }
+
+    if (btnTriggerPicture && pictureInput) {
+        btnTriggerPicture.addEventListener("click", () => pictureInput.click());
+        pictureInput.addEventListener("change", (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                uploadVaultFiles(Array.from(e.target.files), "images");
+                e.target.value = "";
+            }
+        });
+    }
+
+    // Drag and Drop Upload Support
+    const ytContainer = document.getElementById("youtubeContainer");
+    if (ytContainer) {
+        ytContainer.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            ytContainer.style.outline = "2px dashed #ef4444";
+        });
+        ytContainer.addEventListener("dragleave", (e) => {
+            e.preventDefault();
+            ytContainer.style.outline = "none";
+        });
+        ytContainer.addEventListener("drop", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            ytContainer.style.outline = "none";
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                uploadVaultFiles(Array.from(e.dataTransfer.files));
+            }
+        });
+    }
+
+    // Filter Tabs
+    const filterTabs = [
+        { btn: tabAll, type: "all" },
+        { btn: tabVideos, type: "video" },
+        { btn: tabPictures, type: "image" }
+    ];
+
+    filterTabs.forEach(item => {
+        if (!item.btn) return;
+        item.btn.addEventListener("click", () => {
+            filterTabs.forEach(t => t.btn && t.btn.classList.remove("active"));
+            item.btn.classList.add("active");
+            ytActiveMediaType = item.type;
+            loadGmailVaultMedia(ytUserGmail, ytActiveMediaType);
         });
     });
 
-    // Auto load initial trending Khmer songs
-    handleYouTubeInput("ចម្រៀងខ្មែរថ្មីៗ");
+    // Refresh Button
+    if (btnRefresh) {
+        btnRefresh.addEventListener("click", () => {
+            loadGmailVaultMedia(ytUserGmail, ytActiveMediaType);
+        });
+    }
+
+    // Search Input in Gallery
+    if (searchInput) {
+        searchInput.addEventListener("input", () => {
+            const query = searchInput.value.trim().toLowerCase();
+            renderVaultGallery(ytVaultFilesCache.filter(f => f.file_name.toLowerCase().includes(query)));
+        });
+    }
+
+    // Direct Video Player Meta Actions
+    const btnDlCurrent = document.getElementById("ytBtnDownloadCurrent");
+    const btnCopyLink = document.getElementById("ytBtnCopyCurrentLink");
+    const btnDelCurrent = document.getElementById("ytBtnDeleteCurrent");
+
+    if (btnDlCurrent) {
+        btnDlCurrent.addEventListener("click", () => {
+            if (ytActiveSelectedFile) {
+                window.open(`/api/download/${ytActiveSelectedFile.id}`, "_blank");
+            }
+        });
+    }
+
+    if (btnCopyLink) {
+        btnCopyLink.addEventListener("click", () => {
+            if (ytActiveSelectedFile) {
+                const streamUrl = `${window.location.origin}/api/view/${ytActiveSelectedFile.id}`;
+                navigator.clipboard.writeText(streamUrl).then(() => {
+                    alert("បានចម្លង Link វីដេអូដោយជោគជ័យ!\n" + streamUrl);
+                }).catch(() => {
+                    prompt("Link វីដេអូ:", streamUrl);
+                });
+            }
+        });
+    }
+
+    if (btnDelCurrent) {
+        btnDelCurrent.addEventListener("click", () => {
+            if (ytActiveSelectedFile) {
+                deleteVaultFile(ytActiveSelectedFile.id, ytActiveSelectedFile.file_name);
+            }
+        });
+    }
+
+    // Initial Media Load
+    loadGmailVaultMedia(ytUserGmail, ytActiveMediaType);
+}
+
+// Upload Files to YouTube Media Vault
+async function uploadVaultFiles(filesList, preferredCategory) {
+    if (!filesList || filesList.length === 0) return;
+
+    // Check Gmail
+    if (!ytUserGmail) {
+        const input = document.getElementById("ytGmailInput");
+        let entered = (input ? input.value.trim().toLowerCase() : "");
+        if (!entered) {
+            entered = prompt("សូមបញ្ចូលអាសយដ្ឋាន Gmail របស់អ្នកដើម្បីរក្សាទុកឯកសារ (ឧ. example@gmail.com):");
+        }
+        if (!entered || !entered.trim()) {
+            alert("តម្រូវឱ្យមាន Gmail ដើម្បីរក្សាទុកឯកសារក្នុង YouTube Vault!");
+            return;
+        }
+        if (!entered.includes("@")) entered += "@gmail.com";
+        ytUserGmail = entered.trim().toLowerCase();
+        localStorage.setItem("yt_user_gmail", ytUserGmail);
+        updateGmailStatusUI();
+    }
+
+    const driveSelect = document.getElementById("ytVaultTargetDrive");
+    const driveOwner = (driveSelect ? driveSelect.value : "buntha") || "buntha";
+
+    const banner = document.getElementById("ytUploadProgressBanner");
+    const statusText = document.getElementById("ytUploadProgressStatus");
+    const percentText = document.getElementById("ytUploadProgressPercent");
+    const fillBar = document.getElementById("ytUploadProgressBarFill");
+    const nameText = document.getElementById("ytUploadProgressFileName");
+    const detailText = document.getElementById("ytUploadProgressDetail");
+
+    if (banner) banner.style.display = "block";
+
+    for (let i = 0; i < filesList.length; i++) {
+        const file = filesList[i];
+        if (nameText) nameText.textContent = `[${i + 1}/${filesList.length}] ${file.name}`;
+        if (statusText) statusText.textContent = `កំពុងផ្ទុកឡើង និង Encrypt ចូល 1000TB Cloud [Drive: ${driveOwner.toUpperCase()}]...`;
+        if (percentText) percentText.textContent = "0%";
+        if (fillBar) fillBar.style.width = "0%";
+
+        await new Promise((resolve) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "/api/youtube/media/upload");
+
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const pct = Math.round((e.loaded / e.total) * 100);
+                    if (percentText) percentText.textContent = `${pct}%`;
+                    if (fillBar) fillBar.style.width = `${pct}%`;
+                    if (detailText) {
+                        detailText.textContent = `${formatBytes(e.loaded)} / ${formatBytes(e.total)}`;
+                    }
+                }
+            };
+
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        const res = JSON.parse(xhr.responseText);
+                        if (res.success) {
+                            if (percentText) percentText.textContent = "100%";
+                            if (fillBar) fillBar.style.width = "100%";
+                        }
+                    } catch (err) {}
+                }
+                resolve();
+            };
+
+            xhr.onerror = () => {
+                resolve();
+            };
+
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("gmail", ytUserGmail);
+            formData.append("drive_owner", driveOwner);
+
+            xhr.send(formData);
+        });
+    }
+
+    if (statusText) statusText.textContent = "✅ បានរក្សាទុកក្នុង Cloud ដោយជោគជ័យ!";
+    setTimeout(() => {
+        if (banner) banner.style.display = "none";
+    }, 3000);
+
+    // Refresh media gallery
+    loadGmailVaultMedia(ytUserGmail, ytActiveMediaType);
+    fetchStats();
+}
+
+// Fetch Media List from Server
+async function loadGmailVaultMedia(gmail, mediaType) {
+    const grid = document.getElementById("ytMediaGalleryGrid");
+    if (!grid) return;
+
+    grid.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 36px; color: #94a3b8;">
+            <div style="font-size: 26px; margin-bottom: 8px;" class="spinner-spin">⏳</div>
+            <div>កំពុងផ្ទុកកាតាឡុកវីដេអូ & រូបភាព...</div>
+        </div>
+    `;
+
+    try {
+        const url = `/api/youtube/media/list?gmail=${encodeURIComponent(gmail || '')}&type=${encodeURIComponent(mediaType || 'all')}&drive_owner=all`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.success) {
+            ytVaultFilesCache = data.files || [];
+
+            // Update stats count pills
+            const cntAll = document.getElementById("ytCountAll");
+            const cntVid = document.getElementById("ytCountVideos");
+            const cntPic = document.getElementById("ytCountPictures");
+            if (cntAll) cntAll.textContent = ytVaultFilesCache.length;
+            if (cntVid) cntVid.textContent = data.stats ? data.stats.videos_count : 0;
+            if (cntPic) cntPic.textContent = data.stats ? data.stats.images_count : 0;
+
+            renderVaultGallery(ytVaultFilesCache);
+        } else {
+            grid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 36px; color: #f87171;">
+                    ✕ មិនអាចទាញយកទិន្នន័យបាន: ${data.error || 'Server error'}
+                </div>
+            `;
+        }
+    } catch (e) {
+        console.error("loadGmailVaultMedia error:", e);
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 36px; color: #f87171;">
+                ✕ បរាជ័យក្នុងការតភ្ជាប់ទៅកាន់ម៉ាស៊ីនបម្រើ
+            </div>
+        `;
+    }
+}
+
+// Render Gallery Cards
+function renderVaultGallery(items) {
+    const grid = document.getElementById("ytMediaGalleryGrid");
+    if (!grid) return;
+
+    if (!items || items.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; color: #94a3b8; background: rgba(30, 41, 59, 0.4); border-radius: 12px; border: 1px dashed rgba(255, 255, 255, 0.08);">
+                <div style="font-size: 40px; margin-bottom: 10px;">📂</div>
+                <div style="font-size: 15px; font-weight: 600; color: #f1f5f9; margin-bottom: 4px;">មិនទាន់មានឯកសារនៅឡើយទេ</div>
+                <div style="font-size: 12.5px; color: #64748b; margin-bottom: 16px;">ចុច "ផ្ទុកវីដេអូឡើង" ឬ "ផ្ទុករូបភាពឡើង" ខាងលើ ដើម្បីរក្សាទុកឯកសាររបស់អ្នកភ្លាមៗ</div>
+            </div>
+        `;
+        return;
+    }
+
+    grid.innerHTML = "";
+
+    items.forEach(file => {
+        const isVideo = (file.category === "videos");
+        const card = document.createElement("div");
+        card.className = "yt-vault-card";
+
+        const thumbHtml = isVideo
+            ? `<div class="yt-vault-video-thumb-icon">▶</div>`
+            : `<img src="/api/view/${file.id}" alt="${file.file_name}" loading="lazy" onerror="this.onerror=null; this.src='/static/drive_icon.png';">`;
+
+        const badgeHtml = isVideo
+            ? `<span class="yt-vault-type-badge video">🎬 VIDEO</span>`
+            : `<span class="yt-vault-type-badge image">🖼️ PHOTO</span>`;
+
+        const uploaderDisplay = file.uploader_email
+            ? `📧 ${file.uploader_email}`
+            : `Drive: ${(file.drive_owner || 'buntha').toUpperCase()}`;
+
+        card.innerHTML = `
+            <div class="yt-vault-thumb" title="${file.file_name}">
+                ${thumbHtml}
+                ${badgeHtml}
+                <span class="yt-vault-size-badge">${formatBytes(file.file_size)}</span>
+            </div>
+            <div class="yt-vault-card-body">
+                <div class="yt-vault-card-title" title="${file.file_name}">${file.file_name}</div>
+                <div class="yt-vault-meta-row">
+                    <span class="yt-vault-uploader" title="${uploaderDisplay}">${uploaderDisplay}</span>
+                    <span>${(file.created_at || '').substring(0, 10)}</span>
+                </div>
+                <div class="yt-vault-card-actions">
+                    ${isVideo
+                        ? `<button class="yt-vault-btn yt-vault-btn-play" title="ចាក់វីដេអូ">▶ ចាក់មើល</button>`
+                        : `<button class="yt-vault-btn yt-vault-btn-view" title="មើលរូបភាព">🔍 មើលធំ</button>`
+                    }
+                    <button class="yt-vault-btn yt-vault-btn-dl" title="ទាញយកឯកសារ">📥 ទាញយក</button>
+                    <button class="yt-vault-btn yt-vault-btn-del" title="លុបឯកសារ">🗑️</button>
+                </div>
+            </div>
+        `;
+
+        // Card Click Events
+        const thumbEl = card.querySelector(".yt-vault-thumb");
+        const actionBtn = isVideo ? card.querySelector(".yt-vault-btn-play") : card.querySelector(".yt-vault-btn-view");
+        const dlBtn = card.querySelector(".yt-vault-btn-dl");
+        const delBtn = card.querySelector(".yt-vault-btn-del");
+
+        const openMedia = () => {
+            if (isVideo) {
+                playVaultVideo(file);
+            } else {
+                previewVaultPicture(file);
+            }
+        };
+
+        if (thumbEl) thumbEl.addEventListener("click", openMedia);
+        if (actionBtn) actionBtn.addEventListener("click", openMedia);
+
+        if (dlBtn) {
+            dlBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                window.open(`/api/download/${file.id}`, "_blank");
+            });
+        }
+
+        if (delBtn) {
+            delBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                deleteVaultFile(file.id, file.file_name);
+            });
+        }
+
+        grid.appendChild(card);
+    });
+}
+
+// Play Video in Direct Player Viewport
+function playVaultVideo(file) {
+    ytActiveSelectedFile = file;
+
+    const placeholder = document.getElementById("ytPlayerPlaceholder");
+    const videoEl = document.getElementById("ytDirectVideoPlayer");
+    const iframe = document.getElementById("ytPlayerIframe");
+    const metaBar = document.getElementById("ytVideoMetaBar");
+    const titleEl = document.getElementById("ytNowTitle");
+    const chanEl = document.getElementById("ytNowChannel");
+
+    if (placeholder) placeholder.style.display = "none";
+    if (iframe) iframe.style.display = "none";
+
+    if (videoEl) {
+        videoEl.style.display = "block";
+        videoEl.src = `/api/view/${file.id}`;
+        videoEl.load();
+        videoEl.play().catch(() => {});
+    }
+
+    if (metaBar) metaBar.style.display = "flex";
+    if (titleEl) titleEl.textContent = file.file_name;
+    if (chanEl) {
+        const uploader = file.uploader_email ? `Gmail: ${file.uploader_email}` : `Drive: ${(file.drive_owner || 'buntha').toUpperCase()}`;
+        chanEl.textContent = `ទំហំ: ${formatBytes(file.file_size)} • ${uploader} • ${file.created_at || ''}`;
+    }
+
+    // Scroll smoothly to player
+    const viewportCard = document.getElementById("ytViewportCard");
+    if (viewportCard) {
+        viewportCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+}
+
+// Preview Picture in Lightbox / New Tab
+function previewVaultPicture(file) {
+    const imgUrl = `/api/view/${file.id}`;
+    // Open in elegant modal or new tab
+    const w = window.open(imgUrl, "_blank");
+    if (!w) {
+        window.location.href = imgUrl;
+    }
+}
+
+// Delete Media File from YouTube Vault
+async function deleteVaultFile(fileId, fileName) {
+    if (!confirm(`តើអ្នកពិតជាចង់លុបឯកសារ "${fileName}" នេះមែនទេ?`)) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/youtube/media/delete/${fileId}`, { method: "POST" });
+        const data = await res.json();
+        if (data.success) {
+            // If current playing video was deleted, reset player
+            if (ytActiveSelectedFile && ytActiveSelectedFile.id === fileId) {
+                const videoEl = document.getElementById("ytDirectVideoPlayer");
+                const placeholder = document.getElementById("ytPlayerPlaceholder");
+                const metaBar = document.getElementById("ytVideoMetaBar");
+                if (videoEl) {
+                    videoEl.pause();
+                    videoEl.src = "";
+                    videoEl.style.display = "none";
+                }
+                if (placeholder) placeholder.style.display = "flex";
+                if (metaBar) metaBar.style.display = "none";
+                ytActiveSelectedFile = null;
+            }
+
+            // Reload media list
+            loadGmailVaultMedia(ytUserGmail, ytActiveMediaType);
+            fetchStats();
+        } else {
+            alert("✕ មិនអាចលុបឯកសារបាន: " + (data.error || "Error"));
+        }
+    } catch (e) {
+        alert("✕ Error: " + e.message);
+    }
 }
 
 
