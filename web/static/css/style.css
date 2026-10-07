@@ -5034,3 +5034,190 @@ body.marquee-selecting {
         grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     }
 }
+
+/* ==========================================================================
+   Bun Tha YouTube Channel Card Styles
+   ========================================================================== */
+.yt-channel-card-banner {
+    background: linear-gradient(135deg, rgba(24, 24, 27, 0.95), rgba(15, 23, 42, 0.98));
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.yt-channel-info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.yt-channel-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ef4444, #991b1b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+.yt-channel-meta {
+    flex: 1;
+    min-width: 200px;
+}
+
+.yt-channel-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 2px;
+}
+
+.yt-channel-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #f8fafc;
+    margin: 0;
+}
+
+.yt-channel-badge {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34d399;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 10px;
+}
+
+.yt-channel-handle {
+    font-size: 12.5px;
+}
+
+.yt-channel-link {
+    color: #38bdf8;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.yt-channel-link:hover {
+    text-decoration: underline;
+    color: #7dd3fc;
+}
+
+.yt-channel-quick-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.yt-btn-studio {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e2e8f0;
+    padding: 6px 12px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.yt-btn-studio:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+.yt-btn-open-channel {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border: none;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
+    transition: all 0.2s;
+}
+
+.yt-btn-open-channel:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+}
+
+.yt-url-saver-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.yt-url-input-wrap {
+    flex: 1;
+    min-width: 260px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 0 12px;
+    height: 38px;
+}
+
+.yt-url-input-wrap input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #f8fafc;
+    font-size: 13px;
+    outline: none;
+}
+
+.yt-btn-import-save,
+.yt-btn-import-audio {
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 8px;
+    border: none;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.yt-btn-import-save {
+    background: #ef4444;
+    color: white;
+}
+.yt-btn-import-save:hover {
+    background: #dc2626;
+}
+
+.yt-btn-import-audio {
+    background: #10b981;
+    color: white;
+}
+.yt-btn-import-audio:hover {
+    background: #059669;
+}
