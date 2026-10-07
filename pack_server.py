@@ -293,7 +293,7 @@ class StorageEngine:
             return "Multi-Cloud Aggregator Pool (Auto ⚡)"
         return getattr(self.backend, "display_name", "Storage Node")
 
-    def upload_file(self, local_path: str, drive_owner: str = "buntha", custom_filename: str = None, folder_id: int = None, progress_callback = None, preferred_backend = None):
+    def upload_file(self, local_path: str, drive_owner: str = "buntha", custom_filename: str = None, folder_id: int = None, progress_callback = None, preferred_backend = None, uploader_email: str = None):
         p = Path(local_path)
         file_size = p.stat().st_size
         file_name = custom_filename or p.name
@@ -376,7 +376,8 @@ class StorageEngine:
             cloud_backend=provider_name,
             chunks=chunks_info,
             drive_owner=drive_owner,
-            folder_id=folder_id
+            folder_id=folder_id,
+            uploader_email=uploader_email
         )
         return {{"id": file_db_id, "file_name": file_name, "file_size": file_size, "chunks_count": len(chunks_info), "cloud_backend": provider_name}}
 
@@ -1682,6 +1683,62 @@ def yt_status_route(task_id):
 @app.route("/api/youtube/tasks", methods=["GET"])
 def yt_tasks_route():
     return jsonify({{"success": True, "tasks": list(YOUTUBE_TASKS.values())}})
+
+@app.route("/api/youtube/media/list", methods=["GET"])
+def yt_media_list_route():
+    gmail = request.args.get("gmail", "").strip()
+    media_type = request.args.get("type", "all").strip().lower()
+    drive_owner = request.args.get("drive_owner", "").strip()
+    files = database.get_gmail_media_files(gmail, media_type, drive_owner if drive_owner else None)
+    videos_count = sum(1 for f in files if f.get("category") == "videos")
+    images_count = sum(1 for f in files if f.get("category") == "images")
+    total_size = sum(f.get("file_size", 0) for f in files)
+    return jsonify({{
+        "success": True,
+        "files": files,
+        "gmail": gmail,
+        "stats": {{
+            "videos_count": videos_count,
+            "images_count": images_count,
+            "total_size": total_size
+        }}
+    }})
+
+@app.route("/api/youtube/media/upload", methods=["POST"])
+def yt_media_upload_route():
+    if "file" not in request.files:
+        return jsonify({{"success": False, "error": "No file uploaded"}}), 400
+    file = request.files["file"]
+    if not file.filename:
+        return jsonify({{"success": False, "error": "Empty filename"}}), 400
+    gmail = request.form.get("gmail", "").strip().lower()
+    drive_owner = request.form.get("drive_owner", "buntha").strip()
+    orig_name = "".join(c for c in file.filename if c.isalnum() or c in "._- ") or "media_upload.bin"
+    temp_path = CACHE_DIR / f"yt_up_{{int(time.time())}}_{{orig_name}}"
+    try:
+        file.save(str(temp_path))
+        up_res = engine.upload_file(
+            local_path=str(temp_path),
+            drive_owner=drive_owner,
+            custom_filename=orig_name,
+            uploader_email=gmail if gmail else None
+        )
+        if temp_path.exists():
+            temp_path.unlink()
+        file_info = database.get_file_by_id(up_res["id"])
+        return jsonify({{"success": True, "file": file_info, "message": "Uploaded successfully to YouTube Vault"}})
+    except Exception as e:
+        if temp_path.exists():
+            temp_path.unlink()
+        return jsonify({{"success": False, "error": str(e)}}), 500
+
+@app.route("/api/youtube/media/delete/<int:file_id>", methods=["DELETE", "POST"])
+def yt_media_delete_route(file_id):
+    try:
+        database.move_to_trash(file_id)
+        return jsonify({{"success": True, "message": "Moved to trash successfully"}})
+    except Exception as e:
+        return jsonify({{"success": False, "error": str(e)}}), 500
 
 # Restore DB from pinned Telegram backup on startup
 try:
