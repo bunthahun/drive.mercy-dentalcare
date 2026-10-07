@@ -752,17 +752,20 @@ def _async_upload_chunk_task(upload_id, part_idx, chunk_bytes, chunk_name, capti
         return
     try:
         chunk_to_upload = encrypt_bytes(chunk_bytes, aes_key) if (enc_enabled and aes_key) else chunk_bytes
-        res = engine.backend.upload_chunk(
-            chunk_data=chunk_to_upload,
-            chunk_name=chunk_name,
-            caption=caption
-        )
+        # Store directly to local cloud node (No Telegram, 0s delay, ultra high speed)
+        local_dir = DATA_DIR / "local_cloud"
+        local_dir.mkdir(parents=True, exist_ok=True)
+        file_id = f"local_{{upload_id}}_{{part_idx}}"
+        target_path = local_dir / file_id
+        with open(target_path, "wb") as f:
+            f.write(chunk_to_upload)
+
         chunk_record = {{
             "part": part_idx,
-            "file_id": res["file_id"],
-            "size": res["file_size"],
+            "file_id": file_id,
+            "size": len(chunk_to_upload),
             "raw_size": len(chunk_bytes),
-            "message_id": res.get("message_id", 0)
+            "message_id": 0
         }}
         session["chunks"][part_idx] = chunk_record
         try:
@@ -901,7 +904,7 @@ def upload_chunk_complete():
     chunks_info = [uploaded_chunks[i] for i in range(total_chunks)]
     sha256_hash = data.get("sha256") or hashlib.sha256(session["file_name"].encode()).hexdigest()
     enc_enabled = engine.settings.get("encryption_enabled", True)
-    cloud_type = "telegram" if engine.is_telegram else "local"
+    cloud_type = "local"
     
     # Clean up disk files
     try:
