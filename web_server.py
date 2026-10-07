@@ -1725,6 +1725,10 @@ def yt_media_add_link_route():
     )
 
     file_info = database.get_file_by_id(file_id)
+    try:
+        backup_database_to_telegram()
+    except Exception:
+        pass
     return jsonify({
         "success": True,
         "file": file_info,
