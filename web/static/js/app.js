@@ -3077,8 +3077,20 @@ function previewFile(id) {
         window.history.pushState({ previewOpen: true }, "");
     } catch (e) {}
 
-    const ext = file.file_name.toLowerCase().split('.').pop();
+    const ext = file.file_name && file.file_name.includes('.') ? file.file_name.toLowerCase().split('.').pop() : '';
+    const mime = (file.mime_type || '').toLowerCase();
     const viewUrl = `/api/view/${file.id}`;
+
+    // Supported preview types
+    const imageExts = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico'];
+    const videoExts = ['mp4', 'webm', 'ogg', 'mov', 'm4v', 'mkv', 'avi'];
+    const audioExts = ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'];
+    const textExts = ['txt', 'log', 'csv', 'json', 'md', 'html', 'xml', 'js', 'py', 'css', 'sql', 'sh', 'bat'];
+    const isImage = imageExts.includes(ext) || mime.startsWith('image/');
+    const isVideo = videoExts.includes(ext) || mime.startsWith('video/');
+    const isAudio = audioExts.includes(ext) || mime.startsWith('audio/');
+    const isPdf = ext === 'pdf' || mime === 'application/pdf';
+    const isText = textExts.includes(ext) || mime.startsWith('text/') || mime === 'application/json';
 
     // Detect YouTube video
     const isYouTube = file.cloud_backend === "youtube" || file.mime_type === "video/youtube" || (file.sha256 && file.sha256.startsWith("yt_"));
@@ -3197,13 +3209,17 @@ function previewFile(id) {
         return;
     }
 
-    if (imageExts.includes(ext)) {
+    if (isImage) {
         body.innerHTML = `
-            <div class="preview-media-container">
-                <img src="${viewUrl}" alt="${file.file_name}" class="preview-img" onerror="this.parentElement.innerHTML='<div class=\\'preview-error\\'>មិនអាចបើកមើលរូបភាពនេះបានទេ</div>'">
+            <div class="preview-media-container" style="display: flex; justify-content: center; align-items: center; min-height: 260px; position: relative;">
+                <div id="imgPreviewLoading" style="position: absolute; color: #94a3b8; font-size: 14px;">⏳ កំពុងទាញយករូបភាព...</div>
+                <img src="${viewUrl}" alt="${file.file_name}" class="preview-img" 
+                     onload="const l=document.getElementById('imgPreviewLoading'); if(l) l.style.display='none'; this.style.opacity='1';"
+                     onerror="const l=document.getElementById('imgPreviewLoading'); if(l) l.style.display='none'; this.parentElement.innerHTML='<div class=\\'preview-error\\'>⚠️ មិនអាចបើកមើលរូបភាពនេះបានទេ</div>';"
+                     style="opacity: 0; transition: opacity 0.25s ease; max-height: 75vh; max-width: 100%; border-radius: 8px; object-fit: contain; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
             </div>
         `;
-    } else if (videoExts.includes(ext)) {
+    } else if (isVideo) {
         body.innerHTML = `
             <div class="preview-media-container" id="videoContainer" style="position: relative; min-height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
                 <div id="videoPrepBox" style="text-align: center; padding: 25px 20px; width: 100%; max-width: 500px;">
@@ -3296,7 +3312,7 @@ function previewFile(id) {
         }
 
         checkAndPoll();
-    } else if (audioExts.includes(ext)) {
+    } else if (isAudio) {
         body.innerHTML = `
             <div class="preview-audio-container">
                 <div class="preview-audio-icon">🎵</div>
@@ -3308,11 +3324,11 @@ function previewFile(id) {
         `;
     } else if (isPdf) {
         body.innerHTML = `
-            <div class="preview-pdf-container">
-                <iframe src="${viewUrl}" class="preview-iframe" title="${file.file_name}"></iframe>
+            <div class="preview-pdf-container" style="display: flex; flex-direction: column; width: 100%; height: 75vh;">
+                <iframe src="${viewUrl}#toolbar=1" class="preview-iframe" title="${file.file_name}" style="flex: 1; width: 100%; height: 100%; border: none; border-radius: 8px; background: #fff;"></iframe>
             </div>
         `;
-    } else if (textExts.includes(ext)) {
+    } else if (isText) {
         fetch(viewUrl)
             .then(res => {
                 if (!res.ok) throw new Error("Status " + res.status);
