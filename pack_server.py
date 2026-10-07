@@ -56,7 +56,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from flask import Flask, render_template_string, request, jsonify, send_file, make_response
+from flask import Flask, render_template_string, request, jsonify, send_file, make_response, redirect
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
@@ -1166,6 +1166,20 @@ def batch_trash_route():
 def download_file(file_id):
     file_info = database.get_file_by_id(file_id)
     if not file_info: return jsonify({{"success": False, "error": "Not found"}}), 404
+    if file_info.get("cloud_backend") == "youtube" or file_info.get("mime_type") == "video/youtube" or str(file_info.get("sha256", "")).startswith("yt_"):
+        yt_id = ""
+        if str(file_info.get("sha256", "")).startswith("yt_"):
+            yt_id = file_info.get("sha256")[3:]
+        if not yt_id and file_info.get("chunks"):
+            try:
+                import json
+                c = json.loads(file_info["chunks"]) if isinstance(file_info["chunks"], str) else file_info["chunks"]
+                if c and isinstance(c, list) and c[0].get("youtube_id"):
+                    yt_id = c[0]["youtube_id"]
+            except Exception:
+                pass
+        yt_url = f"https://www.youtube.com/watch?v={{yt_id}}" if yt_id else "https://www.youtube.com"
+        return redirect(yt_url)
     name = file_info["file_name"]
     temp_path = CACHE_DIR / ("cached_" + str(file_id) + "_" + name)
     try:
@@ -1325,6 +1339,20 @@ def prepare_file_status(file_id):
 def view_file_content(file_id):
     file_info = database.get_file_by_id(file_id)
     if not file_info: return jsonify({{"success": False, "error": "Not found"}}), 404
+    if file_info.get("cloud_backend") == "youtube" or file_info.get("mime_type") == "video/youtube" or str(file_info.get("sha256", "")).startswith("yt_"):
+        yt_id = ""
+        if str(file_info.get("sha256", "")).startswith("yt_"):
+            yt_id = file_info.get("sha256")[3:]
+        if not yt_id and file_info.get("chunks"):
+            try:
+                import json
+                c = json.loads(file_info["chunks"]) if isinstance(file_info["chunks"], str) else file_info["chunks"]
+                if c and isinstance(c, list) and c[0].get("youtube_id"):
+                    yt_id = c[0]["youtube_id"]
+            except Exception:
+                pass
+        yt_url = f"https://www.youtube.com/watch?v={{yt_id}}" if yt_id else "https://www.youtube.com"
+        return redirect(yt_url)
     name = file_info["file_name"]
     ext = name.lower().split('.')[-1] if '.' in name else ''
     mime_type = MIME_MAP.get(ext) or file_info.get("mime_type") or mimetypes.guess_type(name)[0] or "application/octet-stream"
