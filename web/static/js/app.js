@@ -754,6 +754,23 @@ function initEventListeners() {
         });
     }
 
+    const btnRibbonEmptyTrash = document.getElementById("btnRibbonEmptyTrash");
+    if (btnRibbonEmptyTrash) {
+        btnRibbonEmptyTrash.addEventListener("click", () => emptyTrash());
+    }
+
+    const btnRibbonRestoreAll = document.getElementById("btnRibbonRestoreAll");
+    if (btnRibbonRestoreAll) {
+        btnRibbonRestoreAll.addEventListener("click", async () => {
+            if (confirm(currentLang === "km" ? "តើអ្នកចង់ស្តារឯកសារទាំងអស់ក្នុងធុងសំរាមឡើងវិញមែនទេ? (Restore all items?)" : "Restore all items from recycle bin?")) {
+                await fetch("/api/restore-all", { method: "POST" });
+                fetchStats();
+                loadFiles();
+                showToast(currentLang === "km" ? "✓ បានស្តារឯកសារទាំងអស់ឡើងវិញជោគជ័យ!" : "✓ All items restored successfully!");
+            }
+        });
+    }
+
     // Windows 11 Navigation Controls
     const btnNavBack = document.getElementById("btnNavBack");
     if (btnNavBack) btnNavBack.addEventListener("click", navBack);
@@ -1945,7 +1962,12 @@ function renderFiles() {
                     if (e.ctrlKey || e.metaKey || selectedFolderIds.size > 0 || selectedFileIds.size > 0) {
                         toggleSelectFolder(folder.id);
                     } else {
-                        openFolder(folder.id, folder.folder_name);
+                        if (currentCategory === "trash") {
+                            clearSelection();
+                            toggleSelectFolder(folder.id);
+                        } else {
+                            openFolder(folder.id, folder.folder_name);
+                        }
                     }
                 });
 
@@ -2071,7 +2093,23 @@ function renderFiles() {
                     if (e.ctrlKey || e.metaKey || selectedFileIds.size > 0 || selectedFolderIds.size > 0) {
                         toggleSelectFile(file.id);
                     } else {
-                        if (!file.is_trash) previewFile(file.id);
+                        if (!file.is_trash) {
+                            previewFile(file.id);
+                        } else {
+                            clearSelection();
+                            toggleSelectFile(file.id);
+                        }
+                    }
+                });
+
+                card.addEventListener("dblclick", (e) => {
+                    e.stopPropagation();
+                    if (!file.is_trash) {
+                        previewFile(file.id);
+                    } else {
+                        if (confirm(currentLang === "km" ? `តើអ្នកចង់ស្តារឯកសារ "${file.file_name}" ឡើងវិញមែនទេ? (Restore file?)` : `Do you want to restore "${file.file_name}"?`)) {
+                            restoreFile(file.id);
+                        }
                     }
                 });
 
@@ -2525,31 +2563,74 @@ async function deleteSelectedFiles() {
     const folderCount = selectedFolderIds.size;
     const total = fileCount + folderCount;
     if (total === 0) return;
+
+    const isTrashMode = currentCategory === "trash";
     const msg = currentLang === "km"
-        ? `តើអ្នកពិតជាចង់លុប ${total} ធាតុដែលបានជ្រើសរើស (${folderCount > 0 ? folderCount + ' ថត, ' : ''}${fileCount} ឯកសារ) មែនទេ?`
-        : `Are you sure you want to delete ${total} selected item(s)?`;
+        ? (isTrashMode
+            ? `⚠️ ធាតុទាំង ${total} នេះនឹងត្រូវលុបជាអចិន្ត្រៃយ៍! តើអ្នកប្រាកដថាចង់លុបមែនទេ?`
+            : `តើអ្នកពិតជាចង់លុប ${total} ធាតុដែលបានជ្រើសរើស (${folderCount > 0 ? folderCount + ' ថត, ' : ''}${fileCount} ឯកសារ) មែនទេ?`)
+        : (isTrashMode
+            ? `⚠️ These ${total} item(s) will be permanently deleted! Are you sure?`
+            : `Are you sure you want to delete ${total} selected item(s)?`);
     if (!confirm(msg)) return;
 
     try {
-        if (fileCount > 0) {
-            await fetch("/api/files/batch-trash", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ file_ids: Array.from(selectedFileIds) })
-            });
-        }
-        if (folderCount > 0) {
-            for (const fId of selectedFolderIds) {
-                await fetch("/api/folders/delete", {
+        if (isTrashMode) {
+            if (fileCount > 0) {
+                await fetch("/api/files/batch-delete-permanent", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ folder_id: fId })
+                    body: JSON.stringify({ file_ids: Array.from(selectedFileIds) })
                 });
+            }
+            if (folderCount > 0) {
+                for (const fId of selectedFolderIds) {
+                    await fetch("/api/folders/delete", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ folder_id: fId })
+                    });
+                }
+            }
+        } else {
+            if (fileCount > 0) {
+                await fetch("/api/files/batch-trash", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ file_ids: Array.from(selectedFileIds) })
+                });
+            }
+            if (folderCount > 0) {
+                for (const fId of selectedFolderIds) {
+                    await fetch("/api/folders/delete", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ folder_id: fId })
+                    });
+                }
             }
         }
         clearSelection();
         fetchStats();
         loadFiles();
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function restoreSelectedFiles() {
+    const fileCount = selectedFileIds.size;
+    if (fileCount === 0) return;
+    try {
+        await fetch("/api/files/batch-restore", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ file_ids: Array.from(selectedFileIds) })
+        });
+        clearSelection();
+        fetchStats();
+        loadFiles();
+        showToast(currentLang === "km" ? `✓ បានស្តារ ${fileCount} ឯកសារឡើងវិញជោគជ័យ!` : `✓ Restored ${fileCount} file(s)!`);
     } catch (e) {
         console.error(e);
     }
@@ -3005,6 +3086,11 @@ function updateCurrentDriveHeader() {
     const emptyTrashBtn = document.getElementById("btnEmptyTrash");
     if (uploadBtn) uploadBtn.style.display = isTrash ? "none" : "flex";
     if (emptyTrashBtn) emptyTrashBtn.style.display = isTrash ? "flex" : "none";
+
+    const grpTrash = document.getElementById("grpRibbonTrashActions");
+    if (grpTrash) grpTrash.style.display = isTrash ? "flex" : "none";
+    const btnMenuEmptyTrash = document.getElementById("btnMenuEmptyTrash");
+    if (btnMenuEmptyTrash) btnMenuEmptyTrash.style.display = isTrash ? "flex" : "none";
 
     const titleEl = document.getElementById("currentDriveTitle");
     const dropHint = document.getElementById("tDropHint");
@@ -3731,7 +3817,22 @@ function initContextMenuListeners() {
         filecmenuDelete.addEventListener("click", () => {
             hideAllContextMenus();
             if (activeContextItem && activeContextItem.type === "file") {
-                trashFile(activeContextItem.id);
+                if (currentCategory === "trash" || activeContextItem.is_trash) {
+                    deletePermanent(activeContextItem.id);
+                } else {
+                    trashFile(activeContextItem.id);
+                }
+            }
+        });
+    }
+
+    // File Context Menu: Restore
+    const filecmenuRestore = document.getElementById("filecmenuRestore");
+    if (filecmenuRestore) {
+        filecmenuRestore.addEventListener("click", () => {
+            hideAllContextMenus();
+            if (activeContextItem && activeContextItem.type === "file") {
+                restoreFile(activeContextItem.id);
             }
         });
     }
@@ -3831,11 +3932,30 @@ function showFileContextMenu(x, y, file) {
     hideAllContextMenus();
     activeContextItem = { type: 'file', id: file.id, name: file.file_name, is_trash: file.is_trash, file: file };
     const menu = document.getElementById("fileContextMenu");
+    const isTrash = currentCategory === "trash" || !!file.is_trash;
+
     const ytItem = document.getElementById("filecmenuYouTube");
     if (ytItem) {
         const isYT = file.cloud_backend === "youtube" || file.mime_type === "video/youtube" || (file.sha256 && file.sha256.startsWith("yt_"));
-        ytItem.style.display = isYT ? "flex" : "none";
+        ytItem.style.display = (isYT && !isTrash) ? "flex" : "none";
     }
+
+    const restoreItem = document.getElementById("filecmenuRestore");
+    if (restoreItem) restoreItem.style.display = isTrash ? "flex" : "none";
+
+    const delLabel = document.getElementById("filecmenuDeleteLabel");
+    if (delLabel) {
+        delLabel.textContent = isTrash
+            ? (currentLang === "km" ? "លុបជាអចិន្ត្រៃយ៍ (Permanent Delete)" : "Delete Permanently")
+            : (currentLang === "km" ? "Delete (លុបឯកសារ)" : "Delete");
+    }
+
+    const normalIds = ["filecmenuView", "filecmenuDownload", "filecmenuSendTelegram", "filecmenuCut", "filecmenuCopy", "filecmenuRename", "filecmenuMove"];
+    normalIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = isTrash ? "none" : "flex";
+    });
+
     if (menu) positionMenu(menu, x, y);
 }
 
