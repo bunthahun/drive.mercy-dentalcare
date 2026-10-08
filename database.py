@@ -553,6 +553,26 @@ def restore_from_trash(file_id: int):
     conn.commit()
     conn.close()
 
+def batch_restore_from_trash(file_ids: List[int]) -> int:
+    if not file_ids: return 0
+    conn = get_connection()
+    cursor = conn.cursor()
+    placeholders = ",".join("?" for _ in file_ids)
+    cursor.execute(f"UPDATE files SET is_trash = 0 WHERE id IN ({placeholders})", file_ids)
+    count = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return count
+
+def restore_all_trash() -> int:
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE files SET is_trash = 0 WHERE is_trash = 1")
+    count = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return count
+
 def delete_permanently(file_id: int) -> Optional[Dict[str, Any]]:
     conn = get_connection()
     cursor = conn.cursor()
@@ -566,6 +586,17 @@ def delete_permanently(file_id: int) -> Optional[Dict[str, Any]]:
     conn.commit()
     conn.close()
     return file_dict
+
+def batch_delete_permanently(file_ids: List[int]) -> int:
+    if not file_ids: return 0
+    conn = get_connection()
+    cursor = conn.cursor()
+    placeholders = ",".join("?" for _ in file_ids)
+    cursor.execute(f"DELETE FROM files WHERE id IN ({placeholders})", file_ids)
+    count = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return count
 
 def empty_trash() -> List[Dict[str, Any]]:
     conn = get_connection()
