@@ -1387,11 +1387,33 @@ def restore_file(file_id):
     database.restore_from_trash(file_id)
     return jsonify({{"success": True}})
 
+@app.route("/api/restore-all", methods=["POST"])
+def restore_all_route():
+    database.restore_all_trash()
+    backup_database_to_telegram()
+    return jsonify({{"success": True}})
+
 @app.route("/api/delete-permanent/<int:file_id>", methods=["DELETE"])
 def delete_perm(file_id):
     res = database.delete_permanently(file_id)
     backup_database_to_telegram()
     return jsonify({{"success": True, "file": res}})
+
+@app.route("/api/files/batch-delete-permanent", methods=["POST"])
+def batch_delete_permanent_route():
+    data = request.json or {{}}
+    file_ids = [int(f) for f in data.get("file_ids", []) if str(f).isdigit()]
+    count = database.batch_delete_permanently(file_ids)
+    backup_database_to_telegram()
+    return jsonify({{"success": True, "count": count}})
+
+@app.route("/api/files/batch-restore", methods=["POST"])
+def batch_restore_route():
+    data = request.json or {{}}
+    file_ids = [int(f) for f in data.get("file_ids", []) if str(f).isdigit()]
+    count = database.batch_restore_from_trash(file_ids)
+    backup_database_to_telegram()
+    return jsonify({{"success": True, "count": count}})
 
 @app.route("/api/empty-trash", methods=["POST"])
 def empty_trash_route():
