@@ -1251,27 +1251,53 @@
         <!-- Windows 11 Master Website Lock Screen -->
         <div class="site-lock-screen" id="siteLockScreen" style="display: none;">
             <div class="lock-card" id="lockCardBox">
-                <div class="lock-avatar">☁️</div>
-                <div class="lock-user-title">Mercy Dental Care</div>
-                <div class="lock-user-sub">Cloud Storage 1000TB • Secure Portal</div>
+                <div class="lock-avatar" id="siteLockAvatar">👨‍💼</div>
+                <div class="lock-user-title" id="siteLockTitle">HUN BUNTHA</div>
+                <div class="lock-user-sub" id="siteLockSub">Cloud Storage 1000TB • Secure Portal</div>
 
-                <div class="lock-input-group">
-                    <input type="password" class="lock-input" id="siteLockInput" placeholder="Password (កូដ: 1234)..."
-                        autocomplete="current-password">
-                    <button type="button" class="lock-toggle-pwd" id="btnToggleSitePwd"
-                        title="បង្ហាញ/លាក់លេខសម្ងាត់">👁️</button>
-                    <button class="lock-submit-btn" id="btnSiteUnlock" title="Sign In">➔</button>
+                <!-- Account Selection Chips -->
+                <div class="lock-account-chips" id="lockAccountChips">
+                    <button type="button" class="lock-chip active" data-name="HUN BUNTHA" data-drive="buntha" data-avatar="👨‍💼">
+                        👨‍💼 BUNTHA
+                    </button>
+                    <button type="button" class="lock-chip" data-name="NEANG VUOCHLIN" data-drive="vuochlin" data-avatar="👩‍💼">
+                        👩‍💼 VUOCHLIN
+                    </button>
+                    <button type="button" class="lock-chip" data-name="Mercy Dental Care" data-drive="mercy" data-avatar="🏥">
+                        🏥 Mercy
+                    </button>
+                </div>
+
+                <!-- Username / Account Name input -->
+                <div class="lock-field-group">
+                    <label class="lock-field-label" for="siteLockUser">👤 ឈ្មោះគណនី (Account Name):</label>
+                    <div class="lock-input-wrap">
+                        <span class="lock-input-icon">👤</span>
+                        <input type="text" class="lock-text-input" id="siteLockUser" placeholder="វាយឈ្មោះគណនី..." value="HUN BUNTHA" autocomplete="username">
+                    </div>
+                </div>
+
+                <!-- Password input (Clean, NO hints or leaks) -->
+                <div class="lock-field-group">
+                    <label class="lock-field-label" for="siteLockInput">🔒 លេខសម្ងាត់ (Password - បើមាន):</label>
+                    <div class="lock-input-wrap">
+                        <span class="lock-input-icon">🔑</span>
+                        <input type="password" class="lock-text-input pwd-field" id="siteLockInput" placeholder="លេខសម្ងាត់ (Password)..." autocomplete="current-password">
+                        <button type="button" class="lock-toggle-pwd" id="btnToggleSitePwd" title="បង្ហាញ/លាក់លេខសម្ងាត់">👁️</button>
+                    </div>
                 </div>
 
                 <div class="lock-error-msg" id="siteLockError"></div>
 
-                <button type="button" class="lock-direct-btn" id="btnSiteDirectAccess">
-                    🔓 ចូលប្រើប្រាស់ដោយផ្ទាល់ (Direct Access)
+                <!-- Sign in button -->
+                <button type="button" class="lock-signin-btn" id="btnSiteUnlock">
+                    ✨ ចូលប្រើប្រាស់ (Sign In)
                 </button>
 
-                <div class="lock-hint">
-                    🔑 លេខសម្ងាត់ Website: <b>1234</b> ឬ <b>1111</b> ឬ <b>8729</b> (ឬចុចប៊ូតុងខាងលើ)
-                </div>
+                <!-- Direct access by selected name -->
+                <button type="button" class="lock-direct-btn" id="btnSiteDirectAccess">
+                    🔓 ចូលប្រើប្រាស់ជា <span id="lblDirectUser" style="margin-left: 4px; font-weight: 600; color: #38bdf8;">HUN BUNTHA</span>
+                </button>
             </div>
         </div>
 
