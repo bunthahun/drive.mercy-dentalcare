@@ -258,6 +258,18 @@
                     </button>
                 </div>
 
+                <!-- Trash Specific Action Ribbon (Empty Trash & Restore All) -->
+                <div class="win-cmd-group" id="grpRibbonTrashActions" style="display: none; align-items: center; gap: 6px;">
+                    <button class="win-cmd-btn" id="btnRibbonEmptyTrash" title="Empty Trash (សម្អាតធុងសំរាម)" style="color: #f43f5e; border-color: rgba(244, 63, 94, 0.4); background: rgba(244, 63, 94, 0.12); padding: 5px 10px; border-radius: 6px;">
+                        <span class="win-cmd-icon">🗑️</span>
+                        <span style="font-weight: 600; font-size: 13px;">សម្អាតធុងសំរាម</span>
+                    </button>
+                    <button class="win-cmd-btn" id="btnRibbonRestoreAll" title="Restore all (ស្តារឡើងវិញទាំងអស់)" style="color: #34d399; border-color: rgba(52, 211, 153, 0.4); background: rgba(52, 211, 153, 0.12); padding: 5px 10px; border-radius: 6px;">
+                        <span class="win-cmd-icon">♻️</span>
+                        <span style="font-weight: 600; font-size: 13px;">ស្តារទាំងអស់</span>
+                    </button>
+                </div>
+
                 <div class="win-cmd-divider"></div>
 
                 <!-- Sort Dropdown -->
@@ -1064,10 +1076,16 @@
                 </div>
             </div>
             <div class="win-menu-divider"></div>
+            <div class="win-menu-item" id="filecmenuRestore" style="display: none; color: #10b981;">
+                <div class="win-item-left">
+                    <span class="win-item-icon">♻️</span>
+                    <span class="win-item-label">Restore (ស្តារឡើងវិញ)</span>
+                </div>
+            </div>
             <div class="win-menu-item win-danger" id="filecmenuDelete">
                 <div class="win-item-left">
                     <span class="win-item-icon">🗑️</span>
-                    <span class="win-item-label">Delete (លុបឯកសារ)</span>
+                    <span class="win-item-label" id="filecmenuDeleteLabel">Delete (លុបឯកសារ)</span>
                 </div>
             </div>
         </div>
