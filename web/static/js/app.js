@@ -107,26 +107,23 @@ function normalizeKhmerInput(str) {
 
 function initAuthSecurity() {
     const lockScreen = document.getElementById("siteLockScreen");
+    const lockUserInput = document.getElementById("siteLockUser");
     const lockInput = document.getElementById("siteLockInput");
     const lockBtn = document.getElementById("btnSiteUnlock");
     const lockDirectBtn = document.getElementById("btnSiteDirectAccess");
     const lockToggleBtn = document.getElementById("btnToggleSitePwd");
     const lockError = document.getElementById("siteLockError");
     const lockCard = document.getElementById("lockCardBox");
+    const lockAvatar = document.getElementById("siteLockAvatar");
+    const lockTitle = document.getElementById("siteLockTitle");
+    const lblDirectUser = document.getElementById("lblDirectUser");
+    const accountChips = document.querySelectorAll(".lock-chip");
     const btnLogout = document.getElementById("btnLogoutSite");
 
-    // Seamless auto-authentication: Never block the owner from accessing their YouTube Media Vault
+    // Check existing authentication status
     const isExplicitLogout = sessionStorage.getItem("site_explicit_logout") === "true";
-    if (!isExplicitLogout) {
-        sessionStorage.setItem("site_authenticated", "true");
-        localStorage.setItem("site_authenticated", "true");
-        sessionStorage.setItem("is_admin", "true");
-        localStorage.setItem("is_admin", "true");
-        sessionStorage.setItem("unlocked_drive_buntha", "true");
-        localStorage.setItem("unlocked_drive_buntha", "true");
-    }
+    const isSiteAuth = (sessionStorage.getItem("site_authenticated") === "true" || localStorage.getItem("site_authenticated") === "true") && !isExplicitLogout;
 
-    const isSiteAuth = sessionStorage.getItem("site_authenticated") === "true" || localStorage.getItem("site_authenticated") === "true";
     if (isSiteAuth) {
         if (lockScreen) {
             lockScreen.classList.add("unlocked");
@@ -140,6 +137,46 @@ function initAuthSecurity() {
         }
     }
 
+    // Account chip selector logic
+    accountChips.forEach(chip => {
+        chip.addEventListener("click", () => {
+            accountChips.forEach(c => c.classList.remove("active"));
+            chip.classList.add("active");
+            const name = chip.getAttribute("data-name") || "HUN BUNTHA";
+            const avatar = chip.getAttribute("data-avatar") || "👨‍💼";
+            if (lockUserInput) lockUserInput.value = name;
+            if (lockTitle) lockTitle.textContent = name;
+            if (lockAvatar) lockAvatar.textContent = avatar;
+            if (lblDirectUser) lblDirectUser.textContent = name;
+            if (lockError) lockError.textContent = "";
+            if (lockInput) lockInput.focus();
+        });
+    });
+
+    // Account name input listener
+    if (lockUserInput) {
+        lockUserInput.addEventListener("input", () => {
+            const val = lockUserInput.value.trim() || "User";
+            if (lockTitle) lockTitle.textContent = val;
+            if (lblDirectUser) lblDirectUser.textContent = val;
+            let matched = false;
+            accountChips.forEach(chip => {
+                const cName = (chip.getAttribute("data-name") || "").toLowerCase();
+                if (cName === val.toLowerCase()) {
+                    chip.classList.add("active");
+                    if (lockAvatar) lockAvatar.textContent = chip.getAttribute("data-avatar") || "👤";
+                    matched = true;
+                } else {
+                    chip.classList.remove("active");
+                }
+            });
+            if (!matched && lockAvatar) {
+                lockAvatar.textContent = "👤";
+            }
+        });
+    }
+
+    // Password visibility toggle
     if (lockToggleBtn && lockInput) {
         lockToggleBtn.addEventListener("click", () => {
             if (lockInput.type === "password") {
@@ -154,14 +191,24 @@ function initAuthSecurity() {
         });
     }
 
-    function grantAccessAndUnlock(drivesList) {
+    function grantAccessAndUnlock(drivesList, defaultDrive, userName) {
         sessionStorage.removeItem("site_explicit_logout");
         sessionStorage.setItem("site_authenticated", "true");
         localStorage.setItem("site_authenticated", "true");
-        sessionStorage.setItem("is_admin", "true");
-        localStorage.setItem("is_admin", "true");
-        sessionStorage.setItem("unlocked_drive_buntha", "true");
-        localStorage.setItem("unlocked_drive_buntha", "true");
+        
+        if (userName) {
+            sessionStorage.setItem("current_user_name", userName);
+            localStorage.setItem("current_user_name", userName);
+        }
+
+        const isMaster = (!defaultDrive || defaultDrive === "buntha" || (Array.isArray(drivesList) && drivesList.includes("buntha") && drivesList.includes("vuochlin")));
+        if (isMaster) {
+            sessionStorage.setItem("is_admin", "true");
+            localStorage.setItem("is_admin", "true");
+            sessionStorage.setItem("unlocked_drive_buntha", "true");
+            localStorage.setItem("unlocked_drive_buntha", "true");
+        }
+
         if (Array.isArray(drivesList)) {
             drivesList.forEach(d => {
                 sessionStorage.setItem("unlocked_drive_" + d, "true");
@@ -174,35 +221,41 @@ function initAuthSecurity() {
             lockScreen.classList.add("unlocked");
             setTimeout(() => lockScreen.style.display = "none", 300);
         }
+        
+        if (defaultDrive) {
+            currentCategory = defaultDrive;
+            if (typeof window.switchDrive === "function") {
+                window.switchDrive(defaultDrive);
+            } else if (typeof updateCurrentDriveHeader === "function") {
+                updateCurrentDriveHeader();
+            }
+        }
         fetchStats();
         loadFiles();
     }
 
-    if (lockDirectBtn) {
-        lockDirectBtn.addEventListener("click", () => grantAccessAndUnlock(["buntha", "vuochlin", "mercy"]));
-    }
-
-    async function attemptSiteUnlock() {
+    async function attemptSiteUnlock(isDirect = false) {
+        const username = lockUserInput ? lockUserInput.value.trim() : "HUN BUNTHA";
         const rawPwd = lockInput ? lockInput.value.trim() : "";
-        const pwd = normalizeKhmerInput(rawPwd) || "1234";
+        const pwd = normalizeKhmerInput(rawPwd);
 
         try {
             const res = await fetch("/api/auth/verify-site", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ password: pwd })
+                body: JSON.stringify({
+                    username: username,
+                    password: pwd,
+                    direct: isDirect
+                })
             });
             const data = await res.json();
             if (data.success) {
-                grantAccessAndUnlock(data.unlocked_drives || ["buntha", "vuochlin", "mercy"]);
-                if (data.default_drive) {
-                    currentCategory = data.default_drive;
-                    updateCurrentDriveHeader();
-                }
+                grantAccessAndUnlock(data.unlocked_drives || ["buntha", "vuochlin", "mercy"], data.default_drive, data.user_name || username);
             } else {
-                // If invalid password entered, display clear hint and still allow entering
+                // Show clean error message without leaking any passwords
                 if (lockError) {
-                    lockError.innerHTML = 'កូដសម្ងាត់: <b>1234</b> ឬ <b>1111</b> ឬ <b>8729</b> ឬចុច "ចូលប្រើប្រាស់ដោយផ្ទាល់"';
+                    lockError.textContent = data.error || "ឈ្មោះ ឬលេខសម្ងាត់មិនត្រឹមត្រូវ សូមព្យាយាមម្ដងទៀត!";
                 }
                 if (lockCard) {
                     lockCard.classList.add("shake");
@@ -211,15 +264,37 @@ function initAuthSecurity() {
                 if (lockInput) lockInput.select();
             }
         } catch (e) {
-            // Network fallback: grant access so owner is never locked out
-            grantAccessAndUnlock(["buntha", "vuochlin", "mercy"]);
+            // Offline/Network fallback: unlock chosen account so user is never locked out
+            let targetDrive = "buntha";
+            const u = username.toLowerCase();
+            if (u.includes("vuochlin") || u.includes("វ៉ុចលីន")) targetDrive = "vuochlin";
+            else if (u.includes("mercy") || u.includes("មឺស៊ី")) targetDrive = "mercy";
+            grantAccessAndUnlock([targetDrive, "buntha"], targetDrive, username);
         }
     }
 
-    if (lockBtn) lockBtn.addEventListener("click", attemptSiteUnlock);
-    if (lockInput) lockInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") attemptSiteUnlock();
-    });
+    if (lockDirectBtn) {
+        lockDirectBtn.addEventListener("click", () => attemptSiteUnlock(true));
+    }
+
+    if (lockBtn) {
+        lockBtn.addEventListener("click", () => attemptSiteUnlock(false));
+    }
+
+    if (lockInput) {
+        lockInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") attemptSiteUnlock(false);
+        });
+    }
+
+    if (lockUserInput) {
+        lockUserInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                if (lockInput && lockInput.value) attemptSiteUnlock(false);
+                else attemptSiteUnlock(true);
+            }
+        });
+    }
 
     if (btnLogout) {
         btnLogout.addEventListener("click", () => {
