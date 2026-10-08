@@ -539,49 +539,92 @@ def normalize_password(pwd) -> str:
 @app.route("/api/auth/verify-site", methods=["POST"])
 def verify_site_route():
     data = request.json or {{}}
+    raw_user = str(data.get("username", "")).strip()
     raw_pwd = data.get("password", "")
+    direct = bool(data.get("direct", False))
+
     pwd = normalize_password(raw_pwd)
+    u_lower = raw_user.lower()
+
     s = load_settings()
     site_pwd = normalize_password(s.get("website_password", "1234"))
     pwd_buntha = normalize_password(s.get("password_buntha", "1111"))
     pwd_vuochlin = normalize_password(s.get("password_vuochlin", "2222"))
     pwd_mercy = normalize_password(s.get("password_mercy", "3333"))
 
-    # Direct access / Master / Bun Tha Channel 8729 / 1234 / 1111
-    # User requested direct access with Gmail without getting blocked
-    if not pwd or pwd in (site_pwd, "1234", "8729", "buntha", "admin", pwd_buntha, "1111"):
+    # Identify target drive and account name
+    if any(k in u_lower for k in ["vuochlin", "វ៉ុចលីន", "neang"]):
+        target = "vuochlin"
+        display_name = "NEANG VUOCHLIN"
+    elif any(k in u_lower for k in ["mercy", "មឺស៊ី", "dental", "clinic"]):
+        target = "mercy"
+        display_name = "Mercy Dental Care"
+    elif any(k in u_lower for k in ["buntha", "ប៊ុនថា", "hun", "owner"]):
+        target = "buntha"
+        display_name = "HUN BUNTHA"
+    else:
+        # Check password hint if provided
+        if pwd in (pwd_vuochlin, "2222"):
+            target = "vuochlin"
+            display_name = "NEANG VUOCHLIN"
+        elif pwd in (pwd_mercy, "3333"):
+            target = "mercy"
+            display_name = "Mercy Dental Care"
+        else:
+            target = "buntha"
+            display_name = raw_user if raw_user else "HUN BUNTHA"
+
+    # Authentication validation:
+    # 1. Direct access button clicked -> always authorized for selected account name
+    # 2. Empty password -> authorized by account name
+    # 3. If password entered, check if valid
+    is_valid = False
+    if direct or not pwd:
+        is_valid = True
+    elif pwd in (site_pwd, "1234", "8729", "admin"):
+        # Master website password works for all accounts
+        is_valid = True
+    elif target == "buntha" and pwd in (pwd_buntha, "1111", "buntha"):
+        is_valid = True
+    elif target == "vuochlin" and pwd in (pwd_vuochlin, "2222"):
+        is_valid = True
+    elif target == "mercy" and pwd in (pwd_mercy, "3333"):
+        is_valid = True
+    else:
+        pwd_map = {{"buntha": pwd_buntha, "vuochlin": pwd_vuochlin, "mercy": pwd_mercy}}
+        if pwd and pwd == pwd_map.get(target):
+            is_valid = True
+
+    if not is_valid:
+        return jsonify({{"success": False, "error": "ឈ្មោះ ឬលេខសម្ងាត់មិនត្រឹមត្រូវ សូមព្យាយាមម្ដងទៀត!"}}), 401
+
+    if target == "vuochlin":
+        return jsonify({{
+            "success": True, 
+            "is_master": False,
+            "is_admin": False,
+            "user_name": display_name,
+            "default_drive": "vuochlin",
+            "unlocked_drives": ["vuochlin"]
+        }})
+    elif target == "mercy":
+        return jsonify({{
+            "success": True, 
+            "is_master": False,
+            "is_admin": False,
+            "user_name": display_name,
+            "default_drive": "mercy",
+            "unlocked_drives": ["mercy"]
+        }})
+    else:
         return jsonify({{
             "success": True, 
             "is_master": True,
             "is_admin": True,
+            "user_name": display_name,
             "default_drive": "buntha",
             "unlocked_drives": ["buntha", "vuochlin", "mercy"]
         }})
-    elif pwd == pwd_vuochlin or pwd == "2222":
-        return jsonify({{
-            "success": True, 
-            "is_master": False,
-            "is_admin": False,
-            "default_drive": "vuochlin",
-            "unlocked_drives": ["vuochlin"]
-        }})
-    elif pwd == pwd_mercy or pwd == "3333":
-        return jsonify({{
-            "success": True, 
-            "is_master": False,
-            "is_admin": False,
-            "default_drive": "mercy",
-            "unlocked_drives": ["mercy"]
-        }})
-
-    # Default fallback: unlock Bun Tha drive so owner is never trapped on lock screen
-    return jsonify({{
-        "success": True,
-        "is_master": True,
-        "is_admin": True,
-        "default_drive": "buntha",
-        "unlocked_drives": ["buntha", "vuochlin", "mercy"]
-    }})
 
 @app.route("/api/auth/verify-drive", methods=["POST"])
 def verify_drive_route():
