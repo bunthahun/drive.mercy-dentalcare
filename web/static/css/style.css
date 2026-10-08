@@ -2921,81 +2921,150 @@ body.marquee-selecting {
     align-items: center;
     text-align: center;
     width: 100%;
-    max-width: 360px;
-    padding: 30px;
-    border-radius: 18px;
-    background: rgba(30, 41, 59, 0.45);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55);
+    max-width: 390px;
+    padding: 30px 26px;
+    border-radius: 20px;
+    background: rgba(30, 41, 59, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
 }
 
 .lock-avatar {
-    width: 88px;
-    height: 88px;
+    width: 82px;
+    height: 82px;
     border-radius: 50%;
     background: linear-gradient(135deg, #0ea5e9, #3b82f6);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 42px;
+    font-size: 38px;
     box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
-    margin-bottom: 18px;
+    margin-bottom: 14px;
     border: 2px solid rgba(255, 255, 255, 0.25);
+    transition: transform 0.25s ease;
 }
 
 .lock-user-title {
     font-size: 20px;
-    font-weight: 600;
+    font-weight: 700;
     color: #f8fafc;
     margin-bottom: 4px;
+    letter-spacing: 0.3px;
 }
 
 .lock-user-sub {
-    font-size: 13px;
+    font-size: 12.5px;
     color: var(--text-muted);
-    margin-bottom: 22px;
+    margin-bottom: 18px;
 }
 
-.lock-input-group {
+.lock-account-chips {
+    display: flex;
+    gap: 7px;
+    width: 100%;
+    margin-bottom: 16px;
+    justify-content: center;
+}
+
+.lock-chip {
+    flex: 1;
+    padding: 7px 4px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #cbd5e1;
+    font-size: 11.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.lock-chip:hover {
+    background: rgba(59, 130, 246, 0.22);
+    border-color: rgba(59, 130, 246, 0.5);
+    color: #ffffff;
+}
+
+.lock-chip.active {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.4), rgba(59, 130, 246, 0.5));
+    border-color: #38bdf8;
+    color: #ffffff;
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+    font-weight: 600;
+}
+
+.lock-field-group {
+    width: 100%;
+    margin-bottom: 12px;
+    text-align: left;
+}
+
+.lock-field-label {
+    display: block;
+    font-size: 11.5px;
+    color: #94a3b8;
+    margin-bottom: 5px;
+    font-weight: 500;
+    padding-left: 2px;
+}
+
+.lock-input-wrap {
     position: relative;
     width: 100%;
     display: flex;
     align-items: center;
 }
 
-.lock-input {
+.lock-input-icon {
+    position: absolute;
+    left: 12px;
+    font-size: 14px;
+    color: #64748b;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.lock-text-input {
     width: 100%;
-    height: 44px;
-    padding: 0 80px 0 16px;
+    height: 42px;
+    padding: 0 42px 0 34px;
     background: rgba(15, 23, 42, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 9px;
     color: #f8fafc;
-    font-size: 15px;
-    letter-spacing: 2px;
+    font-size: 14px;
     outline: none;
     transition: all 0.2s ease;
 }
 
-.lock-input:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+.lock-text-input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
     background: rgba(15, 23, 42, 0.95);
+}
+
+.lock-text-input.pwd-field {
+    letter-spacing: 2px;
 }
 
 .lock-toggle-pwd {
     position: absolute;
-    right: 44px;
-    width: 32px;
-    height: 34px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
     background: none;
     border: none;
-    color: var(--text-muted);
+    color: #94a3b8;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 15px;
     transition: color 0.15s ease;
 }
 
@@ -3003,72 +3072,68 @@ body.marquee-selecting {
     color: #f8fafc;
 }
 
-.lock-submit-btn {
-    position: absolute;
-    right: 5px;
-    width: 34px;
-    height: 34px;
-    border-radius: 6px;
-    background: #3b82f6;
-    border: none;
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 15px;
-    transition: all 0.15s ease;
-}
-
-.lock-submit-btn:hover {
-    background: #2563eb;
-    transform: scale(1.05);
-}
-
-.lock-error-msg {
-    color: #f43f5e;
-    font-size: 12.5px;
-    margin-top: 10px;
-    min-height: 18px;
-}
-
-.lock-hint {
-    margin-top: 14px;
-    font-size: 12px;
-    color: var(--text-muted);
-    line-height: 1.5;
-}
-
-.lock-hint b {
-    color: #38bdf8;
-    background: rgba(56, 189, 248, 0.15);
-    padding: 1px 5px;
-    border-radius: 4px;
-}
-
-.lock-direct-btn {
+.lock-signin-btn {
     width: 100%;
-    margin-top: 14px;
-    padding: 11px 18px;
-    background: linear-gradient(135deg, #0284c7, #2563eb);
+    height: 42px;
+    margin-top: 6px;
+    background: linear-gradient(135deg, #0ea5e9, #2563eb);
     color: #ffffff;
     border: none;
-    border-radius: 12px;
-    font-size: 13.5px;
+    border-radius: 10px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    transition: all 0.2s ease;
+}
+
+.lock-signin-btn:hover {
+    background: linear-gradient(135deg, #0284c7, #1d4ed8);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.5);
+    transform: translateY(-1px);
+}
+
+.lock-signin-btn:active {
+    transform: translateY(0);
+}
+
+.lock-error-msg {
+    color: #f43f5e;
+    font-size: 12.5px;
+    margin-top: 8px;
+    margin-bottom: 2px;
+    min-height: 18px;
+    text-align: center;
+    width: 100%;
+}
+
+.lock-direct-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #cbd5e1;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
     transition: all 0.2s ease;
 }
 
 .lock-direct-btn:hover {
-    background: linear-gradient(135deg, #0369a1, #1d4ed8);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.55);
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
 }
 
 .shake {
